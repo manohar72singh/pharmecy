@@ -1,0 +1,168 @@
+frontend/
+├── public/
+│   └── favicon.ico
+│
+├── src/
+│   │
+│   ├── assets/
+│   │   └── logo.png
+│   │
+│   ├── components/
+│   │   ├── common/
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── Loader.jsx
+│   │   │   ├── Modal.jsx
+│   │   │   └── ProtectedRoute.jsx
+│   │   │
+│   │   ├── ui/
+│   │   │   ├── Button.jsx
+│   │   │   ├── Input.jsx
+│   │   │   ├── Badge.jsx
+│   │   │   └── Card.jsx
+│   │   │
+│   │   ├── medicine/
+│   │   │   ├── MedicineCard.jsx
+│   │   │   └── MedicineFilter.jsx
+│   │   │
+│   │   ├── cart/
+│   │   │   ├── CartItem.jsx
+│   │   │   └── CartSummary.jsx
+│   │   │
+│   │   ├── order/
+│   │   │   ├── OrderCard.jsx
+│   │   │   └── OrderTimeline.jsx
+│   │   │
+│   │   └── prescription/
+│   │       └── PrescriptionUpload.jsx
+│   │
+│   ├── pages/
+│   │   ├── auth/
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   └── OtpVerify.jsx
+│   │   │
+│   │   ├── customer/
+│   │   │   ├── Home.jsx
+│   │   │   ├── MedicineList.jsx
+│   │   │   ├── MedicineDetail.jsx
+│   │   │   ├── Cart.jsx
+│   │   │   ├── Checkout.jsx
+│   │   │   ├── Orders.jsx
+│   │   │   ├── OrderDetail.jsx
+│   │   │   ├── Prescription.jsx
+│   │   │   ├── Subscription.jsx
+│   │   │   └── Profile.jsx
+│   │   │
+│   │   └── admin/
+│   │       ├── Dashboard.jsx
+│   │       ├── Medicines.jsx
+│   │       ├── Stock.jsx
+│   │       ├── Orders.jsx
+│   │       ├── Prescriptions.jsx
+│   │       ├── Suppliers.jsx
+│   │       ├── Purchase.jsx
+│   │       ├── Delivery.jsx
+│   │       ├── Subscriptions.jsx
+│   │       ├── Reports.jsx
+│   │       ├── Coupons.jsx
+│   │       └── Users.jsx
+│   │
+│   ├── context/
+│   │   ├── AuthContext.jsx
+│   │   └── CartContext.jsx
+│   │
+│   ├── hooks/
+│   │   ├── useAuth.js
+│   │   └── useCart.js
+│   │
+│   ├── services/
+│   │   ├── api.js
+│   │   ├── authService.js
+│   │   ├── medicineService.js
+│   │   ├── orderService.js
+        |-- Prescriptionservice.js    
+│   │   └── cartService.js
+│   │
+│   ├── utils/
+│   │   ├── constants.js
+│   │   └── formatters.js
+│   │
+│   ├── routes/
+│   │   └── AppRoutes.jsx
+│   │
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── index.css
+│
+├── .env
+├── tailwind.config.js
+├── postcss.config.js
+└── package.json
+
+
+
+pharmacy-backend/
+│
+├── src/
+│   │
+│   ├── config/
+│   │   ├── db.js               # MySQL connection
+│   │   └── constants.js        # App constants
+│   │
+│   ├── controllers/            # Business logic
+│   │   ├── auth.controller.js
+│   │   ├── medicine.controller.js
+│   │   ├── category.controller.js
+│   │   ├── stock.controller.js
+│   │   ├── order.controller.js
+│   │   ├── cart.controller.js
+│   │   ├── prescription.controller.js
+│   │   ├── payment.controller.js
+│   │   ├── delivery.controller.js
+│   │   ├── subscription.controller.js
+│   │   ├── coupon.controller.js
+│   │   ├── supplier.controller.js
+│   │   ├── purchase.controller.js
+│   │   ├── user.controller.js
+│   │   └── dashboard.controller.js
+│   │
+│   ├── routes/                 # API routes
+│   │   ├── auth.routes.js
+│   │   ├── medicine.routes.js
+│   │   ├── category.routes.js
+│   │   ├── stock.routes.js
+│   │   ├── order.routes.js
+│   │   ├── cart.routes.js
+│   │   ├── prescription.routes.js
+│   │   ├── payment.routes.js
+│   │   ├── delivery.routes.js
+│   │   ├── subscription.routes.js
+│   │   ├── coupon.routes.js
+│   │   ├── supplier.routes.js
+│   │   ├── purchase.routes.js
+│   │   ├── user.routes.js
+│   │   └── dashboard.routes.js
+│   │
+│   ├── middleware/
+│   │   ├── auth.middleware.js   # JWT verify
+│   │   ├── role.middleware.js   # Role check
+│   │   ├── upload.middleware.js # File upload (multer)
+│   │   └── error.middleware.js  # Error handler
+│   │
+│   ├── utils/
+│   │   ├── response.js         # Standard API response
+│   │   ├── jwt.js              # JWT helpers
+│   │   ├── otp.js              # OTP generate
+│   │   └── cronJobs.js         # Expiry alert cron
+│   │
+│   └── app.js                  # Express app setup
+│
+├── uploads/                    # Prescription images
+│   └── prescriptions/
+│
+├── .env
+├── .env.example
+├── .gitignore
+├── package.json
+└── server.js                   # Entry point

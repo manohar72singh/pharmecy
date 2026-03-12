@@ -1,12 +1,12 @@
 # Pharmecy – Online Pharmacy Application
 
-This repository holds a full‑stack online pharmacy project consisting of a React/Vite frontend and an Express/MongoDB backend. The application allows customers to browse medicines, manage carts, place orders, upload prescriptions, and more, while administrators can control inventory, users, orders, coupons, and other business operations via an admin dashboard.
+This repository holds a full‑stack online pharmacy project consisting of a React/Vite frontend and an Express backend backed by a SQL database. The application allows customers to browse medicines, manage carts, place orders, upload prescriptions, and more, while administrators can control inventory, users, orders, coupons, and other business operations via an admin dashboard.
 
 ---
 
 ## 📁 Project Layout
 
-- **backend/** – Node.js/Express server with routes, controllers, middleware, utilities, and MongoDB models. Handles authentication, business logic, and file uploads.
+- **backend/** – Node.js/Express server with routes, controllers, middleware, utilities, and SQL models (e.g. using Sequelize or another ORM). Handles authentication, business logic, and file uploads.
 - **frontend/** – Vite-powered React app using Tailwind CSS. Contains components, pages, contexts, hooks, and services for interacting with backend APIs.
 
 ## 🚀 Key Features
@@ -22,11 +22,11 @@ This repository holds a full‑stack online pharmacy project consisting of a Rea
 
 ## 🛠 Technology Stack
 
-| Layer     | Technologies                                     |
-| --------- | ------------------------------------------------ |
-| Backend   | Node.js, Express, MongoDB, Mongoose, JWT, Multer |
-| Frontend  | React, Vite, Tailwind CSS, Context API, Axios    |
-| Utilities | ESLint, Prettier, dotenv, Vite plugins           |
+| Layer     | Technologies                                                                |
+| --------- | --------------------------------------------------------------------------- |
+| Backend   | Node.js, Express, SQL database (e.g. MySQL/PostgreSQL) via ORM, JWT, Multer |
+| Frontend  | React, Vite, Tailwind CSS, Context API, Axios                               |
+| Utilities | ESLint, Prettier, dotenv, Vite plugins                                      |
 
 ## 📦 Setup Instructions
 

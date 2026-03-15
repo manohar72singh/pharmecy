@@ -9,6 +9,17 @@ import pool from "./src/config/db.js";
 import authRoute from "./src/routes/authRoutes.js";
 import medicineRoute from "./src/routes/medicineRoutes.js";
 import cartRoutes from "./src/routes/cartRoutes.js";
+import addressRoutes from "./src/routes/addressRoutes.js";
+import orderRoutes from "./src/routes/orderRoutes.js";
+import userRoutes from "./src/routes/userRoutes.js";
+import couponRoutes from "./src/routes/couponRoutes.js";
+import subscriptionRoutes from "./src/routes/subscriptionRoutes.js";
+import prescriptionRoutes from "./src/routes/prescriptionRoutes.js";
+import wishlistRoutes from "./src/routes/wishlistRoutes.js";
+import reviewRoutes from "./src/routes/reviewRoutes.js";
+import notificationRoutes from "./src/routes/notificationRoutes.js";
+import walletRoutes from "./src/routes/walletRoutes.js";
+import adminRoutes from "./src/routes/AdminRoutes/adminRoutes.js";
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -17,7 +28,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -37,6 +48,17 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoute);
 app.use("/api/medicines", medicineRoute);
 app.use("/api/cart", cartRoutes);
+app.use("/api/addresses", addressRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/coupons", couponRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/prescriptions", prescriptionRoutes);
+app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/wallet", walletRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found" });

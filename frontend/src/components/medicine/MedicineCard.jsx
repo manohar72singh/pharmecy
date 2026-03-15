@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import MedicineImage from "../common/MedicineImage";
 import cartService, { localCart } from "../../services/cartService";
-import { showCartToast } from "../common/CartToast"; // ✅ yeh missing tha
+import wishlistService from "../../services/wishlistService";
+import { showCartToast } from "../common/CartToast";
 
 const ScheduleBadge = ({ code }) => {
   const colors = {
@@ -22,16 +23,26 @@ const ScheduleBadge = ({ code }) => {
 export default function MedicineCard({ med }) {
   const [added, setAdded] = useState(false);
   const [cartError, setCartError] = useState(null);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [wishLoading, setWishLoading] = useState(false);
 
   const price = parseFloat(med.selling_price || 0);
   const mrp = parseFloat(med.mrp || 0);
   const discount = mrp > 0 ? Math.round(((mrp - price) / mrp) * 100) : 0;
   const inStock = (med.available_quantity || 0) > 0;
+  const isLoggedIn = !!localStorage.getItem("token");
 
+  // ── Wishlist status check on mount ───────────────
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    // Agar wishlist localStorage mein cache hai to check karo
+    const cached = JSON.parse(localStorage.getItem("wishlistIds") || "[]");
+    if (cached.includes(med.id)) setWishlisted(true);
+  }, [med.id]);
+
+  // ── Add to Cart ───────────────────────────────────
   const addToCart = async () => {
-    const isLoggedIn = !!localStorage.getItem("token");
     setCartError(null);
-
     try {
       if (isLoggedIn) {
         if (!med.batch_id) {
@@ -46,13 +57,7 @@ export default function MedicineCard({ med }) {
       } else {
         localCart.add(med, 1);
       }
-
-      // ✅ Toast show karo
-      showCartToast({
-        name: med.name,
-        price: `₹${price.toFixed(2)}`,
-      });
-
+      showCartToast({ name: med.name, price: `₹${price.toFixed(2)}` });
       window.dispatchEvent(new Event("cartUpdated"));
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
@@ -60,6 +65,40 @@ export default function MedicineCard({ med }) {
       console.error("Cart add error:", err);
       setCartError("Cart mein add nahi hua. Dobara try karein.");
       setTimeout(() => setCartError(null), 3000);
+    }
+  };
+
+  // ── Toggle Wishlist ───────────────────────────────
+  const toggleWishlist = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isLoggedIn) {
+      window.location.href = "/login";
+      return;
+    }
+    setWishLoading(true);
+    try {
+      const { data } = await wishlistService.toggle(med.id);
+      const newState = data.data.wishlisted;
+      setWishlisted(newState);
+
+      // Update localStorage cache
+      const cached = JSON.parse(localStorage.getItem("wishlistIds") || "[]");
+      if (newState) {
+        localStorage.setItem(
+          "wishlistIds",
+          JSON.stringify([...new Set([...cached, med.id])]),
+        );
+      } else {
+        localStorage.setItem(
+          "wishlistIds",
+          JSON.stringify(cached.filter((id) => id !== med.id)),
+        );
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setWishLoading(false);
     }
   };
 
@@ -84,6 +123,7 @@ export default function MedicineCard({ med }) {
               className="group-hover:scale-110 transition-transform duration-200"
             />
           )}
+
           {discount > 0 && (
             <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
               {discount}% OFF
@@ -104,11 +144,29 @@ export default function MedicineCard({ med }) {
 
       {/* ── Details ── */}
       <div className="p-3">
-        <Link to={`/medicines/${med.id}`}>
-          <h3 className="text-sm font-semibold text-gray-800 leading-tight line-clamp-2 hover:text-emerald-600 transition">
-            {med.name}
-          </h3>
-        </Link>
+        <div className="flex items-start justify-between gap-1">
+          <Link to={`/medicines/${med.id}`} className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-gray-800 leading-tight line-clamp-2 hover:text-emerald-600 transition">
+              {med.name}
+            </h3>
+          </Link>
+          {/* ❤️ Wishlist Button */}
+          <button
+            onClick={toggleWishlist}
+            disabled={wishLoading}
+            className="flex-shrink-0 p-1 rounded-lg hover:bg-red-50 transition"
+            title={
+              wishlisted ? "Wishlist se remove karo" : "Wishlist mein add karo"
+            }
+          >
+            <span
+              className={`text-base transition ${wishLoading ? "opacity-50" : ""}`}
+            >
+              {wishlisted ? "❤️" : "🤍"}
+            </span>
+          </button>
+        </div>
+
         <p className="text-xs text-gray-400 mt-0.5">{med.brand}</p>
         <p className="text-xs text-gray-400">{med.pack_size}</p>
 
@@ -128,7 +186,7 @@ export default function MedicineCard({ med }) {
             📋 Rx Required
           </p>
         ) : (
-          <p className="text-[10px] text-green-600 bg-amber-50 px-2 py-1 rounded-lg mb-2">
+          <p className="text-[10px] text-green-600 bg-green-50 px-2 py-1 rounded-lg mb-2">
             📋 Rx Not Required
           </p>
         )}
@@ -142,14 +200,13 @@ export default function MedicineCard({ med }) {
         <button
           disabled={!inStock}
           onClick={addToCart}
-          className={`w-full py-2 rounded-xl text-sm font-semibold transition-all duration-200
-            ${
-              !inStock
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : added
-                  ? "bg-emerald-600 text-white scale-95"
-                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white"
-            }`}
+          className={`w-full py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+            !inStock
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : added
+                ? "bg-emerald-600 text-white scale-95"
+                : "bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white"
+          }`}
         >
           {added ? "✓ Added!" : "Add to Cart"}
         </button>

@@ -4,6 +4,7 @@ import medicineService from "../../services/medicineService";
 import MedicineImage from "../../components/common/MedicineImage";
 import cartService, { localCart } from "../../services/cartService"; // ✅ add
 import { showCartToast } from "../../components/common/CartToast"; // ✅ add
+import ReviewSection from "../../components/common/ReviewSection"; // ✅ NEW
 
 // ── Schedule Badge ────────────────────────────────────
 const ScheduleBadge = ({ code }) => {
@@ -53,7 +54,7 @@ export default function MedicineDetail() {
   const [added, setAdded] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
   const [error, setError] = useState("");
-  const [cartError, setCartError] = useState(""); // ✅ add
+  const [cartError, setCartError] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -527,6 +528,9 @@ export default function MedicineDetail() {
             )}
           </div>
         </div>
+
+        {/* ── Reviews ── */}
+        <ReviewSection medicineId={med.id} />
       </div>
     </div>
   );

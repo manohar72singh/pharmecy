@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import cartService from "../../services/cartService";
 
-// ── Global cart event ─────────────────────────────────
 export const updateCartCount = () => {
   window.dispatchEvent(new Event("cartUpdated"));
 };
@@ -16,43 +15,35 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // ── Cart count refresh ────────────────────────────
-  // ✅ FIX: Login hone par DB se count lo, guest ke liye localStorage
   const refreshCart = async () => {
     const token = localStorage.getItem("token");
     if (token) {
-      // Logged in — DB se actual count lo
       try {
         const res = await cartService.getCart();
-        const count = res.data?.data?.count || 0;
-        setCartCount(count);
+        setCartCount(res.data?.data?.count || 0);
       } catch {
-        // Token invalid ho gaya — localStorage fallback
         const cart = JSON.parse(localStorage.getItem("cart") || "[]");
         setCartCount(cart.reduce((sum, i) => sum + (i.quantity || 1), 0));
       }
     } else {
-      // Guest — localStorage se count lo
       const cart = JSON.parse(localStorage.getItem("cart") || "[]");
       setCartCount(cart.reduce((sum, i) => sum + (i.quantity || 1), 0));
     }
   };
 
-  // ── Read user + cart on route change ─────────────
   useEffect(() => {
     const stored = localStorage.getItem("user");
     setUser(stored ? JSON.parse(stored) : null);
     refreshCart();
   }, [location.pathname]);
 
-  // ── Listen to cartUpdated event ───────────────────
   useEffect(() => {
     window.addEventListener("cartUpdated", refreshCart);
     return () => window.removeEventListener("cartUpdated", refreshCart);
   }, []);
 
-  // ── Close dropdown on outside click ──────────────
   useEffect(() => {
     const handler = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target))
@@ -66,6 +57,8 @@ export default function Navbar() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("cart");
+    localStorage.removeItem("cartCoupon");
+    localStorage.removeItem("wishlistIds");
     setUser(null);
     setCartCount(0);
     setProfileOpen(false);
@@ -94,9 +87,54 @@ export default function Navbar() {
     ? AVATAR_COLORS[user.name?.charCodeAt(0) % AVATAR_COLORS.length]
     : "bg-emerald-500";
 
+  // Desktop dropdown items
+  const customerMenuItems = [
+    { to: "/profile", icon: "👤", label: "My Profile" },
+    { to: "/orders", icon: "📦", label: "My Orders" },
+    { to: "/wishlist", icon: "❤️", label: "My Wishlist" },
+    { to: "/wallet", icon: "👛", label: "My Wallet" },
+    { to: "/notifications", icon: "🔔", label: "Notifications" },
+    { to: "/prescription", icon: "📋", label: "Prescriptions" },
+    { to: "/subscription", icon: "🔁", label: "Subscriptions" },
+    { to: "/offers", icon: "🏷️", label: "Offers & Coupons" },
+    {
+      to: "/cart",
+      icon: "🛒",
+      label: `My Cart${cartCount > 0 ? ` (${cartCount})` : ""}`,
+    },
+  ];
+
+  // Mobile menu items
+  const mobileMenuItems = [
+    {
+      to: "/cart",
+      icon: "🛒",
+      label: `My Cart${cartCount > 0 ? ` (${cartCount})` : ""}`,
+    },
+    { to: "/orders", icon: "📦", label: "My Orders" },
+    { to: "/wishlist", icon: "❤️", label: "My Wishlist" },
+    { to: "/wallet", icon: "👛", label: "My Wallet" },
+    { to: "/notifications", icon: "🔔", label: "Notifications" },
+    { to: "/prescription", icon: "📋", label: "Prescriptions" },
+    { to: "/subscription", icon: "🔁", label: "Subscriptions" },
+    { to: "/offers", icon: "🏷️", label: "Offers & Coupons" },
+    { to: "/profile", icon: "👤", label: "My Profile" },
+  ];
+
+  const CATEGORIES = [
+    { icon: "💊", label: "Medicines", slug: "medicines" },
+    { icon: "🩺", label: "Healthcare", slug: "healthcare" },
+    { icon: "🧴", label: "Personal Care", slug: "personal-care" },
+    { icon: "💪", label: "Vitamins", slug: "vitamins-supplements" },
+    { icon: "👶", label: "Baby Care", slug: "baby-care" },
+    { icon: "🩸", label: "Diabetic Care", slug: "diabetic-care" },
+    { icon: "🩹", label: "Surgical", slug: "surgical" },
+    { icon: "🌿", label: "Ayurvedic", slug: "ayurvedic" },
+  ];
+
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-      {/* ── Top strip ──────────────────────────────── */}
+      {/* Top strip */}
       <div
         className="text-white text-xs py-1.5 text-center"
         style={{ background: "linear-gradient(90deg, #064e3b, #059669)" }}
@@ -105,7 +143,7 @@ export default function Navbar() {
         9771157571
       </div>
 
-      {/* ── Main bar ───────────────────────────────── */}
+      {/* Main bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo */}
@@ -149,7 +187,7 @@ export default function Navbar() {
                 }}
               />
               <button
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-white px-3 py-1.5 rounded-lg text-xs font-semibold"
                 style={{ background: "#059669" }}
               >
                 Search
@@ -159,17 +197,15 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-1 sm:gap-2">
-            {/* ── GUEST ────────────────────────────── */}
+            {/* ── GUEST ── */}
             {!user && (
               <>
                 <Link
                   to="/cart"
                   className="relative p-2 rounded-xl hover:bg-gray-100 transition group"
-                  title="My Cart"
                 >
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-6 h-6 text-gray-600 group-hover:text-emerald-600 transition"
+                    className="w-6 h-6 text-gray-600 group-hover:text-emerald-600"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -200,7 +236,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/register"
-                  className="text-sm font-semibold text-white px-4 py-2 rounded-lg transition shadow-sm"
+                  className="text-sm font-semibold text-white px-4 py-2 rounded-lg shadow-sm transition"
                   style={{ background: "#059669" }}
                 >
                   Register
@@ -208,17 +244,34 @@ export default function Navbar() {
               </>
             )}
 
-            {/* ── CUSTOMER ─────────────────────────── */}
+            {/* ── CUSTOMER ── */}
             {user && role === "customer" && (
               <>
+                {/* Wishlist icon */}
+                <Link
+                  to="/wishlist"
+                  className="hidden sm:flex p-2 rounded-xl hover:bg-gray-100 transition"
+                  title="My Wishlist"
+                >
+                  <span className="text-xl">❤️</span>
+                </Link>
+
+                {/* Notifications icon */}
+                <Link
+                  to="/notifications"
+                  className="hidden sm:flex relative p-2 rounded-xl hover:bg-gray-100 transition"
+                  title="Notifications"
+                >
+                  <span className="text-xl">🔔</span>
+                </Link>
+
+                {/* Cart icon */}
                 <Link
                   to="/cart"
                   className="relative p-2 rounded-xl hover:bg-gray-100 transition group"
-                  title="My Cart"
                 >
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-6 h-6 text-gray-600 group-hover:text-emerald-600 transition"
+                    className="w-6 h-6 text-gray-600 group-hover:text-emerald-600"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -264,7 +317,6 @@ export default function Navbar() {
                       </div>
                     </div>
                     <svg
-                      xmlns="http://www.w3.org/2000/svg"
                       className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
                       fill="none"
                       viewBox="0 0 24 24"
@@ -280,7 +332,7 @@ export default function Navbar() {
                   </button>
 
                   {profileOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-2xl shadow-gray-200 py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-2xl py-2 z-50">
                       <div className="px-4 py-3 border-b border-gray-100">
                         <div className="flex items-center gap-3">
                           <div
@@ -300,32 +352,14 @@ export default function Navbar() {
                           </div>
                         </div>
                       </div>
-                      {[
-                        { to: "/profile", icon: "👤", label: "My Profile" },
-                        { to: "/orders", icon: "📦", label: "My Orders" },
-                        {
-                          to: "/prescription",
-                          icon: "📋",
-                          label: "Prescriptions",
-                        },
-                        {
-                          to: "/subscription",
-                          icon: "🔁",
-                          label: "Subscriptions",
-                        },
-                        {
-                          to: "/cart",
-                          icon: "🛒",
-                          label: `My Cart ${cartCount > 0 ? `(${cartCount})` : ""}`,
-                        },
-                      ].map((item) => (
+                      {customerMenuItems.map((item) => (
                         <Link
                           key={item.to}
                           to={item.to}
                           onClick={() => setProfileOpen(false)}
                           className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition"
                         >
-                          <span className="text-base">{item.icon}</span>
+                          <span className="text-base">{item.icon}</span>{" "}
                           {item.label}
                         </Link>
                       ))}
@@ -343,7 +377,7 @@ export default function Navbar() {
               </>
             )}
 
-            {/* ── ADMIN ────────────────────────────── */}
+            {/* ── ADMIN ── */}
             {user &&
               (role === "admin" ||
                 role === "super_admin" ||
@@ -372,7 +406,6 @@ export default function Navbar() {
                       </div>
                     </div>
                     <svg
-                      xmlns="http://www.w3.org/2000/svg"
                       className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? "rotate-180" : ""}`}
                       fill="none"
                       viewBox="0 0 24 24"
@@ -437,7 +470,6 @@ export default function Navbar() {
             >
               {menuOpen ? (
                 <svg
-                  xmlns="http://www.w3.org/2000/svg"
                   className="w-5 h-5 text-gray-600"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -452,7 +484,6 @@ export default function Navbar() {
                 </svg>
               ) : (
                 <svg
-                  xmlns="http://www.w3.org/2000/svg"
                   className="w-5 h-5 text-gray-600"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -470,18 +501,9 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* ── Category nav ─────────────────────────── */}
-        <div className="hidden md:flex items-center gap-1 pb-2 overflow-x-auto scrollbar-hide">
-          {[
-            { icon: "💊", label: "Medicines", slug: "medicines" },
-            { icon: "🩺", label: "Healthcare", slug: "healthcare" },
-            { icon: "🧴", label: "Personal Care", slug: "personal-care" },
-            { icon: "💪", label: "Vitamins", slug: "vitamins-supplements" },
-            { icon: "👶", label: "Baby Care", slug: "baby-care" },
-            { icon: "🩸", label: "Diabetic Care", slug: "diabetic-care" },
-            { icon: "🩹", label: "Surgical", slug: "surgical" },
-            { icon: "🌿", label: "Ayurvedic", slug: "ayurvedic" },
-          ].map((cat) => (
+        {/* Category nav */}
+        <div className="hidden md:flex items-center gap-1 pb-2 overflow-x-auto">
+          {CATEGORIES.map((cat) => (
             <Link
               key={cat.label}
               to={`/medicines?category=${cat.slug}`}
@@ -493,7 +515,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ── Mobile menu ────────────────────────────────── */}
+      {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white px-4 py-4 space-y-1">
           <div className="relative mb-3">
@@ -543,17 +565,7 @@ export default function Navbar() {
                   <p className="text-xs text-gray-400">{user.phone}</p>
                 </div>
               </div>
-              {[
-                {
-                  to: "/cart",
-                  icon: "🛒",
-                  label: `My Cart ${cartCount > 0 ? `(${cartCount})` : ""}`,
-                },
-                { to: "/orders", icon: "📦", label: "My Orders" },
-                { to: "/prescription", icon: "📋", label: "Prescriptions" },
-                { to: "/subscription", icon: "🔁", label: "Subscriptions" },
-                { to: "/profile", icon: "👤", label: "My Profile" },
-              ].map((item) => (
+              {mobileMenuItems.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
@@ -577,16 +589,7 @@ export default function Navbar() {
               Categories
             </p>
             <div className="grid grid-cols-4 gap-2">
-              {[
-                { icon: "💊", label: "Medicines", slug: "medicines" },
-                { icon: "🩺", label: "Healthcare", slug: "healthcare" },
-                { icon: "🧴", label: "Personal", slug: "personal-care" },
-                { icon: "💪", label: "Vitamins", slug: "vitamins-supplements" },
-                { icon: "👶", label: "Baby Care", slug: "baby-care" },
-                { icon: "🩸", label: "Diabetic", slug: "diabetic-care" },
-                { icon: "🩹", label: "Surgical", slug: "surgical" },
-                { icon: "🌿", label: "Ayurvedic", slug: "ayurvedic" },
-              ].map((cat) => (
+              {CATEGORIES.map((cat) => (
                 <Link
                   key={cat.label}
                   to={`/medicines?category=${cat.slug}`}

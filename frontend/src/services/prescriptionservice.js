@@ -7,6 +7,7 @@ const prescriptionService = {
     }),
   getAll: () => api.get("/prescriptions"),
   getById: (id) => api.get(`/prescriptions/${id}`),
+  remove: (id) => api.delete(`/prescriptions/${id}`),
 };
 
 export default prescriptionService;

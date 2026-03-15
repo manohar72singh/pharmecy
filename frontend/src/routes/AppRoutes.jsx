@@ -18,6 +18,13 @@ import OrderDetail from "../pages/customer/OrderDetail";
 import Prescription from "../pages/customer/Prescription";
 import Subscription from "../pages/customer/Subscription";
 import Profile from "../pages/customer/Profile";
+import Offers from "../pages/customer/Offers";
+import Wishlist from "../pages/customer/Wishlist"; // ✅ NEW
+import Notifications from "../pages/customer/Notifications"; // ✅ NEW
+import Wallet from "../pages/customer/Wallet"; // ✅ NEW
+
+// ── Admin Layout
+import AdminLayout from "../pages/admin/AdminLayout";
 
 // ── Admin Pages
 import Dashboard from "../pages/admin/Dashboard";
@@ -42,7 +49,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-// ── Layout — sirf Navbar, CartToast nahi (neeche globally hai)
 const Layout = ({ children }) => (
   <>
     <Navbar />
@@ -53,11 +59,9 @@ const Layout = ({ children }) => (
 export default function AppRoutes() {
   return (
     <>
-      {/* ✅ FIX: CartToast Routes ke BAHAR — kabhi re-mount nahi hoga */}
       <CartToast />
-
       <Routes>
-        {/* ── Public Routes ──────────────────────────── */}
+        {/* ── Public Routes ── */}
         <Route
           path="/"
           element={
@@ -114,8 +118,24 @@ export default function AppRoutes() {
             </Layout>
           }
         />
+        <Route
+          path="/offers"
+          element={
+            <Layout>
+              <Offers />
+            </Layout>
+          }
+        />
+        <Route
+          path="/wishlist"
+          element={
+            <Layout>
+              <Wishlist />
+            </Layout>
+          }
+        />
 
-        {/* ── Customer Protected Routes ───────────────── */}
+        {/* ── Customer Protected Routes ── */}
         <Route
           path="/checkout"
           element={
@@ -176,15 +196,37 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <Layout>
+                <Notifications />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/wallet"
+          element={
+            <ProtectedRoute allowedRoles={["customer"]}>
+              <Layout>
+                <Wallet />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
 
-        {/* ── Admin Protected Routes ──────────────────── */}
+        {/* ── Admin Protected Routes ── */}
         <Route
           path="/admin/dashboard"
           element={
             <ProtectedRoute
               allowedRoles={["admin", "super_admin", "pharmacist"]}
             >
-              <Dashboard />
+              <AdminLayout>
+                <Dashboard />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
@@ -194,7 +236,9 @@ export default function AppRoutes() {
             <ProtectedRoute
               allowedRoles={["admin", "super_admin", "pharmacist"]}
             >
-              <AdminMedicines />
+              <AdminLayout>
+                <AdminMedicines />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
@@ -204,7 +248,9 @@ export default function AppRoutes() {
             <ProtectedRoute
               allowedRoles={["admin", "super_admin", "pharmacist"]}
             >
-              <AdminStock />
+              <AdminLayout>
+                <AdminStock />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
@@ -214,7 +260,9 @@ export default function AppRoutes() {
             <ProtectedRoute
               allowedRoles={["admin", "super_admin", "pharmacist"]}
             >
-              <AdminOrders />
+              <AdminLayout>
+                <AdminOrders />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
@@ -224,7 +272,9 @@ export default function AppRoutes() {
             <ProtectedRoute
               allowedRoles={["admin", "super_admin", "pharmacist"]}
             >
-              <AdminPrescriptions />
+              <AdminLayout>
+                <AdminPrescriptions />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
@@ -232,7 +282,9 @@ export default function AppRoutes() {
           path="/admin/users"
           element={
             <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
-              <AdminUsers />
+              <AdminLayout>
+                <AdminUsers />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
@@ -240,7 +292,9 @@ export default function AppRoutes() {
           path="/admin/suppliers"
           element={
             <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
-              <AdminSuppliers />
+              <AdminLayout>
+                <AdminSuppliers />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
@@ -248,7 +302,9 @@ export default function AppRoutes() {
           path="/admin/purchase"
           element={
             <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
-              <AdminPurchase />
+              <AdminLayout>
+                <AdminPurchase />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
@@ -256,7 +312,9 @@ export default function AppRoutes() {
           path="/admin/delivery"
           element={
             <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
-              <AdminDelivery />
+              <AdminLayout>
+                <AdminDelivery />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
@@ -264,7 +322,9 @@ export default function AppRoutes() {
           path="/admin/subscriptions"
           element={
             <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
-              <AdminSubscriptions />
+              <AdminLayout>
+                <AdminSubscriptions />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
@@ -272,7 +332,9 @@ export default function AppRoutes() {
           path="/admin/reports"
           element={
             <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
-              <AdminReports />
+              <AdminLayout>
+                <AdminReports />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
@@ -280,12 +342,14 @@ export default function AppRoutes() {
           path="/admin/coupons"
           element={
             <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
-              <AdminCoupons />
+              <AdminLayout>
+                <AdminCoupons />
+              </AdminLayout>
             </ProtectedRoute>
           }
         />
 
-        {/* ── 404 ────────────────────────────────────── */}
+        {/* ── 404 ── */}
         <Route
           path="*"
           element={

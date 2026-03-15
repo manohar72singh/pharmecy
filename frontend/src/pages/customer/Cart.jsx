@@ -2,17 +2,31 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MedicineImage from "../../components/common/MedicineImage";
 import cartService, { localCart } from "../../services/cartService";
+import couponService from "../../services/couponService";
 
 export default function Cart() {
   const navigate = useNavigate();
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [coupon, setCoupon] = useState("");
-  const [discount, setDiscount] = useState(0);
-  const [couponMsg, setCouponMsg] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [applied, setApplied] = useState(null); // { code, discount_amount, coupon_id }
+  const [couponMsg, setCouponMsg] = useState({ type: "", text: "" });
+  const [allCoupons, setAllCoupons] = useState([]);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [priceOpen, setPriceOpen] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const isLoggedIn = !!localStorage.getItem("token");
+
+  // ── Load saved coupon on mount ────────────────────
+  useEffect(() => {
+    const saved = localStorage.getItem("cartCoupon");
+    if (saved) {
+      try {
+        setApplied(JSON.parse(saved));
+      } catch {}
+    }
+  }, []);
 
   // ── Load Cart ─────────────────────────────────────
   const loadCart = useCallback(async () => {
@@ -26,21 +40,111 @@ export default function Cart() {
       }
     } catch (err) {
       console.error(err);
-      setCart(localCart.get()); // fallback
+      setCart(localCart.get());
     } finally {
       setLoading(false);
     }
   }, [isLoggedIn]);
 
+  // ── Load Coupons ──────────────────────────────────
+  useEffect(() => {
+    couponService
+      .getAll()
+      .then((res) => setAllCoupons(res.data.data || []))
+      .catch(console.error);
+  }, []);
+
   useEffect(() => {
     loadCart();
   }, [loadCart]);
-
-  // cartUpdated event pe reload
   useEffect(() => {
     window.addEventListener("cartUpdated", loadCart);
     return () => window.removeEventListener("cartUpdated", loadCart);
   }, [loadCart]);
+
+  // ── Price Calculations ────────────────────────────
+  const subtotal = cart.reduce(
+    (s, i) => s + parseFloat(i.price) * i.quantity,
+    0,
+  );
+  const mrpTotal = cart.reduce((s, i) => s + parseFloat(i.mrp) * i.quantity, 0);
+  const saved = mrpTotal - subtotal;
+  const delivery = subtotal >= 299 ? 0 : 49;
+  const couponDiscount = applied ? applied.discount_amount : 0;
+  const total = subtotal - couponDiscount + delivery;
+
+  // ── Eligible coupons based on cart value ─────────
+  const eligibleCoupons = allCoupons.filter((c) => {
+    if (c.discount_type === "flat") {
+      // flat coupon — subtotal se bada discount nahi hona chahiye
+      return parseFloat(c.discount_value) <= subtotal;
+    }
+    return true; // percentage always eligible
+  });
+
+  // ── Apply Coupon (DB se validate) ────────────────
+  const handleApply = async () => {
+    if (!couponCode.trim())
+      return setCouponMsg({ type: "error", text: "Coupon code enter karo." });
+    if (!isLoggedIn)
+      return setCouponMsg({
+        type: "error",
+        text: "Coupon apply karne ke liye login karein.",
+      });
+
+    setCouponLoading(true);
+    setCouponMsg({ type: "", text: "" });
+    try {
+      const { data } = await couponService.apply(
+        couponCode.trim(),
+        subtotal + delivery,
+      );
+      setApplied(data.data);
+      localStorage.setItem("cartCoupon", JSON.stringify(data.data));
+      setCouponMsg({ type: "success", text: `🎉 ${data.message}` });
+      setCouponCode("");
+    } catch (err) {
+      setApplied(null);
+      localStorage.removeItem("cartCoupon");
+      setCouponMsg({
+        type: "error",
+        text: err.response?.data?.message || "Invalid coupon.",
+      });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setApplied(null);
+    localStorage.removeItem("cartCoupon");
+    setCouponMsg({ type: "", text: "" });
+    setCouponCode("");
+  };
+
+  // ── Quick Apply from suggestion ───────────────────
+  const quickApply = async (code) => {
+    if (!isLoggedIn)
+      return setCouponMsg({
+        type: "error",
+        text: "Coupon apply karne ke liye login karein.",
+      });
+    setCouponLoading(true);
+    setCouponMsg({ type: "", text: "" });
+    try {
+      const { data } = await couponService.apply(code, subtotal + delivery);
+      setApplied(data.data);
+      localStorage.setItem("cartCoupon", JSON.stringify(data.data));
+      setCouponMsg({ type: "success", text: `🎉 ${data.message}` });
+    } catch (err) {
+      setCouponMsg({
+        type: "error",
+        text: err.response?.data?.message || "Invalid coupon.",
+      });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   // ── Update Quantity ───────────────────────────────
   const updateQty = async (item, qty) => {
@@ -54,6 +158,15 @@ export default function Cart() {
       } else {
         localCart.update(item.medicine_id, qty);
         setCart(localCart.get());
+      }
+      // Reset coupon on qty change
+      if (applied) {
+        setApplied(null);
+        localStorage.removeItem("cartCoupon");
+        setCouponMsg({
+          type: "info",
+          text: "Cart update hua — coupon dobara apply karo.",
+        });
       }
       window.dispatchEvent(new Event("cartUpdated"));
     } catch (err) {
@@ -71,6 +184,10 @@ export default function Cart() {
         localCart.remove(item.medicine_id);
         setCart(localCart.get());
       }
+      if (applied) {
+        setApplied(null);
+        setCouponMsg({ type: "", text: "" });
+      }
       window.dispatchEvent(new Event("cartUpdated"));
     } catch (err) {
       console.error(err);
@@ -87,36 +204,15 @@ export default function Cart() {
         localCart.clear();
         setCart([]);
       }
+      setApplied(null);
+      localStorage.removeItem("cartCoupon");
       window.dispatchEvent(new Event("cartUpdated"));
     } catch (err) {
       console.error(err);
     }
   };
 
-  // ── Price Calculations ────────────────────────────
-  const subtotal = cart.reduce(
-    (s, i) => s + parseFloat(i.price) * i.quantity,
-    0,
-  );
-  const mrpTotal = cart.reduce((s, i) => s + parseFloat(i.mrp) * i.quantity, 0);
-  const saved = mrpTotal - subtotal;
-  const delivery = subtotal >= 299 ? 0 : 49;
-  const total = subtotal - discount + delivery;
-
-  const applyCoupon = () => {
-    const code = coupon.trim().toUpperCase();
-    if (code === "MEDI10") {
-      setDiscount(Math.round(subtotal * 0.1));
-      setCouponMsg("✅ 10% discount apply ho gaya!");
-    } else if (code === "FIRST50") {
-      setDiscount(50);
-      setCouponMsg("✅ ₹50 discount apply ho gaya!");
-    } else {
-      setDiscount(0);
-      setCouponMsg("❌ Invalid coupon code");
-    }
-  };
-
+  // ── Checkout ──────────────────────────────────────
   const handleCheckout = () => {
     if (!user) {
       navigate("/login", {
@@ -133,12 +229,10 @@ export default function Cart() {
   // ── Loading ───────────────────────────────────────
   if (loading)
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="flex items-center justify-center py-32">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-500 text-sm">Cart load ho rahi hai...</p>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 text-sm">Cart load ho rahi hai...</p>
         </div>
       </div>
     );
@@ -157,7 +251,7 @@ export default function Cart() {
           </p>
           <Link
             to="/medicines"
-            className="inline-block text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg transition"
+            className="inline-block text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg"
             style={{ background: "linear-gradient(135deg, #065f46, #059669)" }}
           >
             Medicines Browse Karein →
@@ -242,7 +336,6 @@ export default function Cart() {
                       size="md"
                     />
                   </div>
-
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
@@ -260,7 +353,6 @@ export default function Cart() {
                         className="text-gray-300 hover:text-red-500 transition flex-shrink-0 p-1"
                       >
                         <svg
-                          xmlns="http://www.w3.org/2000/svg"
                           className="w-4 h-4"
                           fill="none"
                           viewBox="0 0 24 24"
@@ -275,7 +367,6 @@ export default function Cart() {
                         </svg>
                       </button>
                     </div>
-
                     <div className="flex items-center justify-between mt-3 flex-wrap gap-3">
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-black text-gray-900">
@@ -292,7 +383,6 @@ export default function Cart() {
                           </>
                         )}
                       </div>
-
                       <div className="flex items-center gap-2 bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
                         <button
                           onClick={() => updateQty(item, item.quantity - 1)}
@@ -311,7 +401,6 @@ export default function Cart() {
                         </button>
                       </div>
                     </div>
-
                     <p className="text-xs text-gray-400 mt-2">
                       Item total:{" "}
                       <strong className="text-gray-700">
@@ -322,7 +411,6 @@ export default function Cart() {
                 </div>
               );
             })}
-
             <Link
               to="/medicines"
               className="flex items-center gap-2 text-sm text-emerald-600 font-semibold hover:text-emerald-700 mt-2"
@@ -331,106 +419,241 @@ export default function Cart() {
             </Link>
           </div>
 
-          {/* ── Order Summary ── */}
+          {/* ── Right Sidebar ── */}
           <div className="space-y-4">
-            {/* Coupon */}
+            {/* ── Coupon Section ── */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
                 <span>🎟️</span> Apply Coupon
               </h3>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={coupon}
-                  onChange={(e) => setCoupon(e.target.value)}
-                  placeholder="Coupon code"
-                  onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
-                  className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                />
-                <button
-                  onClick={applyCoupon}
-                  className="px-4 py-2.5 rounded-xl text-white text-sm font-bold transition"
-                  style={{ background: "#059669" }}
-                >
-                  Apply
-                </button>
-              </div>
-              {couponMsg && (
+
+              {/* Applied coupon */}
+              {applied ? (
+                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl mb-3">
+                  <div>
+                    <p className="font-black text-emerald-700 text-sm">
+                      {applied.code} ✅
+                    </p>
+                    <p className="text-xs text-emerald-600 mt-0.5">
+                      ₹{applied.discount_amount.toFixed(2)} ki bachat
+                    </p>
+                  </div>
+                  <button
+                    onClick={removeCoupon}
+                    className="text-xs font-bold text-red-400 hover:text-red-600 transition"
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => {
+                      setCouponCode(e.target.value.toUpperCase());
+                      setCouponMsg({ type: "", text: "" });
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && handleApply()}
+                    placeholder="Coupon code enter karo"
+                    className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                  />
+                  <button
+                    onClick={handleApply}
+                    disabled={couponLoading}
+                    className="px-4 py-2.5 rounded-xl text-white text-sm font-bold transition"
+                    style={{
+                      background: couponLoading ? "#6ee7b7" : "#059669",
+                    }}
+                  >
+                    {couponLoading ? "..." : "Apply"}
+                  </button>
+                </div>
+              )}
+
+              {/* Message */}
+              {couponMsg.text && (
                 <p
-                  className={`text-xs mt-2 font-semibold ${couponMsg.startsWith("✅") ? "text-green-600" : "text-red-500"}`}
+                  className={`text-xs font-semibold mb-3 ${
+                    couponMsg.type === "success"
+                      ? "text-emerald-600"
+                      : couponMsg.type === "info"
+                        ? "text-blue-500"
+                        : "text-red-500"
+                  }`}
                 >
-                  {couponMsg}
+                  {couponMsg.text}
                 </p>
               )}
-              <p className="text-xs text-gray-400 mt-2">
-                Try: <strong>MEDI10</strong> or <strong>FIRST50</strong>
-              </p>
-            </div>
 
-            {/* Price Summary */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h3 className="font-bold text-gray-900 mb-4">Price Details</h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between text-gray-600">
-                  <span>
-                    MRP Total ({cart.reduce((s, i) => s + i.quantity, 0)} items)
-                  </span>
-                  <span>₹{mrpTotal.toFixed(2)}</span>
+              {/* Eligible Coupons — Horizontal Scroll, max 4 */}
+              {!applied && eligibleCoupons.length > 0 && (
+                <div>
+                  <p className="text-xs text-gray-400 font-semibold mb-2">
+                    🎁 Available offers ({eligibleCoupons.length})
+                  </p>
+                  <div
+                    className="flex gap-2 overflow-x-auto pb-1"
+                    style={{ scrollbarWidth: "none" }}
+                  >
+                    {eligibleCoupons.map((c) => {
+                      const discText =
+                        c.discount_type === "flat"
+                          ? `₹${c.discount_value} off`
+                          : `${c.discount_value}% off`;
+                      const savingsPreview =
+                        c.discount_type === "flat"
+                          ? parseFloat(c.discount_value)
+                          : (subtotal * parseFloat(c.discount_value)) / 100;
+                      return (
+                        <div
+                          key={c.id}
+                          className="flex-shrink-0 w-36 border-2 border-dashed border-emerald-200 bg-emerald-50 rounded-xl p-2.5 flex flex-col justify-between gap-1.5"
+                        >
+                          <div>
+                            <p className="font-black text-gray-800 text-xs tracking-wider">
+                              {c.code}
+                            </p>
+                            <p className="text-xs font-bold text-emerald-600">
+                              {discText}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              Save ₹{savingsPreview.toFixed(0)}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => quickApply(c.code)}
+                            className="w-full text-xs font-bold text-white py-1 rounded-lg transition"
+                            style={{ background: "#059669" }}
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="flex justify-between text-green-600 font-semibold">
-                  <span>Product Discount</span>
-                  <span>− ₹{saved.toFixed(2)}</span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-green-600 font-semibold">
-                    <span>Coupon Discount</span>
-                    <span>− ₹{discount.toFixed(2)}</span>
+              )}
+
+              {/* No eligible coupons */}
+              {!applied &&
+                eligibleCoupons.length === 0 &&
+                allCoupons.length > 0 && (
+                  <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 text-xs text-amber-700">
+                    💡 Thoda aur add karo — coupons eligible ho jaayenge!
                   </div>
                 )}
-                <div className="flex justify-between text-gray-600">
-                  <span>Delivery Charges</span>
-                  <span
-                    className={
-                      delivery === 0 ? "text-green-600 font-semibold" : ""
-                    }
-                  >
-                    {delivery === 0 ? "FREE 🎉" : `₹${delivery}`}
+
+              <Link
+                to="/offers"
+                className="text-xs text-emerald-600 font-bold mt-3 block hover:underline"
+              >
+                🏷️ Saare offers dekho →
+              </Link>
+            </div>
+
+            {/* ── Price Summary ── */}
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              {/* Total row — always visible, click to toggle */}
+              <button
+                onClick={() => setPriceOpen((o) => !o)}
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-gray-900">Price Details</span>
+                  <span className="text-xs text-gray-400">
+                    ({cart.reduce((s, i) => s + i.quantity, 0)} items)
                   </span>
                 </div>
-                {delivery > 0 && (
-                  <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
-                    ₹{(299 - subtotal).toFixed(0)} aur add karein — FREE
-                    delivery paayein!
-                  </p>
-                )}
-                <div className="border-t border-gray-100 pt-3 flex justify-between font-black text-gray-900 text-base">
-                  <span>Total Amount</span>
-                  <span>₹{total.toFixed(2)}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-black text-emerald-600 text-lg">
+                    ₹{total.toFixed(2)}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${priceOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
                 </div>
-                {saved + discount > 0 && (
-                  <p className="text-xs text-green-600 font-bold bg-green-50 px-3 py-2 rounded-lg text-center">
-                    🎉 Aap ₹{(saved + discount).toFixed(2)} bachaa rahe hain!
+              </button>
+
+              {/* Dropdown detail */}
+              {priceOpen && (
+                <div className="px-5 pb-4 border-t border-gray-50">
+                  <div className="space-y-3 text-sm pt-3">
+                    <div className="flex justify-between text-gray-600">
+                      <span>MRP Total</span>
+                      <span>₹{mrpTotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-green-600 font-semibold">
+                      <span>Product Discount</span>
+                      <span>− ₹{saved.toFixed(2)}</span>
+                    </div>
+                    {applied && (
+                      <div className="flex justify-between text-emerald-600 font-semibold">
+                        <span>Coupon ({applied.code})</span>
+                        <span>− ₹{couponDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-gray-600">
+                      <span>Delivery</span>
+                      <span
+                        className={
+                          delivery === 0 ? "text-green-600 font-semibold" : ""
+                        }
+                      >
+                        {delivery === 0 ? "FREE 🎉" : `₹${delivery}`}
+                      </span>
+                    </div>
+                    {delivery > 0 && (
+                      <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
+                        ₹{(299 - subtotal).toFixed(0)} aur add karein — FREE
+                        delivery paayein!
+                      </p>
+                    )}
+                    <div className="border-t border-gray-100 pt-3 flex justify-between font-black text-gray-900">
+                      <span>Total Amount</span>
+                      <span className="text-emerald-600">
+                        ₹{total.toFixed(2)}
+                      </span>
+                    </div>
+                    {saved + couponDiscount > 0 && (
+                      <p className="text-xs text-green-600 font-bold bg-green-50 px-3 py-2 rounded-lg text-center">
+                        🎉 ₹{(saved + couponDiscount).toFixed(2)} ki bachat ho
+                        rahi hai!
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Checkout Button */}
+              <div className="px-5 pb-5">
+                <button
+                  onClick={handleCheckout}
+                  className="w-full py-4 rounded-2xl text-white font-black text-base shadow-lg transition-transform active:scale-95"
+                  style={{
+                    background: "linear-gradient(135deg, #065f46, #059669)",
+                  }}
+                >
+                  {user
+                    ? "Proceed to Checkout →"
+                    : "Login karke Checkout karein →"}
+                </button>
+                {!user && (
+                  <p className="text-center text-xs text-gray-400 mt-2">
+                    Cart items save rahenge login ke baad ✅
                   </p>
                 )}
               </div>
-
-              <button
-                onClick={handleCheckout}
-                className="w-full mt-5 py-4 rounded-2xl text-white font-black text-base shadow-lg transition-transform active:scale-95"
-                style={{
-                  background: "linear-gradient(135deg, #065f46, #059669)",
-                }}
-              >
-                {user
-                  ? "Proceed to Checkout →"
-                  : "Login karke Checkout karein →"}
-              </button>
-
-              {!user && (
-                <p className="text-center text-xs text-gray-400 mt-2">
-                  Cart items save rahenge login ke baad ✅
-                </p>
-              )}
             </div>
 
             {/* Trust badges */}

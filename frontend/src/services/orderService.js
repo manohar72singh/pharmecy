@@ -2,10 +2,10 @@ import api from "./api.js";
 
 const orderService = {
   placeOrder: (data) => api.post("/orders", data),
-  getMyOrders: (params) => api.get("/orders", { params }),
+  getMyOrders: () => api.get("/orders"),
   getOrderById: (id) => api.get(`/orders/${id}`),
-  cancelOrder: (id) => api.put(`/orders/${id}/cancel`),
-  returnOrder: (id, data) => api.post(`/orders/${id}/return`, data),
+  getOrderDetail: (id) => api.get(`/orders/${id}`),
+  cancelOrder: (id, data) => api.put(`/orders/${id}/cancel`, data),
 };
 
 export default orderService;

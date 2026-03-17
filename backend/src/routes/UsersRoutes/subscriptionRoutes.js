@@ -1,5 +1,5 @@
 import { Router } from "express";
-import authenticate from "../middleware/authMiddleware.js";
+import authenticate from "../../middleware/authMiddleware.js";
 import {
   getPlans,
   getMySubscriptions,
@@ -7,7 +7,7 @@ import {
   togglePause,
   cancelSubscription,
   getSubscriptionOrders,
-} from "../controllers/subscriptionController.js";
+} from "../../controllers/UsersControllers/subscriptionController.js";
 
 const router = Router();
 

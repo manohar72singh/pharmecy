@@ -1,12 +1,12 @@
 import { Router } from "express";
-import authenticate from "../middleware/authMiddleware.js";
+import authenticate from "../../middleware/authMiddleware.js";
 import multer from "multer";
 import path from "path";
 import {
   getMyPrescriptions,
   uploadPrescription,
   deletePrescription,
-} from "../controllers/prescriptionController.js";
+} from "../../controllers/UsersControllers/prescriptionController.js";
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/prescriptions/"),

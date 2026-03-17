@@ -1,5 +1,5 @@
-import pool from "../config/db.js";
-import { success, error, paginated } from "../utils/response.js";
+import pool from "../../config/db.js";
+import { success, error, paginated } from "../../utils/response.js";
 
 // ── Image JOIN helper ─────────────────────────────────
 const IMAGE_JOIN = `

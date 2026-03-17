@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Pagination from "../../components/common/Pagination";
 import { Link } from "react-router-dom";
 import api from "../../services/api";
 
@@ -34,6 +35,8 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [ordersPage, setOrdersPage] = useState(1);
+  const ORDERS_PER_PAGE = 5;
 
   useEffect(() => {
     const load = async () => {
@@ -149,32 +152,49 @@ export default function Dashboard() {
               Koi order nahi
             </div>
           ) : (
-            <div className="divide-y divide-gray-50">
-              {recentOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center gap-3 px-5 py-3"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900">
-                      #{order.order_number}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {order.user_name} ·{" "}
-                      {new Date(order.created_at).toLocaleDateString("en-IN")}
-                    </p>
-                  </div>
-                  <span
-                    className={`text-xs font-bold px-2 py-1 rounded-full ${ORDER_STATUS_COLORS[order.order_status] || "bg-gray-100 text-gray-600"}`}
-                  >
-                    {order.order_status}
-                  </span>
-                  <p className="text-sm font-black text-emerald-600 flex-shrink-0">
-                    ₹{parseFloat(order.total_amount).toFixed(0)}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <>
+              <div className="divide-y divide-gray-50">
+                {recentOrders
+                  .slice(
+                    (ordersPage - 1) * ORDERS_PER_PAGE,
+                    ordersPage * ORDERS_PER_PAGE,
+                  )
+                  .map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex items-center gap-3 px-5 py-3"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-900">
+                          #{order.order_number}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {order.user_name} ·{" "}
+                          {new Date(order.created_at).toLocaleDateString(
+                            "en-IN",
+                          )}
+                        </p>
+                      </div>
+                      <span
+                        className={`text-xs font-bold px-2 py-1 rounded-full ${ORDER_STATUS_COLORS[order.order_status] || "bg-gray-100 text-gray-600"}`}
+                      >
+                        {order.order_status}
+                      </span>
+                      <p className="text-sm font-black text-emerald-600 flex-shrink-0">
+                        ₹{parseFloat(order.total_amount).toFixed(0)}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+              <div className="px-5 pb-3">
+                <Pagination
+                  page={ordersPage}
+                  total={recentOrders.length}
+                  limit={ORDERS_PER_PAGE}
+                  onPageChange={setOrdersPage}
+                />
+              </div>
+            </>
           )}
         </div>
 

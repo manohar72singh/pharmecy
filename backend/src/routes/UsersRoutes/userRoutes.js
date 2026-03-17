@@ -1,5 +1,5 @@
 import { Router } from "express";
-import authenticate from "../middleware/authMiddleware.js";
+import authenticate from "../../middleware/authMiddleware.js";
 import multer from "multer";
 import path from "path";
 import {
@@ -7,7 +7,7 @@ import {
   updateProfile,
   uploadProfilePhoto,
   changePassword,
-} from "../controllers/userController.js";
+} from "../../controllers/UsersControllers/userController.js";
 
 // Multer config — profile photos
 const storage = multer.diskStorage({

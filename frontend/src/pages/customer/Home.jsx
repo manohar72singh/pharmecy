@@ -463,7 +463,7 @@ export default function Home() {
       </section>
 
       {/* ── FOOTER ────────────────────────────────────── */}
-      <footer className="bg-gray-900 text-gray-400 py-10">
+      {/* <footer className="bg-gray-900 text-gray-400 py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-8">
             <div>
@@ -524,7 +524,7 @@ export default function Home() {
             © 2024 MediShop. All rights reserved. | Licensed Pharmacy
           </div>
         </div>
-      </footer>
+      </footer> */}
     </div>
   );
 }

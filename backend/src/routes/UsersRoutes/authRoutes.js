@@ -6,8 +6,8 @@ import {
   resendOTP,
   getMe,
   changePassword,
-} from "../controllers/authController.js";
-import authenticate from "../middleware/authMiddleware.js";
+} from "../../controllers/UsersControllers//authController.js";
+import authenticate from "../../middleware/authMiddleware.js";
 
 const router = Router();
 

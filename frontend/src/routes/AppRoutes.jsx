@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import CartToast from "../components/common/CartToast";
-
+import Footer from "../components/common/Footer";
 // ── Auth Pages
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -53,6 +53,14 @@ const Layout = ({ children }) => (
   <>
     <Navbar />
     {children}
+    <Footer />
+  </>
+);
+// Sirf Navbar, no Footer (auth pages)
+const AuthLayout = ({ children }) => (
+  <>
+    <Navbar />
+    {children}
   </>
 );
 
@@ -89,25 +97,25 @@ export default function AppRoutes() {
         <Route
           path="/login"
           element={
-            <Layout>
+            <AuthLayout>
               <Login />
-            </Layout>
+            </AuthLayout>
           }
         />
         <Route
           path="/register"
           element={
-            <Layout>
+            <AuthLayout>
               <Register />
-            </Layout>
+            </AuthLayout>
           }
         />
         <Route
           path="/verify-otp"
           element={
-            <Layout>
+            <AuthLayout>
               <OtpVerify />
-            </Layout>
+            </AuthLayout>
           }
         />
         <Route

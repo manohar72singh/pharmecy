@@ -1,5 +1,5 @@
-import pool from "../config/db.js";
-import { success, error } from "../utils/response.js";
+import pool from "../../config/db.js";
+import { success, error } from "../../utils/response.js";
 
 // ── Get all plans (public) ────────────────────────────
 export const getPlans = async (req, res) => {

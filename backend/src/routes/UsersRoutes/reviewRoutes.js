@@ -1,10 +1,10 @@
 import { Router } from "express";
-import authenticate from "../middleware/authMiddleware.js";
+import authenticate from "../../middleware/authMiddleware.js";
 import {
   getMedicineReviews,
   addReview,
   deleteReview,
-} from "../controllers/reviewController.js";
+} from "../../controllers/UsersControllers/reviewController.js";
 
 const router = Router();
 router.get("/medicine/:medicine_id", getMedicineReviews); // Public

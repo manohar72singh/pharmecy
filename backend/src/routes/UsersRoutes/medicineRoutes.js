@@ -4,7 +4,7 @@ import {
   getMedicineById,
   getFeaturedMedicines,
   getCategories,
-} from "../controllers/medicineController.js";
+} from "../../controllers/UsersControllers/medicineController.js";
 
 const router = Router();
 

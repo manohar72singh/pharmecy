@@ -9,7 +9,7 @@ export default function AdminMedicines() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const LIMIT = 15;
+  const LIMIT = 10;
 
   const load = async () => {
     setLoading(true);

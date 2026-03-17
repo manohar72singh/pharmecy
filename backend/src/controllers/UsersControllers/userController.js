@@ -1,8 +1,8 @@
-import pool from "../config/db.js";
+import pool from "../../config/db.js";
 import bcrypt from "bcryptjs";
 import path from "path";
 import fs from "fs";
-import { success, error } from "../utils/response.js";
+import { success, error } from "../../utils/response.js";
 
 // ── Get Profile ───────────────────────────────────────
 export const getProfile = async (req, res) => {

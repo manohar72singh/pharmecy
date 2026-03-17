@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
-import pool from "../config/db.js";
-import { generateToken } from "../utils/jwt.js";
-import { generateOTP, getOTPExpiry } from "../utils/otp.js";
-import { success, error } from "../utils/response.js";
+import pool from "../../config/db.js";
+import { generateToken } from "../../utils/jwt.js";
+import { generateOTP, getOTPExpiry } from "../../utils/otp.js";
+import { success, error } from "../../utils/response.js";
 
 // ── Register ──────────────────────────────────────────
 export const register = async (req, res) => {

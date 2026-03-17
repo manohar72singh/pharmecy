@@ -1,10 +1,10 @@
 import { Router } from "express";
-import authenticate from "../middleware/authMiddleware.js";
+import authenticate from "../../middleware/authMiddleware.js";
 import {
   getWishlist,
   toggleWishlist,
   removeFromWishlist,
-} from "../controllers/wishlistController.js";
+} from "../../controllers/UsersControllers/wishlistController.js";
 
 const router = Router();
 router.use(authenticate);

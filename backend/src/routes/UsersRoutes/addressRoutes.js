@@ -1,12 +1,12 @@
 import { Router } from "express";
-import authenticate from "../middleware/authMiddleware.js";
+import authenticate from "../../middleware/authMiddleware.js";
 import {
   getAddresses,
   addAddress,
   updateAddress,
   deleteAddress,
   setDefaultAddress,
-} from "../controllers/addressControlle.js";
+} from "../../controllers/UsersControllers/addressControlle.js";
 
 const router = Router();
 router.use(authenticate);

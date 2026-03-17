@@ -1,10 +1,10 @@
 import { Router } from "express";
-import authenticate from "../middleware/authMiddleware.js";
+import authenticate from "../../middleware/authMiddleware.js";
 import {
   getNotifications,
   markRead,
   markOneRead,
-} from "../controllers/notificationController.js";
+} from "../../controllers/UsersControllers/notificationController.js";
 
 const router = Router();
 router.use(authenticate);

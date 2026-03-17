@@ -1,5 +1,5 @@
-import pool from "../config/db.js";
-import { success, error } from "../utils/response.js";
+import pool from "../../config/db.js";
+import { success, error } from "../../utils/response.js";
 
 // ── Get My Prescriptions ──────────────────────────────
 export const getMyPrescriptions = async (req, res) => {

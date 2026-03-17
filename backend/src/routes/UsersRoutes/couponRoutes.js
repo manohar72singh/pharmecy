@@ -13,11 +13,11 @@
 // export default router;
 
 import { Router } from "express";
-import authenticate from "../middleware/authMiddleware.js";
+import authenticate from "../../middleware/authMiddleware.js";
 import {
   getActiveCoupons,
   applyCoupon,
-} from "../controllers/couponController.js";
+} from "../../controllers/UsersControllers/couponController.js";
 
 // Optional auth middleware
 const optionalAuth = (req, res, next) => {

@@ -3,8 +3,8 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import medicineService from "../../services/medicineService";
 import MedicineImage from "../../components/common/MedicineImage";
 import cartService, { localCart } from "../../services/cartService"; // ✅ add
-import { showCartToast } from "../../components/common/CartToast"; // ✅ add
 import ReviewSection from "../../components/common/ReviewSection"; // ✅ NEW
+import { useToast } from "../../context/ToastContext";
 
 // ── Schedule Badge ────────────────────────────────────
 const ScheduleBadge = ({ code }) => {
@@ -46,6 +46,7 @@ const Skeleton = () => (
 );
 
 export default function MedicineDetail() {
+  const { showCartToast } = useToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [med, setMed] = useState(null);

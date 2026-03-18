@@ -45,9 +45,7 @@ export default function Prescription() {
   const [deleteId, setDeleteId] = useState(null);
   const [viewImg, setViewImg] = useState(null);
 
-  const API_URL =
-    import.meta.env.VITE_API_URL?.replace("/api", "") ||
-    "http://localhost:5000";
+  const API_URL = import.meta.env.VITE_API_URL?.replace("/api", "");
 
   useEffect(() => {
     prescriptionService

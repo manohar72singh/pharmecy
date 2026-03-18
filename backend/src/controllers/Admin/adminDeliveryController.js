@@ -21,7 +21,7 @@ export const getDeliveryOrders = async (req, res) => {
       `SELECT o.id, o.order_number, o.order_status, o.total_amount, o.created_at,
               u.name AS user_name, u.phone AS user_phone,
               ca.address_line1, ca.city, ca.pincode,
-              da.delivery_boy_id,
+              da.delivery_boy_id, da.delivery_otp, da.otp_verified,
               db_user.name AS delivery_boy_name
        FROM orders o
        JOIN users u ON o.user_id = u.id
@@ -35,10 +35,11 @@ export const getDeliveryOrders = async (req, res) => {
       [...params, parseInt(limit), parseInt(offset)],
     );
 
+    // ✅ Sab delivery boys — online + offline dono
     const [deliveryBoys] = await pool.query(
       `SELECT db.id, u.name, db.is_available
        FROM delivery_boys db JOIN users u ON db.user_id = u.id
-       WHERE db.is_available = 1`,
+       ORDER BY db.is_available DESC, u.name ASC`,
     );
 
     return success(
@@ -63,26 +64,58 @@ export const assignDelivery = async (req, res) => {
     const { delivery_boy_id } = req.body;
     const { order_id } = req.params;
 
+    if (!delivery_boy_id) return error(res, "Delivery boy select karo.", 400);
+
+    // ✅ 6 digit OTP generate
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
     const [existing] = await pool.query(
       "SELECT id FROM delivery_assignments WHERE order_id = ?",
       [order_id],
     );
+
     if (existing.length) {
       await pool.query(
-        "UPDATE delivery_assignments SET delivery_boy_id = ? WHERE order_id = ?",
-        [delivery_boy_id, order_id],
+        `UPDATE delivery_assignments 
+         SET delivery_boy_id = ?, delivery_otp = ?, otp_verified = 0 
+         WHERE order_id = ?`,
+        [delivery_boy_id, otp, order_id],
       );
     } else {
       await pool.query(
-        "INSERT INTO delivery_assignments (order_id, delivery_boy_id) VALUES (?, ?)",
-        [order_id, delivery_boy_id],
+        `INSERT INTO delivery_assignments 
+         (order_id, delivery_boy_id, delivery_otp, otp_verified) 
+         VALUES (?, ?, ?, 0)`,
+        [order_id, delivery_boy_id, otp],
       );
     }
+
     await pool.query(
       "UPDATE orders SET order_status = 'out_for_delivery' WHERE id = ?",
       [order_id],
     );
-    return success(res, {}, "Delivery assigned.");
+
+    await pool.query(
+      "INSERT INTO order_status_history (order_id, status, updated_by) VALUES (?, ?, ?)",
+      [order_id, "out_for_delivery", req.user.id],
+    );
+
+    // Delivery boy ka naam lo
+    const [dbUser] = await pool.query(
+      `SELECT u.name FROM delivery_boys db 
+       JOIN users u ON db.user_id = u.id 
+       WHERE db.id = ?`,
+      [delivery_boy_id],
+    );
+
+    return success(
+      res,
+      {
+        delivery_otp: otp,
+        delivery_boy_name: dbUser[0]?.name,
+      },
+      "Delivery assigned. OTP generated ✅",
+    );
   } catch (err) {
     console.error(err);
     return error(res, "Assign failed.", 500);

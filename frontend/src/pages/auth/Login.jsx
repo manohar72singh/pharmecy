@@ -37,6 +37,8 @@ export default function Login() {
       const role = data.data.user.role;
       if (role === "admin" || role === "super_admin" || role === "pharmacist") {
         navigate("/admin/dashboard");
+      } else if (role === "delivery_boy") {
+        navigate("/delivery"); // ✅ NEW
       } else {
         navigate(from);
       }

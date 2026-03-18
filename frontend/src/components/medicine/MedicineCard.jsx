@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import MedicineImage from "../common/MedicineImage";
 import cartService, { localCart } from "../../services/cartService";
 import wishlistService from "../../services/wishlistService";
-import { showCartToast } from "../common/CartToast";
-
+import { useToast } from "../../context/ToastContext";
 const ScheduleBadge = ({ code }) => {
   const colors = {
     OTC: "bg-green-100 text-green-700",
@@ -21,6 +20,7 @@ const ScheduleBadge = ({ code }) => {
 };
 
 export default function MedicineCard({ med }) {
+  const { showCartToast } = useToast();
   const [added, setAdded] = useState(false);
   const [cartError, setCartError] = useState(null);
   const [wishlisted, setWishlisted] = useState(false);

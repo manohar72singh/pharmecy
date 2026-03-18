@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
-import CartToast from "../components/common/CartToast";
 import Footer from "../components/common/Footer";
 // ── Auth Pages
 import Login from "../pages/auth/Login";
@@ -40,6 +39,12 @@ import AdminSubscriptions from "../pages/admin/Subscriptions";
 import AdminReports from "../pages/admin/Reports";
 import AdminCoupons from "../pages/admin/Coupons";
 
+// ── Delivery Pages
+import DeliveryDashboard from "../pages/delivery/DeliveryDashboard";
+import DeliveryHistory from "../pages/delivery/DeliveryHistory";
+import DeliveryOrders from "../pages/delivery/DeliveryOrders";
+import DeliveryOrderDetail from "../pages/delivery/DeliveryOrderDetail";
+
 // ── Protected Route Helper
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -67,7 +72,6 @@ const AuthLayout = ({ children }) => (
 export default function AppRoutes() {
   return (
     <>
-      <CartToast />
       <Routes>
         {/* ── Public Routes ── */}
         <Route
@@ -356,7 +360,39 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
+        {/* ── Delivery Boy Protected Routes ── ✅ NEW */}
+        <Route
+          path="/delivery"
+          element={
+            <ProtectedRoute allowedRoles={["delivery_boy"]}>
+              <DeliveryDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/delivery/orders"
+          element={
+            <ProtectedRoute allowedRoles={["delivery_boy"]}>
+              <DeliveryOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/delivery/orders/:id"
+          element={
+            <ProtectedRoute allowedRoles={["delivery_boy"]}>
+              <DeliveryOrderDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/delivery/history"
+          element={
+            <ProtectedRoute allowedRoles={["delivery_boy"]}>
+              <DeliveryHistory />
+            </ProtectedRoute>
+          }
+        />
         {/* ── 404 ── */}
         <Route
           path="*"

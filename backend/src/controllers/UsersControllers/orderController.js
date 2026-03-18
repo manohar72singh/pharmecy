@@ -20,7 +20,7 @@ export const placeOrder = async (req, res) => {
       address_id,
       payment_mode,
       coupon_id = null,
-      discount_amount: clientDiscount = 0, // ✅ Frontend se aaya discount
+      discount_amount: clientDiscount = 0,
       notes = null,
     } = req.body;
 
@@ -31,14 +31,12 @@ export const placeOrder = async (req, res) => {
     if (!validModes.includes(payment_mode))
       return error(res, "Invalid payment mode.", 400);
 
-    // Address verify
     const [addr] = await conn.query(
       "SELECT id FROM customer_addresses WHERE id = ? AND user_id = ?",
       [address_id, userId],
     );
     if (addr.length === 0) return error(res, "Address nahi mila.", 404);
 
-    // Cart items fetch
     const [cartItems] = await conn.query(
       `SELECT ci.id, ci.medicine_id, ci.batch_id, ci.quantity,
               mb.selling_price, mb.mrp, mb.available_quantity, m.name
@@ -51,7 +49,6 @@ export const placeOrder = async (req, res) => {
 
     if (cartItems.length === 0) return error(res, "Cart khali hai.", 400);
 
-    // Stock check + subtotal
     let subtotal = 0;
     for (const item of cartItems) {
       if (item.available_quantity < item.quantity)
@@ -59,9 +56,6 @@ export const placeOrder = async (req, res) => {
       subtotal += parseFloat(item.selling_price) * item.quantity;
     }
 
-    // ── Coupon Discount ───────────────────────────────
-    // Frontend se aaya discount use karo (already validated)
-    // Agar nahi aaya to backend se calculate karo
     let discountAmount = parseFloat(clientDiscount) || 0;
 
     if (coupon_id && discountAmount === 0) {
@@ -72,23 +66,19 @@ export const placeOrder = async (req, res) => {
       if (coupon.length > 0) {
         const dtype = (coupon[0].discount_type || "").toLowerCase();
         const dvalue = parseFloat(coupon[0].discount_value) || 0;
-
         if (dtype === "flat") {
           discountAmount = dvalue;
         } else {
-          // 'percent' ya koi bhi aur value
           discountAmount = parseFloat(((subtotal * dvalue) / 100).toFixed(2));
         }
         discountAmount = Math.min(discountAmount, subtotal);
       }
     }
 
-    // Delivery + Tax + Total
     const deliveryCharge = subtotal >= 299 ? 0 : 49;
     const taxAmount = 0;
     const totalAmount = subtotal - discountAmount + deliveryCharge + taxAmount;
 
-    // Order insert
     const orderNumber = generateOrderNumber();
     const [orderResult] = await conn.query(
       `INSERT INTO orders
@@ -111,7 +101,6 @@ export const placeOrder = async (req, res) => {
     );
     const orderId = orderResult.insertId;
 
-    // Coupon usage track
     if (coupon_id) {
       await conn.query(
         "INSERT INTO coupon_usage (coupon_id, user_id, order_id) VALUES (?, ?, ?)",
@@ -119,7 +108,6 @@ export const placeOrder = async (req, res) => {
       );
     }
 
-    // Order items + stock deduct
     for (const item of cartItems) {
       const itemTotal = parseFloat(item.selling_price) * item.quantity;
       await conn.query(
@@ -140,13 +128,11 @@ export const placeOrder = async (req, res) => {
       );
     }
 
-    // Status history
     await conn.query(
       "INSERT INTO order_status_history (order_id, status, updated_by) VALUES (?, ?, ?)",
       [orderId, "placed", userId],
     );
 
-    // Cart clear
     await conn.query("DELETE FROM cart WHERE user_id = ?", [userId]);
 
     await conn.commit();
@@ -203,9 +189,11 @@ export const getOrderDetail = async (req, res) => {
       `SELECT o.*,
               ca.full_name, ca.phone AS addr_phone,
               ca.address_line1, ca.address_line2,
-              ca.city, ca.state, ca.pincode
+              ca.city, ca.state, ca.pincode,
+              da.delivery_otp, da.otp_verified
        FROM orders o
        JOIN customer_addresses ca ON o.address_id = ca.id
+       LEFT JOIN delivery_assignments da ON da.order_id = o.id
        WHERE o.id = ? AND o.user_id = ?`,
       [id, req.user.id],
     );
@@ -263,7 +251,6 @@ export const cancelOrder = async (req, res) => {
         400,
       );
 
-    // Stock wapas
     const [items] = await conn.query(
       "SELECT batch_id, quantity FROM order_items WHERE order_id = ?",
       [id],

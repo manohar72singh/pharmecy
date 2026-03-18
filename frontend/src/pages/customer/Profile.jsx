@@ -21,7 +21,7 @@ const GENDER_OPTIONS = [
 export default function Profile() {
   const navigate = useNavigate();
   const photoRef = useRef();
-  const showToast = useToast();
+  const { showToast } = useToast();
 
   const [tab, setTab] = useState("info");
   const [profile, setProfile] = useState(null);
@@ -552,7 +552,7 @@ export default function Profile() {
                     onSave={(saved, allAddrs) => {
                       setAddresses(allAddrs);
                       setShowNewAddr(false);
-                      showMsg("success", "Address add ho gaya! ✅");
+                      // showMsg("success", "Address add ho gaya! ✅");
                     }}
                     onCancel={() => setShowNewAddr(false)}
                     showCancel={true}

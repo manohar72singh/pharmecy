@@ -38,7 +38,7 @@ const STATES = [
 // onCancel() — form band karo
 export default function AddressForm({ onSave, onCancel, showCancel = true }) {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-
+  const { showToast } = useToast(); // ✅ Fix 1: destructure kiya, duplicate hataya
   const [form, setForm] = useState({
     full_name: user?.name || "",
     phone: "",
@@ -49,7 +49,6 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
     pincode: "",
     is_default: false,
   });
-  const showToast = useToast();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -70,11 +69,14 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
 
     setSaving(true);
     try {
-      const { data } = await addressService.add(form);
+      const addRes = await addressService.add(form); // ✅ Fix 2: addRes rakha
+      const newId = addRes.data?.data?.id || addRes.data?.id; // ✅ Fix 2: dono cases handle
+
       const res = await addressService.getAll();
-      const allAddrs = res.data.data || [];
-      const saved = allAddrs.find((a) => a.id === data.data?.id) || allAddrs[0];
-      showToast("Address save ho gaya! 📍", "success");
+      const allAddrs = res.data?.data || res.data || []; // ✅ Fix 2: fallback
+      const saved = allAddrs.find((a) => a.id === newId) || allAddrs[0];
+
+      showToast("Address save ho gaya! 📍", "success"); // ✅ Ab sahi kaam karega
       onSave?.(saved, allAddrs);
     } catch (err) {
       setError(

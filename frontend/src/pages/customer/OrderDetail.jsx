@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import MedicineImage from "../../components/common/MedicineImage";
 import ReviewModal from "../../components/common/ReviewModal";
 import orderService from "../../services/orderService";
-import reviewService from "../../services/reviewService";
+import reviewService from "../../services/reviewservice";
 
 const STATUS_CONFIG = {
   placed: {
@@ -62,7 +62,6 @@ const STATUS_CONFIG = {
   },
 };
 
-// Order tracking steps
 const TRACKING_STEPS = [
   { key: "placed", label: "Order Placed", icon: "📦" },
   { key: "confirmed", label: "Confirmed", icon: "✅" },
@@ -105,8 +104,8 @@ export default function OrderDetail() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
-  const [reviewItem, setReviewItem] = useState(null); // item being reviewed
-  const [reviewed, setReviewed] = useState([]); // reviewed medicine_ids
+  const [reviewItem, setReviewItem] = useState(null);
+  const [reviewed, setReviewed] = useState([]);
   const [showCancel, setShowCancel] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [error, setError] = useState("");
@@ -121,18 +120,15 @@ export default function OrderDetail() {
         setItems(itemsData);
         setHistory(data.data.history || []);
 
-        // Agar delivered hai to check karo kaunsi medicines already reviewed hain
         if (orderData.order_status === "delivered") {
           const user = JSON.parse(localStorage.getItem("user") || "null");
           if (user) {
-            // Har medicine ke reviews fetch karo aur check karo user ne diya hai kya
             const reviewChecks = await Promise.all(
               itemsData.map((item) =>
                 reviewService
                   .getByMedicine(item.medicine_id)
                   .then((res) => {
                     const reviews = res.data.data || [];
-                    // Is order se review diya hai?
                     const alreadyReviewed = reviews.some(
                       (r) =>
                         r.user_id === user.id && r.order_id === parseInt(id),
@@ -176,7 +172,6 @@ export default function OrderDetail() {
 
   const currentStepIdx = STATUS_ORDER.indexOf(order?.order_status);
 
-  // ── Loading ───────────────────────────────────────
   if (loading)
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -268,8 +263,6 @@ export default function OrderDetail() {
                 </p>
               )}
             </div>
-
-            {/* Cancel Button */}
             {["placed", "confirmed"].includes(order.order_status) && (
               <button
                 onClick={() => setShowCancel(true)}
@@ -280,7 +273,6 @@ export default function OrderDetail() {
             )}
           </div>
 
-          {/* Cancellation reason */}
           {order.order_status === "cancelled" && order.cancellation_reason && (
             <div className="mt-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">
               <strong>Cancel Reason:</strong> {order.cancellation_reason}
@@ -288,12 +280,48 @@ export default function OrderDetail() {
           )}
         </div>
 
+        {/* ✅ NEW — OTP Card — Out for Delivery pe dikhega */}
+        {order.order_status === "out_for_delivery" &&
+          order.delivery_otp &&
+          !order.otp_verified && (
+            <div className="bg-white rounded-2xl border-2 border-emerald-300 p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-xl">
+                  🚴
+                </div>
+                <div>
+                  <h3 className="font-black text-gray-900">Delivery OTP</h3>
+                  <p className="text-xs text-gray-400">
+                    Delivery boy ko yeh OTP do — iske baad order deliver hoga
+                  </p>
+                </div>
+              </div>
+              {/* OTP Boxes */}
+              <div className="flex gap-2 justify-center my-4">
+                {order.delivery_otp
+                  .toString()
+                  .split("")
+                  .map((digit, idx) => (
+                    <div
+                      key={idx}
+                      className="w-12 h-14 rounded-xl bg-emerald-50 border-2 border-emerald-300 flex items-center justify-center text-2xl font-black text-emerald-700"
+                    >
+                      {digit}
+                    </div>
+                  ))}
+              </div>
+              <p className="text-xs text-center text-gray-400 mt-2">
+                ⚠️ Yeh OTP sirf delivery complete karne ke liye hai — kisi aur
+                ko mat batao
+              </p>
+            </div>
+          )}
+
         {/* ── Order Tracking ── */}
         {!["cancelled", "returned"].includes(order.order_status) && (
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <h3 className="font-bold text-gray-900 mb-5">📍 Order Tracking</h3>
             <div className="relative">
-              {/* Progress Line */}
               <div
                 className="absolute top-5 left-5 right-5 h-0.5 bg-gray-100"
                 style={{ zIndex: 0 }}
@@ -308,7 +336,6 @@ export default function OrderDetail() {
                   }}
                 />
               </div>
-
               <div
                 className="relative flex justify-between"
                 style={{ zIndex: 1 }}
@@ -580,7 +607,6 @@ export default function OrderDetail() {
             <p className="text-sm text-gray-400 mb-4">
               Cancel karne ke baad wapas nahi le sakte.
             </p>
-
             <div className="mb-4">
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 Cancel Reason (optional)
@@ -608,13 +634,11 @@ export default function OrderDetail() {
                 </option>
               </select>
             </div>
-
             {error && (
               <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg mb-3">
                 ⚠️ {error}
               </p>
             )}
-
             <div className="flex gap-3">
               <button
                 onClick={() => {
@@ -636,6 +660,7 @@ export default function OrderDetail() {
           </div>
         </div>
       )}
+
       {/* Review Modal */}
       {reviewItem && (
         <ReviewModal

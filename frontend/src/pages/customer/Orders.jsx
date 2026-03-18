@@ -108,7 +108,6 @@ export default function Orders() {
   const filtered =
     filter === "all" ? orders : orders.filter((o) => o.order_status === filter);
 
-  // ── Loading ───────────────────────────────────────
   if (loading)
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -252,7 +251,6 @@ export default function Orders() {
                       </p>
                     </div>
                   </div>
-
                   {/* Payment */}
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">
@@ -278,7 +276,6 @@ export default function Orders() {
                       </div>
                     </div>
                   </div>
-
                   {/* Total */}
                   <div>
                     <p className="text-xs text-gray-400">Total</p>
@@ -318,16 +315,25 @@ export default function Orders() {
                 </div>
               </div>
 
-              {/* Status Banners */}
+              {/* ── Status Banners ── */}
               {order.order_status === "delivered" && (
                 <div className="px-5 py-2.5 bg-green-50 border-t border-green-100 text-xs font-semibold text-green-700">
                   🎉 Delivered successfully!
                 </div>
               )}
+              {/* ✅ NEW — OTP Banner for out_for_delivery */}
               {order.order_status === "out_for_delivery" && (
-                <div className="px-5 py-2.5 bg-blue-50 border-t border-blue-100 text-xs font-semibold text-blue-700">
-                  🚴 Delivery boy raaste mein hai — thodi der mein pahunch
-                  jaayega!
+                <div className="px-5 py-3 bg-emerald-50 border-t border-emerald-100 flex items-center justify-between gap-3 flex-wrap">
+                  <p className="text-xs font-semibold text-emerald-700">
+                    🚴 Delivery boy raaste mein hai — thodi der mein pahunch
+                    jaayega!
+                  </p>
+                  <Link
+                    to={`/orders/${order.id}`}
+                    className="text-xs font-black text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition"
+                  >
+                    🔐 OTP Dekho →
+                  </Link>
                 </div>
               )}
               {order.order_status === "cancelled" && (

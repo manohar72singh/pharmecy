@@ -24,6 +24,8 @@ import Wallet from "../pages/customer/Wallet"; // ✅ NEW
 
 // ── Admin Layout
 import AdminLayout from "../pages/admin/AdminLayout";
+// delevery layout
+import DeliveryLayout from "../pages/delivery/DeliveryLayout";
 
 // ── Admin Pages
 import Dashboard from "../pages/admin/Dashboard";
@@ -365,7 +367,9 @@ export default function AppRoutes() {
           path="/delivery"
           element={
             <ProtectedRoute allowedRoles={["delivery_boy"]}>
-              <DeliveryDashboard />
+              <DeliveryLayout>
+                <DeliveryDashboard />
+              </DeliveryLayout>
             </ProtectedRoute>
           }
         />
@@ -373,7 +377,9 @@ export default function AppRoutes() {
           path="/delivery/orders"
           element={
             <ProtectedRoute allowedRoles={["delivery_boy"]}>
-              <DeliveryOrders />
+              <DeliveryLayout>
+                <DeliveryOrders />
+              </DeliveryLayout>
             </ProtectedRoute>
           }
         />
@@ -381,7 +387,9 @@ export default function AppRoutes() {
           path="/delivery/orders/:id"
           element={
             <ProtectedRoute allowedRoles={["delivery_boy"]}>
-              <DeliveryOrderDetail />
+              <DeliveryLayout>
+                <DeliveryOrderDetail />
+              </DeliveryLayout>
             </ProtectedRoute>
           }
         />
@@ -389,7 +397,9 @@ export default function AppRoutes() {
           path="/delivery/history"
           element={
             <ProtectedRoute allowedRoles={["delivery_boy"]}>
-              <DeliveryHistory />
+              <DeliveryLayout>
+                <DeliveryHistory />
+              </DeliveryLayout>
             </ProtectedRoute>
           }
         />

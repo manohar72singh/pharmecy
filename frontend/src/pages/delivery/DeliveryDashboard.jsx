@@ -1,30 +1,27 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import deliveryService from "../../services/deliveryService";
-import { useToast } from "../../context/ToastContext";
 
 export default function DeliveryDashboard() {
-  const navigate = useNavigate();
-  const { showToast } = useToast();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-
   const [profile, setProfile] = useState(null);
   const [earnings, setEarnings] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+  const [msg, setMsg] = useState("");
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [profileRes, earningsRes, ordersRes] = await Promise.all([
+        const [p, e, o] = await Promise.all([
           deliveryService.getProfile(),
           deliveryService.getEarnings(),
           deliveryService.getAssignedOrders(),
         ]);
-        setProfile(profileRes.data.data);
-        setEarnings(earningsRes.data.data);
-        setOrders(ordersRes.data.data?.orders || []);
+        setProfile(p.data.data);
+        setEarnings(e.data.data);
+        setOrders(o.data.data?.orders || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -39,9 +36,10 @@ export default function DeliveryDashboard() {
     try {
       const { data } = await deliveryService.toggleAvailability();
       setProfile((prev) => ({ ...prev, is_available: data.data.is_available }));
-      showToast(data.message, "success");
+      setMsg(data.message);
+      setTimeout(() => setMsg(""), 2500);
     } catch (err) {
-      showToast("Update failed.", "error", err);
+      console.error(err);
     } finally {
       setToggling(false);
     }
@@ -49,10 +47,10 @@ export default function DeliveryDashboard() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center py-32">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Dashboard load ho raha hai...</p>
+          <div className="w-14 h-14 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-emerald-700 font-semibold text-sm">Loading...</p>
         </div>
       </div>
     );
@@ -60,191 +58,210 @@ export default function DeliveryDashboard() {
   const pendingOrders = orders.filter((o) => !o.otp_verified);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-black text-gray-900">
-                👋 Namaste, {user?.name?.split(" ")[0]}!
-              </h1>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {profile?.vehicle_type || "Delivery Boy"} Dashboard
-              </p>
-            </div>
-            {/* Online / Offline Toggle */}
-            <button
-              onClick={handleToggle}
-              disabled={toggling}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all ${
-                profile?.is_available
-                  ? "bg-emerald-50 text-emerald-700 border-2 border-emerald-400"
-                  : "bg-red-50 text-red-500 border-2 border-red-300"
-              }`}
-            >
-              <span
-                className={`w-2.5 h-2.5 rounded-full ${
-                  profile?.is_available ? "bg-emerald-500" : "bg-red-400"
-                } ${toggling ? "" : "animate-pulse"}`}
-              />
-              {toggling
-                ? "..."
-                : profile?.is_available
-                  ? "Online 🟢"
-                  : "Offline 🔴"}
-            </button>
-          </div>
+    <div className="space-y-0">
+      {/* Toast */}
+      {msg && (
+        <div
+          className="fixed top-20 right-4 z-50 px-4 py-2.5 rounded-2xl text-white text-sm font-bold shadow-xl"
+          style={{ background: "linear-gradient(135deg,#065f46,#059669)" }}
+        >
+          {msg}
         </div>
-      </div>
+      )}
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* Hero Banner */}
+      <div
+        className="rounded-3xl p-6 mb-6 relative overflow-hidden shadow-xl"
+        style={{
+          background:
+            "linear-gradient(135deg, #064e3b 0%, #065f46 60%, #059669 100%)",
+        }}
+      >
+        <div
+          className="absolute top-0 right-0 w-40 h-40 rounded-full opacity-10"
+          style={{
+            background: "radial-gradient(circle, #34d399, transparent)",
+            transform: "translate(20%, -20%)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-0 w-32 h-32 rounded-full opacity-10"
+          style={{
+            background: "radial-gradient(circle, #fbbf24, transparent)",
+            transform: "translate(-20%, 20%)",
+          }}
+        />
+
+        <div className="relative flex items-start justify-between">
+          <div>
+            <p className="text-emerald-300 text-sm font-semibold mb-1">
+              👋 Namaste!
+            </p>
+            <h1 className="text-white font-black text-2xl sm:text-3xl leading-tight">
+              {user?.name?.split(" ")[0]}
+            </h1>
+            <p className="text-emerald-400 text-xs mt-1 font-medium capitalize">
+              🛵 {profile?.vehicle_type || "Delivery Boy"}
+            </p>
+          </div>
+
+          {/* Online Toggle */}
+          <button
+            onClick={handleToggle}
+            disabled={toggling}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-sm transition-all shadow-lg ${
+              profile?.is_available
+                ? "bg-emerald-400/20 text-emerald-300 border border-emerald-400/40"
+                : "bg-red-400/20 text-red-300 border border-red-400/40"
+            }`}
+          >
+            <span
+              className={`w-2.5 h-2.5 rounded-full animate-pulse ${profile?.is_available ? "bg-emerald-400" : "bg-red-400"}`}
+            />
+            {toggling ? "..." : profile?.is_available ? "Online" : "Offline"}
+          </button>
+        </div>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-4 gap-3 mt-5">
           {[
-            {
-              label: "Aaj",
-              value: earnings?.today || 0,
-              icon: "📅",
-              color: "text-blue-600",
-              bg: "bg-blue-50",
-            },
-            {
-              label: "Is Hafte",
-              value: earnings?.this_week || 0,
-              icon: "📆",
-              color: "text-purple-600",
-              bg: "bg-purple-50",
-            },
-            {
-              label: "Is Mahine",
-              value: earnings?.this_month || 0,
-              icon: "🗓️",
-              color: "text-amber-600",
-              bg: "bg-amber-50",
-            },
-            {
-              label: "Total",
-              value: earnings?.total || 0,
-              icon: "🏆",
-              color: "text-emerald-600",
-              bg: "bg-emerald-50",
-            },
-          ].map((stat) => (
+            { label: "Aaj", value: earnings?.today || 0 },
+            { label: "Is Hafte", value: earnings?.this_week || 0 },
+            { label: "Is Mahine", value: earnings?.this_month || 0 },
+            { label: "Total", value: earnings?.total || 0 },
+          ].map((s) => (
             <div
-              key={stat.label}
-              className="bg-white rounded-2xl border border-gray-100 p-4 text-center"
+              key={s.label}
+              className="text-center rounded-2xl py-3"
+              style={{ background: "rgba(255,255,255,0.08)" }}
             >
-              <div
-                className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center text-xl mx-auto mb-2`}
-              >
-                {stat.icon}
-              </div>
-              <p className={`text-2xl font-black ${stat.color}`}>
-                {stat.value}
+              <p className="text-white font-black text-xl leading-none">
+                {s.value}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {stat.label} Deliveries
+              <p className="text-emerald-300 text-[10px] font-semibold mt-1">
+                {s.label}
               </p>
             </div>
           ))}
         </div>
+      </div>
 
-        {/* Pending Orders */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-black text-gray-900">
-              🚴 Pending Orders{" "}
-              {pendingOrders.length > 0 && (
-                <span className="ml-2 text-xs font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">
-                  {pendingOrders.length}
-                </span>
-              )}
+      {/* Pending Orders */}
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-5">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+          <div className="flex items-center gap-2">
+            <h2 className="font-black text-gray-900 text-base">
+              🚴 Pending Orders
             </h2>
-            <Link
-              to="/delivery/orders"
-              className="text-xs font-bold text-emerald-600 hover:underline"
-            >
-              Sab Dekho →
-            </Link>
+            {pendingOrders.length > 0 && (
+              <span className="text-xs font-black px-2 py-0.5 rounded-full bg-red-500 text-white">
+                {pendingOrders.length}
+              </span>
+            )}
           </div>
-
-          {pendingOrders.length === 0 ? (
-            <div className="text-center py-10">
-              <div className="text-5xl mb-3">✅</div>
-              <p className="text-gray-500 font-semibold">
-                Koi pending order nahi hai!
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {pendingOrders.slice(0, 3).map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 hover:border-emerald-200 transition"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 text-sm">
-                      #{order.order_number}
-                    </p>
-                    <p className="text-xs text-gray-400 truncate">
-                      {order.user_name} • {order.city}, {order.pincode}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-black text-emerald-600 text-sm">
-                      ₹{parseFloat(order.total_amount).toFixed(2)}
-                    </p>
-                    <p className="text-xs text-gray-400 uppercase">
-                      {order.payment_mode}
-                    </p>
-                  </div>
-                  <Link
-                    to={`/delivery/orders/${order.id}`}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold text-white flex-shrink-0"
-                    style={{
-                      background: "linear-gradient(135deg, #065f46, #059669)",
-                    }}
-                  >
-                    Deliver →
-                  </Link>
-                </div>
-              ))}
-              {pendingOrders.length > 3 && (
-                <Link
-                  to="/delivery/orders"
-                  className="block text-center text-xs font-bold text-emerald-600 hover:underline pt-2"
-                >
-                  +{pendingOrders.length - 3} aur orders dekho
-                </Link>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Quick Links */}
-        <div className="grid grid-cols-2 gap-4">
           <Link
             to="/delivery/orders"
-            className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-emerald-200 hover:shadow-md transition text-center"
+            className="text-xs font-bold text-emerald-600 hover:underline"
           >
-            <div className="text-4xl mb-2">📋</div>
-            <p className="font-bold text-gray-900 text-sm">Assigned Orders</p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {pendingOrders.length} pending
-            </p>
-          </Link>
-          <Link
-            to="/delivery/history"
-            className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-emerald-200 hover:shadow-md transition text-center"
-          >
-            <div className="text-4xl mb-2">📜</div>
-            <p className="font-bold text-gray-900 text-sm">History</p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {earnings?.total || 0} delivered
-            </p>
+            Sab Dekho →
           </Link>
         </div>
+
+        {pendingOrders.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-5xl mb-3">✅</div>
+            <p className="text-gray-500 font-bold text-sm">
+              Koi pending order nahi!
+            </p>
+            <p className="text-gray-400 text-xs mt-1">
+              Aaram karo — agle order ka intezaar karo 😊
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {pendingOrders.slice(0, 3).map((order) => (
+              <div
+                key={order.id}
+                className="flex items-center gap-3 px-5 py-4 hover:bg-gray-50 transition"
+              >
+                <div
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-lg"
+                  style={{
+                    background: "linear-gradient(135deg,#d1fae5,#a7f3d0)",
+                  }}
+                >
+                  📦
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-black text-gray-900 text-sm">
+                    #{order.order_number}
+                  </p>
+                  <p className="text-xs text-gray-400 truncate">
+                    {order.user_name} • {order.city}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0 mr-2">
+                  <p className="font-black text-emerald-600 text-sm">
+                    ₹{parseFloat(order.total_amount).toFixed(0)}
+                  </p>
+                  <p className="text-xs text-gray-400 uppercase">
+                    {order.payment_mode}
+                  </p>
+                </div>
+                <Link
+                  to={`/delivery/orders/${order.id}`}
+                  className="px-3 py-2 rounded-xl text-xs font-black text-white flex-shrink-0"
+                  style={{
+                    background: "linear-gradient(135deg,#065f46,#059669)",
+                  }}
+                >
+                  Deliver →
+                </Link>
+              </div>
+            ))}
+            {pendingOrders.length > 3 && (
+              <div className="px-5 py-3 text-center">
+                <Link
+                  to="/delivery/orders"
+                  className="text-xs font-bold text-emerald-600 hover:underline"
+                >
+                  +{pendingOrders.length - 3} aur orders
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Quick Cards */}
+      <div className="grid grid-cols-2 gap-4">
+        <Link
+          to="/delivery/orders"
+          className="rounded-3xl p-5 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #065f46, #059669)" }}
+        >
+          <div className="absolute top-0 right-0 text-6xl opacity-10 leading-none">
+            📦
+          </div>
+          <div className="text-3xl mb-3">📋</div>
+          <p className="font-black text-white text-base">Orders</p>
+          <p className="text-emerald-300 text-xs mt-0.5 font-semibold">
+            {pendingOrders.length} pending
+          </p>
+        </Link>
+        <Link
+          to="/delivery/history"
+          className="rounded-3xl p-5 shadow-sm hover:shadow-md transition-all relative overflow-hidden bg-white border border-gray-100"
+        >
+          <div className="absolute top-0 right-0 text-6xl opacity-5 leading-none">
+            📜
+          </div>
+          <div className="text-3xl mb-3">📜</div>
+          <p className="font-black text-gray-900 text-base">History</p>
+          <p className="text-gray-400 text-xs mt-0.5 font-semibold">
+            {earnings?.total || 0} delivered
+          </p>
+        </Link>
       </div>
     </div>
   );

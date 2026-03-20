@@ -1,14 +1,22 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import deliveryService from "../../services/deliveryService";
+import Pagination from "../../components/common/Pagination";
 
 const PAYMENT_ICONS = { cod: "💵", online: "💳", upi: "📱", wallet: "👛" };
+const PAYMENT_COLORS = {
+  cod: "bg-amber-50 text-amber-700",
+  online: "bg-blue-50 text-blue-700",
+  upi: "bg-purple-50 text-purple-700",
+  wallet: "bg-emerald-50 text-emerald-700",
+};
 
 export default function DeliveryOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const LIMIT = 15;
 
   useEffect(() => {
     const load = async () => {
@@ -16,9 +24,7 @@ export default function DeliveryOrders() {
       try {
         const { data } = await deliveryService.getAssignedOrders(page);
         setOrders(data.data?.orders || []);
-        setTotalPages(
-          Math.ceil((data.data?.total || 0) / (data.data?.limit || 15)),
-        );
+        setTotal(data.data?.total || 0);
       } catch (err) {
         console.error(err);
       } finally {
@@ -28,196 +34,152 @@ export default function DeliveryOrders() {
     load();
   }, [page]);
 
-  if (loading)
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Orders load ho rahi hain...</p>
-        </div>
-      </div>
-    );
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Breadcrumb */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <Link to="/delivery" className="hover:text-emerald-600 transition">
-              Dashboard
-            </Link>
-            <span>›</span>
-            <span className="text-gray-700 font-medium">Assigned Orders</span>
+    <div>
+      {/* Header */}
+      <div
+        className="rounded-3xl p-5 mb-5 shadow-md"
+        style={{ background: "linear-gradient(135deg,#064e3b,#065f46)" }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-white font-black text-xl">
+              📦 Assigned Orders
+            </h1>
+            <p className="text-emerald-300 text-xs mt-0.5 font-medium">
+              {total} pending deliveries
+            </p>
+          </div>
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
+            style={{ background: "rgba(255,255,255,0.1)" }}
+          >
+            🚴
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900">
-              📋 Assigned Orders
-            </h1>
-            <p className="text-sm text-gray-400 mt-0.5">
-              {orders.length} pending deliveries
-            </p>
-          </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
         </div>
-
-        {/* Empty */}
-        {orders.length === 0 && (
-          <div className="text-center py-20">
-            <div className="text-7xl mb-4">✅</div>
-            <h3 className="text-lg font-black text-gray-800 mb-2">
-              Koi pending order nahi!
-            </h3>
-            <p className="text-gray-400 text-sm">
-              Abhi koi order assign nahi hua hai.
-            </p>
-            <Link
-              to="/delivery"
-              className="inline-block mt-4 text-white font-bold px-6 py-3 rounded-2xl"
-              style={{
-                background: "linear-gradient(135deg, #065f46, #059669)",
-              }}
-            >
-              Dashboard pe Jao
-            </Link>
-          </div>
-        )}
-
-        {/* Orders List */}
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className="bg-white rounded-2xl border border-gray-100 hover:border-emerald-200 hover:shadow-md transition-all overflow-hidden"
-            >
-              {/* Order Header */}
-              <div className="px-5 py-4 flex items-center justify-between gap-4 flex-wrap border-b border-gray-50">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div>
-                    <p className="font-black text-gray-900 text-sm">
-                      #{order.order_number}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {new Date(order.assigned_at).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </p>
+      ) : orders.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-gray-100 text-center py-20 shadow-sm">
+          <div className="text-6xl mb-4">✅</div>
+          <h3 className="text-lg font-black text-gray-800 mb-2">
+            Sab clear hai!
+          </h3>
+          <p className="text-gray-400 text-sm">
+            Abhi koi order assign nahi hua.
+          </p>
+          <Link
+            to="/delivery"
+            className="inline-block mt-4 text-white font-bold px-6 py-3 rounded-2xl text-sm"
+            style={{ background: "linear-gradient(135deg,#065f46,#059669)" }}
+          >
+            Dashboard pe Jao
+          </Link>
+        </div>
+      ) : (
+        <>
+          <div className="space-y-3">
+            {orders.map((order) => (
+              <div
+                key={order.id}
+                className="bg-white rounded-3xl border border-gray-100 hover:border-emerald-300 hover:shadow-md transition-all overflow-hidden"
+              >
+                {/* Top */}
+                <div className="px-5 pt-4 pb-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center text-lg flex-shrink-0"
+                      style={{
+                        background: "linear-gradient(135deg,#d1fae5,#a7f3d0)",
+                      }}
+                    >
+                      📦
+                    </div>
+                    <div>
+                      <p className="font-black text-gray-900 text-sm">
+                        #{order.order_number}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(order.assigned_at).toLocaleDateString(
+                          "en-IN",
+                          { day: "numeric", month: "short" },
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-600">
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600">
                     🚴 Out for Delivery
                   </span>
                 </div>
-                <Link
-                  to={`/delivery/orders/${order.id}`}
-                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition"
-                >
-                  Details →
-                </Link>
-              </div>
 
-              {/* Order Body */}
-              <div className="px-5 py-4">
-                {/* Customer Info */}
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-lg flex-shrink-0">
-                    👤
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 text-sm">
-                      {order.user_name}
-                    </p>
-                    <p className="text-xs text-gray-400">{order.user_phone}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      📍 {order.address_line1}
-                      {order.address_line2 ? `, ${order.address_line2}` : ""}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {order.city}, {order.state} — {order.pincode}
-                    </p>
+                {/* Customer */}
+                <div className="mx-5 mb-3 p-3 rounded-2xl bg-gray-50">
+                  <div className="flex items-start gap-2">
+                    <span className="text-base">👤</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-gray-900 text-sm">
+                        {order.user_name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {order.user_phone}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        📍 {order.address_line1}, {order.city} — {order.pincode}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                {/* Bottom Row */}
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-4 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">
-                        {PAYMENT_ICONS[order.payment_mode] || "💳"}
-                      </span>
-                      <div>
-                        <p className="text-xs text-gray-400">Payment</p>
-                        <p className="font-bold text-gray-900 text-sm uppercase">
-                          {order.payment_mode}
-                        </p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Items</p>
-                      <p className="font-bold text-gray-900 text-sm">
-                        {order.item_count} medicines
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Total</p>
-                      <p className="font-black text-xl text-emerald-600">
-                        ₹{parseFloat(order.total_amount).toFixed(2)}
-                      </p>
-                    </div>
+                {/* Bottom */}
+                <div className="px-5 pb-4 flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`text-xs font-bold px-2.5 py-1 rounded-full ${PAYMENT_COLORS[order.payment_mode] || "bg-gray-100 text-gray-600"}`}
+                    >
+                      {PAYMENT_ICONS[order.payment_mode]}{" "}
+                      {order.payment_mode.toUpperCase()}
+                    </span>
+                    <span className="text-xs text-gray-500 font-semibold">
+                      {order.item_count} items
+                    </span>
+                    <span className="font-black text-emerald-600 text-lg">
+                      ₹{parseFloat(order.total_amount).toFixed(0)}
+                    </span>
                   </div>
-
                   <Link
                     to={`/delivery/orders/${order.id}`}
-                    className="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-transform active:scale-95"
+                    className="px-5 py-2.5 rounded-2xl text-sm font-black text-white shadow-md transition-transform active:scale-95"
                     style={{
-                      background: "linear-gradient(135deg, #065f46, #059669)",
+                      background: "linear-gradient(135deg,#065f46,#059669)",
                     }}
                   >
                     🚴 Deliver Now
                   </Link>
                 </div>
+
+                {order.payment_mode === "cod" && (
+                  <div className="mx-5 mb-4 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100 text-xs font-semibold text-amber-700">
+                    💵 Cash collect karna hai — ₹
+                    {parseFloat(order.total_amount).toFixed(0)}
+                  </div>
+                )}
               </div>
-
-              {/* COD Banner */}
-              {order.payment_mode === "cod" && (
-                <div className="px-5 py-2.5 bg-amber-50 border-t border-amber-100 text-xs font-semibold text-amber-700">
-                  💵 Cash on Delivery — ₹
-                  {parseFloat(order.total_amount).toFixed(2)} collect karna hai
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-3 mt-8">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-4 py-2 rounded-xl font-bold text-sm border-2 border-gray-200 text-gray-500 hover:border-emerald-400 hover:text-emerald-600 disabled:opacity-40 transition"
-            >
-              ← Pehle
-            </button>
-            <span className="text-sm font-bold text-gray-600">
-              {page} / {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-4 py-2 rounded-xl font-bold text-sm border-2 border-gray-200 text-gray-500 hover:border-emerald-400 hover:text-emerald-600 disabled:opacity-40 transition"
-            >
-              Aage →
-            </button>
+            ))}
           </div>
-        )}
-      </div>
+          <div className="mt-4">
+            <Pagination
+              page={page}
+              total={total}
+              limit={LIMIT}
+              onPageChange={setPage}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }

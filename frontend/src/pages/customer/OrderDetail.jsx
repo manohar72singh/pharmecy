@@ -143,7 +143,7 @@ export default function OrderDetail() {
         }
       } catch (err) {
         console.error(err);
-        setError("Order nahi mila.");
+        setError("Order not found.");
       } finally {
         setLoading(false);
       }
@@ -155,7 +155,7 @@ export default function OrderDetail() {
     setCancelling(true);
     try {
       await orderService.cancelOrder(id, {
-        reason: cancelReason || "Customer ne cancel kiya",
+        reason: cancelReason || "Cancelled by customer",
       });
       setOrder({
         ...order,
@@ -164,7 +164,7 @@ export default function OrderDetail() {
       });
       setShowCancel(false);
     } catch (err) {
-      setError(err.response?.data?.message || "Cancel fail hua.");
+      setError(err.response?.data?.message || "Cancellation failed.");
     } finally {
       setCancelling(false);
     }
@@ -177,7 +177,7 @@ export default function OrderDetail() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Order load ho raha hai...</p>
+          <p className="text-gray-500 text-sm">Loading order details...</p>
         </div>
       </div>
     );
@@ -188,13 +188,13 @@ export default function OrderDetail() {
         <div className="text-center">
           <div className="text-6xl mb-4">😕</div>
           <p className="text-gray-600 font-bold mb-4">
-            {error || "Order nahi mila"}
+            {error || "Order not found"}
           </p>
           <Link
             to="/orders"
             className="text-emerald-600 font-bold hover:underline"
           >
-            ← My Orders
+            ← Back to My Orders
           </Link>
         </div>
       </div>
@@ -222,10 +222,9 @@ export default function OrderDetail() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-5">
-        {/* Error */}
         {error && (
           <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 text-sm px-4 py-3 rounded-2xl">
-            ⚠️ {error}
+            <span>⚠️</span> {error}
           </div>
         )}
 
@@ -275,12 +274,12 @@ export default function OrderDetail() {
 
           {order.order_status === "cancelled" && order.cancellation_reason && (
             <div className="mt-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">
-              <strong>Cancel Reason:</strong> {order.cancellation_reason}
+              <strong>Cancellation Reason:</strong> {order.cancellation_reason}
             </div>
           )}
         </div>
 
-        {/* ✅ NEW — OTP Card — Out for Delivery pe dikhega */}
+        {/* OTP Card */}
         {order.order_status === "out_for_delivery" &&
           order.delivery_otp &&
           !order.otp_verified && (
@@ -292,11 +291,11 @@ export default function OrderDetail() {
                 <div>
                   <h3 className="font-black text-gray-900">Delivery OTP</h3>
                   <p className="text-xs text-gray-400">
-                    Delivery boy ko yeh OTP do — iske baad order deliver hoga
+                    Please provide this OTP to the delivery partner to receive
+                    your order
                   </p>
                 </div>
               </div>
-              {/* OTP Boxes */}
               <div className="flex gap-2 justify-center my-4">
                 {order.delivery_otp
                   .toString()
@@ -311,8 +310,8 @@ export default function OrderDetail() {
                   ))}
               </div>
               <p className="text-xs text-center text-gray-400 mt-2">
-                ⚠️ Yeh OTP sirf delivery complete karne ke liye hai — kisi aur
-                ko mat batao
+                ⚠️ This OTP is strictly for delivery verification — do not share
+                it with anyone else.
               </p>
             </div>
           )}
@@ -374,7 +373,6 @@ export default function OrderDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* ── LEFT ── */}
           <div className="lg:col-span-2 space-y-5">
-            {/* Order Items */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <h3 className="font-bold text-gray-900 mb-4">
                 🛍️ Order Items ({items.length})
@@ -427,7 +425,7 @@ export default function OrderDetail() {
                               onClick={() => setReviewItem(item)}
                               className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg hover:bg-amber-100 transition"
                             >
-                              ⭐ Review Do
+                              ⭐ Write Review
                             </button>
                           ))}
                       </div>
@@ -437,7 +435,6 @@ export default function OrderDetail() {
               </div>
             </div>
 
-            {/* Delivery Address */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <h3 className="font-bold text-gray-900 mb-3">
                 📍 Delivery Address
@@ -459,7 +456,6 @@ export default function OrderDetail() {
               </div>
             </div>
 
-            {/* Order History */}
             {history.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 p-5">
                 <h3 className="font-bold text-gray-900 mb-4">
@@ -497,7 +493,7 @@ export default function OrderDetail() {
             )}
           </div>
 
-          {/* ── RIGHT — Price Summary ── */}
+          {/* ── RIGHT ── */}
           <div className="space-y-5">
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <h3 className="font-bold text-gray-900 mb-4">💰 Price Details</h3>
@@ -543,7 +539,6 @@ export default function OrderDetail() {
               </div>
             </div>
 
-            {/* Payment Info */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <h3 className="font-bold text-gray-900 mb-3">💳 Payment</h3>
               <div className="space-y-2 text-sm">
@@ -556,7 +551,7 @@ export default function OrderDetail() {
                 <div className="flex justify-between">
                   <span className="text-gray-500">Status</span>
                   <span
-                    className={`font-bold px-2 py-0.5 rounded-full text-xs ${
+                    className={`font-bold px-2 py-0.5 rounded-full text-xs capitalize ${
                       order.payment_status === "paid"
                         ? "bg-green-100 text-green-600"
                         : order.payment_status === "failed"
@@ -570,13 +565,12 @@ export default function OrderDetail() {
               </div>
             </div>
 
-            {/* Actions */}
             <div className="space-y-2">
               <Link
                 to="/orders"
                 className="w-full flex items-center justify-center py-3 rounded-xl font-bold text-sm border-2 border-gray-200 text-gray-600 hover:border-emerald-400 hover:text-emerald-600 transition"
               >
-                ← Back to Orders
+                ← Back to My Orders
               </Link>
               {order.order_status === "delivered" && (
                 <Link
@@ -602,43 +596,38 @@ export default function OrderDetail() {
         >
           <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="text-lg font-black text-gray-900 mb-1">
-              Order Cancel Karna Chahte Ho?
+              Cancel Order?
             </h3>
             <p className="text-sm text-gray-400 mb-4">
-              Cancel karne ke baad wapas nahi le sakte.
+              Please note that this action cannot be undone once confirmed.
             </p>
             <div className="mb-4">
               <label className="block text-sm font-bold text-gray-700 mb-2">
-                Cancel Reason (optional)
+                Cancellation Reason (optional)
               </label>
               <select
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400 bg-gray-50"
               >
-                <option value="">Reason select karo...</option>
-                <option value="Order galti se place hua">
-                  Order galti se place hua
+                <option value="">Select a reason...</option>
+                <option value="Order placed by mistake">
+                  Order placed by mistake
                 </option>
-                <option value="Better price mila kahin aur">
-                  Better price mila kahin aur
+                <option value="Better price available elsewhere">
+                  Better price available elsewhere
                 </option>
-                <option value="Delivery time zyada hai">
-                  Delivery time zyada hai
+                <option value="Delivery time is too long">
+                  Delivery time is too long
                 </option>
-                <option value="Product ki zaroorat nahi rahi">
-                  Product ki zaroorat nahi rahi
+                <option value="Product no longer needed">
+                  Product no longer needed
                 </option>
-                <option value="Address change karna hai">
-                  Address change karna hai
+                <option value="Need to change delivery address">
+                  Need to change delivery address
                 </option>
               </select>
             </div>
-            {error && (
-              <p className="text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg mb-3">
-                ⚠️ {error}
-              </p>
-            )}
             <div className="flex gap-3">
               <button
                 onClick={() => {
@@ -647,14 +636,14 @@ export default function OrderDetail() {
                 }}
                 className="flex-1 py-3 rounded-xl font-bold text-sm border-2 border-gray-200 text-gray-600 hover:border-gray-300 transition"
               >
-                Nahi, Rakhna Hai
+                No, Keep Order
               </button>
               <button
                 onClick={handleCancel}
                 disabled={cancelling}
                 className="flex-1 py-3 rounded-xl font-bold text-sm text-white transition bg-red-500 hover:bg-red-600"
               >
-                {cancelling ? "Cancel Ho Raha Hai..." : "Haan, Cancel Karo"}
+                {cancelling ? "Cancelling..." : "Yes, Cancel Order"}
               </button>
             </div>
           </div>

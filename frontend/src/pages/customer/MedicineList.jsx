@@ -37,7 +37,7 @@ export default function MedicineList() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
-  const [totalAll, setTotalAll] = useState(0); // ← sirf "All" ka count
+  const [totalAll, setTotalAll] = useState(0);
   const [page, setPage] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -46,13 +46,13 @@ export default function MedicineList() {
   const sort = searchParams.get("sort") || "id";
   const LIMIT = 12;
 
-  // ── Fetch total ALL medicines count (ek baar) ─────
+  // ── Fetch total ALL medicines count ─────
   useEffect(() => {
     medicineService
-      .getAll({ page: 1, limit: 1 }) // sirf count chahiye
+      .getAll({ page: 1, limit: 1 })
       .then(({ data }) => setTotalAll(data.pagination?.total || 0))
       .catch(console.error);
-  }, []); // ← empty dependency — sirf mount pe
+  }, []);
 
   // ── Fetch filtered medicines ──────────────────────
   const fetchMedicines = useCallback(() => {
@@ -205,7 +205,7 @@ export default function MedicineList() {
                 </button>
               </div>
 
-              {/* All Medicines — totalAll use karo */}
+              {/* All Medicines */}
               <button
                 onClick={() => {
                   setParam("category", "");
@@ -223,7 +223,7 @@ export default function MedicineList() {
                 </span>
               </button>
 
-              {/* Category wise — cat.medicine_count use karo */}
+              {/* Categories */}
               {categories.map((cat) => {
                 const isActive = category === cat.slug;
                 return (
@@ -298,10 +298,10 @@ export default function MedicineList() {
               <div className="text-center py-20">
                 <div className="text-6xl mb-4">🔍</div>
                 <h3 className="text-lg font-bold text-gray-700 mb-2">
-                  Koi medicine nahi mili
+                  No medicines found
                 </h3>
                 <p className="text-gray-400 text-sm mb-4">
-                  Search ya filter change karein
+                  Please try adjusting your search or filter.
                 </p>
                 <button
                   onClick={() => {

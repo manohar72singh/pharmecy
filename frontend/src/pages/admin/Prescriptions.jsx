@@ -50,7 +50,7 @@ export default function AdminPrescriptions() {
 
   return (
     <div className="space-y-4">
-      {/* Image viewer */}
+      {/* Prescription Image Viewer */}
       {viewImg && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -61,10 +61,14 @@ export default function AdminPrescriptions() {
             className="relative max-w-2xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <img src={viewImg} alt="Rx" className="w-full rounded-2xl" />
+            <img
+              src={viewImg}
+              alt="Prescription Detail"
+              className="w-full rounded-2xl shadow-2xl"
+            />
             <button
               onClick={() => setViewImg(null)}
-              className="absolute top-3 right-3 w-9 h-9 bg-white rounded-full flex items-center justify-center font-black"
+              className="absolute top-3 right-3 w-10 h-10 bg-white rounded-full flex items-center justify-center font-black text-gray-800 shadow-lg hover:bg-gray-100 transition-colors"
             >
               ×
             </button>
@@ -72,7 +76,8 @@ export default function AdminPrescriptions() {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex gap-3">
+      {/* Filter Tabs */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex gap-3 shadow-sm">
         {["pending", "approved", "rejected"].map((s) => (
           <button
             key={s}
@@ -80,7 +85,11 @@ export default function AdminPrescriptions() {
               setStatus(s);
               setPage(1);
             }}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition capitalize ${status === s ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all capitalize ${
+              status === s
+                ? "text-white shadow-md"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+            }`}
             style={
               status === s
                 ? { background: "linear-gradient(135deg,#065f46,#059669)" }
@@ -92,34 +101,43 @@ export default function AdminPrescriptions() {
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      {/* Main Table Container */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                {["#", "Patient", "Date", "Image", "Status", "Action"].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase"
-                    >
-                      {h}
-                    </th>
-                  ),
-                )}
+                {[
+                  "Order ID",
+                  "Patient Details",
+                  "Date Uploaded",
+                  "Rx Image",
+                  "Current Status",
+                  "Actions",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="text-left px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider"
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading
                 ? [...Array(8)].map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={6} className="px-4 py-3">
+                      <td colSpan={6} className="px-4 py-4">
                         <div className="h-4 bg-gray-100 rounded animate-pulse" />
                       </td>
                     </tr>
                   ))
                 : prescriptions.map((rx) => (
-                    <tr key={rx.id} className="hover:bg-gray-50">
+                    <tr
+                      key={rx.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-4 py-3 font-bold text-gray-900">
                         #{rx.id}
                       </td>
@@ -131,7 +149,14 @@ export default function AdminPrescriptions() {
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-500">
                         {rx.created_at
-                          ? new Date(rx.created_at).toLocaleDateString("en-IN")
+                          ? new Date(rx.created_at).toLocaleDateString(
+                              "en-IN",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              },
+                            )
                           : "—"}
                       </td>
                       <td className="px-4 py-3">
@@ -142,23 +167,23 @@ export default function AdminPrescriptions() {
                                 `${API_URL}/uploads/prescriptions/${rx.image_url}`,
                               )
                             }
-                            className="w-12 h-12 rounded-xl overflow-hidden border border-gray-200 hover:border-emerald-400 transition"
+                            className="w-12 h-12 rounded-xl overflow-hidden border border-gray-200 hover:border-emerald-400 transition-all shadow-sm"
                           >
                             <img
                               src={`${API_URL}/uploads/prescriptions/${rx.image_url}`}
-                              alt="Rx"
+                              alt="Rx Preview"
                               className="w-full h-full object-cover"
                             />
                           </button>
                         ) : (
-                          <span className="text-gray-400 text-xs">
+                          <span className="text-gray-400 text-[10px] uppercase font-bold">
                             No image
                           </span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`text-xs font-bold px-2 py-1 rounded-full ${STATUS_COLORS[rx.status] || "bg-gray-100 text-gray-600"}`}
+                          className={`text-[10px] uppercase font-black px-2 py-1 rounded-full ${STATUS_COLORS[rx.status] || "bg-gray-100 text-gray-600"}`}
                         >
                           {rx.status}
                         </span>
@@ -168,15 +193,15 @@ export default function AdminPrescriptions() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleUpdate(rx.id, "approved")}
-                              className="text-xs font-bold px-3 py-1.5 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition"
+                              className="text-[10px] font-black uppercase px-3 py-1.5 rounded-lg bg-green-50 text-green-600 border border-green-200 hover:bg-green-600 hover:text-white transition-all"
                             >
-                              ✅ Approve
+                              Approve
                             </button>
                             <button
                               onClick={() => handleUpdate(rx.id, "rejected")}
-                              className="text-xs font-bold px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition"
+                              className="text-[10px] font-black uppercase px-3 py-1.5 rounded-lg bg-red-50 text-red-500 border border-red-200 hover:bg-red-600 hover:text-white transition-all"
                             >
-                              ❌ Reject
+                              Reject
                             </button>
                           </div>
                         )}
@@ -186,7 +211,12 @@ export default function AdminPrescriptions() {
             </tbody>
           </table>
         </div>
-        <div className="px-4 pb-4">
+        {!loading && prescriptions.length === 0 && (
+          <div className="text-center py-12 text-gray-400">
+            No prescriptions found for this category.
+          </div>
+        )}
+        <div className="px-4 py-4 border-t border-gray-50 bg-gray-50/30">
           <Pagination
             page={page}
             total={total}

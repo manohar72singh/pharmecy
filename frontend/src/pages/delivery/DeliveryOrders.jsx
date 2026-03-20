@@ -67,17 +67,17 @@ export default function DeliveryOrders() {
         <div className="bg-white rounded-3xl border border-gray-100 text-center py-20 shadow-sm">
           <div className="text-6xl mb-4">✅</div>
           <h3 className="text-lg font-black text-gray-800 mb-2">
-            Sab clear hai!
+            All caught up!
           </h3>
           <p className="text-gray-400 text-sm">
-            Abhi koi order assign nahi hua.
+            No orders are currently assigned to you.
           </p>
           <Link
             to="/delivery"
             className="inline-block mt-4 text-white font-bold px-6 py-3 rounded-2xl text-sm"
             style={{ background: "linear-gradient(135deg,#065f46,#059669)" }}
           >
-            Dashboard pe Jao
+            Go to Dashboard
           </Link>
         </div>
       ) : (
@@ -163,7 +163,7 @@ export default function DeliveryOrders() {
 
                 {order.payment_mode === "cod" && (
                   <div className="mx-5 mb-4 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100 text-xs font-semibold text-amber-700">
-                    💵 Cash collect karna hai — ₹
+                    💵 Collect Cash Payment — ₹
                     {parseFloat(order.total_amount).toFixed(0)}
                   </div>
                 )}

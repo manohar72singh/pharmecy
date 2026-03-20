@@ -74,18 +74,22 @@ export default function AdminOrders() {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3">
-        <form onSubmit={handleSearch} className="flex gap-2 flex-1 min-w-48">
+      {/* Search & Filter Bar */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 shadow-sm">
+        <form
+          onSubmit={handleSearch}
+          className="flex gap-2 flex-1 min-w-[300px]"
+        >
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search order, user, phone..."
-            className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400"
+            placeholder="Search by Order ID, Customer Name, or Phone..."
+            className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400 focus:bg-white transition-all"
           />
           <button
-            className="px-4 py-2 rounded-xl text-white text-sm font-bold"
-            style={{ background: "linear-gradient(135deg,#065f46,#059669)" }}
+            type="submit"
+            className="px-6 py-2 rounded-xl text-white text-sm font-bold shadow-md hover:opacity-90 transition-opacity"
+            style={{ background: "linear-gradient(135deg, #065f46, #059669)" }}
           >
             Search
           </button>
@@ -96,35 +100,35 @@ export default function AdminOrders() {
             setStatus(e.target.value);
             setPage(1);
           }}
-          className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400"
+          className="px-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400 bg-white cursor-pointer"
         >
-          <option value="">All Status</option>
+          <option value="">Filter by Status</option>
           {STATUS_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s}
+            <option key={s} value={s} className="capitalize">
+              {s.replace(/_/g, " ")}
             </option>
           ))}
         </select>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      {/* Orders Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 {[
-                  "Order #",
-                  "Customer",
-                  "Items",
-                  "Amount",
-                  "Payment",
-                  "Status",
-                  "Action",
+                  "Order Ref",
+                  "Customer Details",
+                  "Items Count",
+                  "Total Amount",
+                  "Payment Summary",
+                  "Current Status",
+                  "Update Progress",
                 ].map((h) => (
                   <th
                     key={h}
-                    className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase"
+                    className="text-left px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider"
                   >
                     {h}
                   </th>
@@ -135,20 +139,24 @@ export default function AdminOrders() {
               {loading
                 ? [...Array(8)].map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={7} className="px-4 py-3">
+                      <td colSpan={7} className="px-4 py-4">
                         <div className="h-4 bg-gray-100 rounded animate-pulse" />
                       </td>
                     </tr>
                   ))
                 : orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50 transition">
+                    <tr
+                      key={order.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-4 py-3">
                         <p className="font-bold text-gray-900">
                           #{order.order_number}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-tighter">
                           {new Date(order.created_at).toLocaleDateString(
                             "en-IN",
+                            { day: "2-digit", month: "short", year: "numeric" },
                           )}
                         </p>
                       </td>
@@ -160,28 +168,28 @@ export default function AdminOrders() {
                           {order.user_phone}
                         </p>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {order.item_count} items
+                      <td className="px-4 py-3 text-gray-600 font-medium">
+                        {order.item_count}{" "}
+                        {order.item_count > 1 ? "Items" : "Item"}
                       </td>
                       <td className="px-4 py-3 font-bold text-emerald-600">
-                        ₹{parseFloat(order.total_amount).toFixed(0)}
+                        ₹{parseFloat(order.total_amount).toFixed(2)}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-xs font-bold uppercase text-gray-600">
+                        <p className="text-[10px] font-black uppercase text-gray-500 tracking-wider">
                           {order.payment_mode}
-                        </span>
-                        <br />
+                        </p>
                         <span
-                          className={`text-xs font-bold ${order.payment_status === "paid" ? "text-green-600" : "text-amber-600"}`}
+                          className={`text-[10px] font-bold uppercase ${order.payment_status === "paid" ? "text-green-600" : "text-amber-600"}`}
                         >
                           {order.payment_status}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`text-xs font-bold px-2 py-1 rounded-full ${STATUS_COLORS[order.order_status] || "bg-gray-100 text-gray-600"}`}
+                          className={`text-[10px] font-black uppercase px-2 py-1 rounded-full ${STATUS_COLORS[order.order_status] || "bg-gray-100 text-gray-600"}`}
                         >
-                          {order.order_status}
+                          {order.order_status?.replace(/_/g, " ")}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -195,21 +203,31 @@ export default function AdminOrders() {
                             order.order_status === "delivered" ||
                             order.order_status === "cancelled"
                           }
-                          className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:border-emerald-400 disabled:opacity-50"
+                          className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:border-emerald-400 bg-white disabled:opacity-50 cursor-pointer"
                         >
                           {STATUS_OPTIONS.map((s) => (
                             <option key={s} value={s}>
-                              {s}
+                              {s.replace(/_/g, " ").toUpperCase()}
                             </option>
                           ))}
                         </select>
+                        {updating === order.id && (
+                          <span className="ml-2 text-[10px] text-gray-400 italic">
+                            Updating...
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
             </tbody>
           </table>
         </div>
-        <div className="px-4 pb-4">
+        {!loading && orders.length === 0 && (
+          <div className="text-center py-12 text-gray-400">
+            No records found matching your criteria.
+          </div>
+        )}
+        <div className="px-4 py-4 border-t border-gray-50 bg-gray-50/30">
           <Pagination
             page={page}
             total={total}

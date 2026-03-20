@@ -62,10 +62,10 @@ const STATUS_CONFIG = {
 const PAYMENT_ICONS = { cod: "💵", online: "💳", upi: "📱", wallet: "👛" };
 
 const FILTERS = [
-  { key: "all", label: "Sab" },
+  { key: "all", label: "All Orders" },
   { key: "placed", label: "Placed" },
   { key: "confirmed", label: "Confirmed" },
-  { key: "out_for_delivery", label: "Out for Delivery" },
+  { key: "out_for_delivery", label: "On the Way" },
   { key: "delivered", label: "Delivered" },
   { key: "cancelled", label: "Cancelled" },
 ];
@@ -113,7 +113,7 @@ export default function Orders() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Orders load ho rahi hain...</p>
+          <p className="text-gray-500 text-sm">Loading your orders...</p>
         </div>
       </div>
     );
@@ -184,13 +184,13 @@ export default function Orders() {
             <div className="text-7xl mb-4">📦</div>
             <h3 className="text-lg font-black text-gray-800 mb-2">
               {filter === "all"
-                ? "Koi order nahi hai abhi"
-                : `Koi ${STATUS_CONFIG[filter]?.label || filter} order nahi`}
+                ? "No orders found yet"
+                : `No ${STATUS_CONFIG[filter]?.label || filter} orders found`}
             </h3>
             <p className="text-gray-400 text-sm mb-6">
               {filter === "all"
-                ? "Apni pehli medicine order karein!"
-                : "Is category mein koi order nahi mila."}
+                ? "Start your healthcare journey by placing your first order!"
+                : "There are no orders in this category at the moment."}
             </p>
             {filter === "all" && (
               <Link
@@ -200,7 +200,7 @@ export default function Orders() {
                   background: "linear-gradient(135deg, #065f46, #059669)",
                 }}
               >
-                Medicines Browse Karein →
+                Browse Medicines →
               </Link>
             )}
           </div>
@@ -234,24 +234,23 @@ export default function Orders() {
                   to={`/orders/${order.id}`}
                   className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition"
                 >
-                  Details →
+                  View Details →
                 </Link>
               </div>
 
               {/* Order Body */}
               <div className="px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-6 flex-wrap">
-                  {/* Items */}
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">🛍️</span>
                     <div>
                       <p className="text-xs text-gray-400">Items</p>
                       <p className="font-bold text-gray-900 text-sm">
-                        {order.item_count} medicines
+                        {order.item_count}{" "}
+                        {order.item_count > 1 ? "medicines" : "medicine"}
                       </p>
                     </div>
                   </div>
-                  {/* Payment */}
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">
                       {PAYMENT_ICONS[order.payment_mode] || "💳"}
@@ -259,11 +258,11 @@ export default function Orders() {
                     <div>
                       <p className="text-xs text-gray-400">Payment</p>
                       <div className="flex items-center gap-1.5">
-                        <p className="font-bold text-gray-900 text-sm">
-                          {order.payment_mode?.toUpperCase()}
+                        <p className="font-bold text-gray-900 text-sm uppercase">
+                          {order.payment_mode}
                         </p>
                         <span
-                          className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                          className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full ${
                             order.payment_status === "paid"
                               ? "bg-green-100 text-green-600"
                               : order.payment_status === "failed"
@@ -276,31 +275,21 @@ export default function Orders() {
                       </div>
                     </div>
                   </div>
-                  {/* Total */}
                   <div>
-                    <p className="text-xs text-gray-400">Total</p>
+                    <p className="text-xs text-gray-400">Total Amount</p>
                     <p className="font-black text-xl text-emerald-600">
                       ₹{parseFloat(order.total_amount).toFixed(2)}
                     </p>
                   </div>
                 </div>
 
-                {/* Buttons */}
                 <div className="flex gap-2">
                   <Link
                     to={`/orders/${order.id}`}
                     className="px-4 py-2 rounded-xl text-sm font-bold border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white transition"
                   >
-                    View Details
+                    Details
                   </Link>
-                  {["placed", "confirmed"].includes(order.order_status) && (
-                    <Link
-                      to={`/orders/${order.id}`}
-                      className="px-4 py-2 rounded-xl text-sm font-bold border-2 border-red-400 text-red-500 hover:bg-red-500 hover:text-white transition"
-                    >
-                      Cancel
-                    </Link>
-                  )}
                   {order.order_status === "delivered" && (
                     <Link
                       to="/medicines"
@@ -315,30 +304,29 @@ export default function Orders() {
                 </div>
               </div>
 
-              {/* ── Status Banners ── */}
+              {/* Status Banners */}
               {order.order_status === "delivered" && (
                 <div className="px-5 py-2.5 bg-green-50 border-t border-green-100 text-xs font-semibold text-green-700">
-                  🎉 Delivered successfully!
+                  🎉 Order delivered successfully!
                 </div>
               )}
-              {/* ✅ NEW — OTP Banner for out_for_delivery */}
               {order.order_status === "out_for_delivery" && (
                 <div className="px-5 py-3 bg-emerald-50 border-t border-emerald-100 flex items-center justify-between gap-3 flex-wrap">
                   <p className="text-xs font-semibold text-emerald-700">
-                    🚴 Delivery boy raaste mein hai — thodi der mein pahunch
-                    jaayega!
+                    🚴 Our delivery partner is on the way and will reach you
+                    shortly!
                   </p>
                   <Link
                     to={`/orders/${order.id}`}
                     className="text-xs font-black text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition"
                   >
-                    🔐 OTP Dekho →
+                    🔐 View Delivery OTP →
                   </Link>
                 </div>
               )}
               {order.order_status === "cancelled" && (
                 <div className="px-5 py-2.5 bg-red-50 border-t border-red-100 text-xs font-semibold text-red-600">
-                  ❌ Order cancel ho gaya hai.
+                  ❌ This order has been cancelled.
                 </div>
               )}
             </div>

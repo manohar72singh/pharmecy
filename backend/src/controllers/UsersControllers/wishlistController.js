@@ -1,6 +1,7 @@
 import pool from "../../config/db.js";
 import { success, error } from "../../utils/response.js";
 
+// ── Get User Wishlist ────────────────────────────────
 export const getWishlist = async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -26,17 +27,18 @@ export const getWishlist = async (req, res) => {
     `,
       [req.user.id],
     );
-    return success(res, rows, "Wishlist fetched.");
+    return success(res, rows, "Wishlist items retrieved successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Fetch failed.", 500);
+    return error(res, "Failed to retrieve wishlist items.", 500);
   }
 };
 
+// ── Toggle Wishlist (Add/Remove) ─────────────────────
 export const toggleWishlist = async (req, res) => {
   try {
     const { medicine_id } = req.body;
-    if (!medicine_id) return error(res, "medicine_id zaroori hai.", 400);
+    if (!medicine_id) return error(res, "Medicine ID is required.", 400);
 
     const [existing] = await pool.query(
       "SELECT id FROM wishlists WHERE user_id = ? AND medicine_id = ?",
@@ -45,33 +47,30 @@ export const toggleWishlist = async (req, res) => {
 
     if (existing.length) {
       await pool.query("DELETE FROM wishlists WHERE id = ?", [existing[0].id]);
-      return success(res, { wishlisted: false }, "Wishlist se remove ho gaya.");
+      return success(res, { wishlisted: false }, "Item removed from wishlist.");
     } else {
       await pool.query(
         "INSERT INTO wishlists (user_id, medicine_id) VALUES (?, ?)",
         [req.user.id, medicine_id],
       );
-      return success(
-        res,
-        { wishlisted: true },
-        "Wishlist mein add ho gaya! ❤️",
-      );
+      return success(res, { wishlisted: true }, "Item added to your wishlist.");
     }
   } catch (err) {
     console.error(err);
-    return error(res, "Toggle failed.", 500);
+    return error(res, "An error occurred while updating wishlist.", 500);
   }
 };
 
+// ── Remove from Wishlist ──────────────────────────────
 export const removeFromWishlist = async (req, res) => {
   try {
     await pool.query(
       "DELETE FROM wishlists WHERE user_id = ? AND medicine_id = ?",
       [req.user.id, req.params.medicine_id],
     );
-    return success(res, {}, "Removed.");
+    return success(res, {}, "Item successfully removed from wishlist.");
   } catch (err) {
     console.error(err);
-    return error(res, "Remove failed.", 500);
+    return error(res, "Failed to remove item from wishlist.", 500);
   }
 };

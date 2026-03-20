@@ -95,13 +95,13 @@ export default function DeliveryDashboard() {
         <div className="relative flex items-start justify-between">
           <div>
             <p className="text-emerald-300 text-sm font-semibold mb-1">
-              👋 Namaste!
+              👋 Welcome Back,
             </p>
             <h1 className="text-white font-black text-2xl sm:text-3xl leading-tight">
               {user?.name?.split(" ")[0]}
             </h1>
             <p className="text-emerald-400 text-xs mt-1 font-medium capitalize">
-              🛵 {profile?.vehicle_type || "Delivery Boy"}
+              🛵 {profile?.vehicle_type || "Delivery Executive"}
             </p>
           </div>
 
@@ -125,9 +125,9 @@ export default function DeliveryDashboard() {
         {/* Stats Row */}
         <div className="grid grid-cols-4 gap-3 mt-5">
           {[
-            { label: "Aaj", value: earnings?.today || 0 },
-            { label: "Is Hafte", value: earnings?.this_week || 0 },
-            { label: "Is Mahine", value: earnings?.this_month || 0 },
+            { label: "Today", value: earnings?.today || 0 },
+            { label: "This Week", value: earnings?.this_week || 0 },
+            { label: "This Month", value: earnings?.this_month || 0 },
             { label: "Total", value: earnings?.total || 0 },
           ].map((s) => (
             <div
@@ -163,7 +163,7 @@ export default function DeliveryDashboard() {
             to="/delivery/orders"
             className="text-xs font-bold text-emerald-600 hover:underline"
           >
-            Sab Dekho →
+            View All →
           </Link>
         </div>
 
@@ -171,10 +171,10 @@ export default function DeliveryDashboard() {
           <div className="text-center py-12">
             <div className="text-5xl mb-3">✅</div>
             <p className="text-gray-500 font-bold text-sm">
-              Koi pending order nahi!
+              No pending orders!
             </p>
             <p className="text-gray-400 text-xs mt-1">
-              Aaram karo — agle order ka intezaar karo 😊
+              Take a break — waiting for the next order 😊
             </p>
           </div>
         ) : (
@@ -204,7 +204,7 @@ export default function DeliveryDashboard() {
                   <p className="font-black text-emerald-600 text-sm">
                     ₹{parseFloat(order.total_amount).toFixed(0)}
                   </p>
-                  <p className="text-xs text-gray-400 uppercase">
+                  <p className="text-[10px] text-gray-400 uppercase font-bold">
                     {order.payment_mode}
                   </p>
                 </div>
@@ -225,7 +225,7 @@ export default function DeliveryDashboard() {
                   to="/delivery/orders"
                   className="text-xs font-bold text-emerald-600 hover:underline"
                 >
-                  +{pendingOrders.length - 3} aur orders
+                  +{pendingOrders.length - 3} more orders
                 </Link>
               </div>
             )}
@@ -246,7 +246,7 @@ export default function DeliveryDashboard() {
           <div className="text-3xl mb-3">📋</div>
           <p className="font-black text-white text-base">Orders</p>
           <p className="text-emerald-300 text-xs mt-0.5 font-semibold">
-            {pendingOrders.length} pending
+            {pendingOrders.length} active tasks
           </p>
         </Link>
         <Link
@@ -259,7 +259,7 @@ export default function DeliveryDashboard() {
           <div className="text-3xl mb-3">📜</div>
           <p className="font-black text-gray-900 text-base">History</p>
           <p className="text-gray-400 text-xs mt-0.5 font-semibold">
-            {earnings?.total || 0} delivered
+            {earnings?.total || 0} completed
           </p>
         </Link>
       </div>

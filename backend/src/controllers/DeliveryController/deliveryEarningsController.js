@@ -8,7 +8,8 @@ export const getEarnings = async (req, res) => {
       "SELECT id FROM delivery_boys WHERE user_id = ?",
       [req.user.id],
     );
-    if (dbRows.length === 0) return error(res, "Delivery boy nahi mila.", 404);
+    if (dbRows.length === 0)
+      return error(res, "Delivery partner profile not found.", 404);
 
     const deliveryBoyId = dbRows[0].id;
 
@@ -48,11 +49,11 @@ export const getEarnings = async (req, res) => {
         this_month: thisMonth.count,
         total: total.count,
       },
-      "Earnings fetched.",
+      "Earnings summary retrieved successfully.",
     );
   } catch (err) {
     console.error(err);
-    return error(res, "Fetch failed.", 500);
+    return error(res, "Failed to retrieve earnings summary.", 500);
   }
 };
 
@@ -66,7 +67,8 @@ export const getDeliveryHistory = async (req, res) => {
       "SELECT id FROM delivery_boys WHERE user_id = ?",
       [req.user.id],
     );
-    if (dbRows.length === 0) return error(res, "Delivery boy nahi mila.", 404);
+    if (dbRows.length === 0)
+      return error(res, "Delivery partner profile not found.", 404);
 
     const deliveryBoyId = dbRows[0].id;
 
@@ -101,10 +103,10 @@ export const getDeliveryHistory = async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
       },
-      "History fetched.",
+      "Delivery history retrieved successfully.",
     );
   } catch (err) {
     console.error(err);
-    return error(res, "Fetch failed.", 500);
+    return error(res, "Failed to retrieve delivery history.", 500);
   }
 };

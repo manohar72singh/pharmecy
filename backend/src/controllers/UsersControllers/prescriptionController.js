@@ -13,17 +13,18 @@ export const getMyPrescriptions = async (req, res) => {
        ORDER BY p.created_at DESC`,
       [req.user.id],
     );
-    return success(res, rows, "Prescriptions fetched.");
+    return success(res, rows, "Prescriptions retrieved successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Fetch failed.", 500);
+    return error(res, "Failed to retrieve prescriptions.", 500);
   }
 };
 
 // ── Upload Prescription ───────────────────────────────
 export const uploadPrescription = async (req, res) => {
   try {
-    if (!req.file) return error(res, "Prescription image upload karo.", 400);
+    if (!req.file)
+      return error(res, "Please upload a prescription image.", 400);
 
     const imageUrl = req.file.filename;
     const { notes } = req.body;
@@ -41,12 +42,12 @@ export const uploadPrescription = async (req, res) => {
         image_url: imageUrl,
         status: "pending",
       },
-      "Prescription upload ho gayi! Admin verify karega. ✅",
+      "Prescription uploaded successfully. It is now pending verification.",
       201,
     );
   } catch (err) {
     console.error(err);
-    return error(res, "Upload failed.", 500);
+    return error(res, "Failed to upload prescription.", 500);
   }
 };
 
@@ -57,14 +58,15 @@ export const deletePrescription = async (req, res) => {
       `SELECT id, status FROM prescriptions WHERE id = ? AND user_id = ?`,
       [req.params.id, req.user.id],
     );
-    if (!rows.length) return error(res, "Prescription nahi mili.", 404);
+    if (!rows.length) return error(res, "Prescription not found.", 404);
+
     if (rows[0].status === "approved")
-      return error(res, "Approved prescription delete nahi ho sakti.", 400);
+      return error(res, "Approved prescriptions cannot be deleted.", 400);
 
     await pool.query(`DELETE FROM prescriptions WHERE id = ?`, [req.params.id]);
-    return success(res, {}, "Prescription delete ho gayi.");
+    return success(res, {}, "Prescription deleted successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Delete failed.", 500);
+    return error(res, "Failed to delete prescription.", 500);
   }
 };

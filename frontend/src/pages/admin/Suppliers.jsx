@@ -60,7 +60,7 @@ export default function AdminSuppliers() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete karna chahte ho?")) return;
+    if (!confirm("Are you sure you want to delete this supplier?")) return;
     try {
       await api.delete(`/admin/suppliers/${id}`);
       setSuppliers((prev) => prev.filter((s) => s.id !== id));
@@ -71,16 +71,18 @@ export default function AdminSuppliers() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
+      {/* Search & Action Bar */}
+      <div className="flex items-center gap-3 shadow-sm p-1 rounded-2xl bg-gray-50/50">
         <form onSubmit={handleSearch} className="flex gap-2 flex-1">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search supplier..."
-            className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400 bg-white"
+            placeholder="Search by supplier name or GST..."
+            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400 bg-white transition-all"
           />
           <button
-            className="px-4 py-2 rounded-xl text-white text-sm font-bold"
+            type="submit"
+            className="px-6 py-2 rounded-xl text-white text-sm font-bold shadow-md hover:opacity-90 transition-opacity"
             style={{ background: "linear-gradient(135deg,#065f46,#059669)" }}
           >
             Search
@@ -88,33 +90,44 @@ export default function AdminSuppliers() {
         </form>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2.5 rounded-xl text-white text-sm font-bold flex-shrink-0"
+          className="px-6 py-2.5 rounded-xl text-white text-sm font-bold flex-shrink-0 shadow-md hover:opacity-90 transition-opacity"
           style={{ background: "linear-gradient(135deg,#065f46,#059669)" }}
         >
-          + Add Supplier
+          {showForm ? "✕ Close" : "+ Add New Supplier"}
         </button>
       </div>
 
+      {/* Entry Form */}
       {showForm && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-900 mb-4">New Supplier</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+          <h3 className="font-bold text-gray-900 mb-5 flex items-center gap-2">
+            <span>📝</span> Registration Form
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { key: "name", label: "Name *", placeholder: "Supplier name" },
-              { key: "phone", label: "Phone", placeholder: "9999999999" },
+              {
+                key: "name",
+                label: "Business Name *",
+                placeholder: "e.g. Apollo Pharmacy Ltd",
+              },
+              {
+                key: "phone",
+                label: "Contact Number",
+                placeholder: "e.g. 9876543210",
+              },
               {
                 key: "email",
-                label: "Email",
-                placeholder: "supplier@email.com",
+                label: "Email Address",
+                placeholder: "e.g. contact@supplier.com",
               },
               {
                 key: "gst_number",
-                label: "GST Number",
-                placeholder: "22AAAAA0000A1Z5",
+                label: "Tax ID / GSTIN",
+                placeholder: "e.g. 22AAAAA0000A1Z5",
               },
             ].map((f) => (
               <div key={f.key}>
-                <label className="text-xs font-bold text-gray-600 mb-1 block">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">
                   {f.label}
                 </label>
                 <input
@@ -123,92 +136,108 @@ export default function AdminSuppliers() {
                     setForm({ ...form, [f.key]: e.target.value })
                   }
                   placeholder={f.placeholder}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400"
+                  className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400 bg-gray-50 focus:bg-white transition-all"
                 />
               </div>
             ))}
             <div className="sm:col-span-2">
-              <label className="text-xs font-bold text-gray-600 mb-1 block">
-                Address
+              <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 block">
+                Office / Warehouse Address
               </label>
               <input
                 value={form.address}
                 onChange={(e) => setForm({ ...form, address: e.target.value })}
-                placeholder="Full address"
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400"
+                placeholder="Complete street address, city, state"
+                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400 bg-gray-50 focus:bg-white transition-all"
               />
             </div>
           </div>
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-3 mt-6">
             <button
               onClick={() => setShowForm(false)}
-              className="px-4 py-2 rounded-xl text-sm font-bold border-2 border-gray-200 text-gray-600"
+              className="px-6 py-2.5 rounded-xl text-sm font-bold border-2 border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleCreate}
               disabled={saving}
-              className="px-6 py-2 rounded-xl text-white text-sm font-bold"
+              className="px-8 py-2.5 rounded-xl text-white text-sm font-bold shadow-sm"
               style={{
                 background: saving
                   ? "#6ee7b7"
                   : "linear-gradient(135deg,#065f46,#059669)",
               }}
             >
-              {saving ? "Saving..." : "Add Supplier"}
+              {saving ? "Saving..." : "Save Supplier Details"}
             </button>
           </div>
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      {/* Supplier Directory Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                {["Supplier", "Phone", "Email", "GST", "Batches", "Action"].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase"
-                    >
-                      {h}
-                    </th>
-                  ),
-                )}
+                {[
+                  "Business Entity",
+                  "Phone",
+                  "Email",
+                  "GSTIN",
+                  "Total Batches",
+                  "Management",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="text-left px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider"
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {loading
                 ? [...Array(6)].map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={6} className="px-4 py-3">
+                      <td colSpan={6} className="px-4 py-4">
                         <div className="h-4 bg-gray-100 rounded animate-pulse" />
                       </td>
                     </tr>
                   ))
                 : suppliers.map((s) => (
-                    <tr key={s.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-semibold text-gray-900">
-                        {s.name}
+                    <tr
+                      key={s.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <p className="font-bold text-gray-900 leading-tight">
+                          {s.name}
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">
+                          ID: SUP-{s.id}
+                        </p>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {s.phone || "—"}
+                      <td className="px-4 py-3 text-gray-600 font-medium">
+                        {s.phone || "N/A"}
                       </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">
-                        {s.email || "—"}
+                      <td className="px-4 py-3 text-gray-500 text-xs italic">
+                        {s.email || "No email"}
                       </td>
-                      <td className="px-4 py-3 text-xs font-mono text-gray-500">
-                        {s.gst_number || "—"}
+                      <td className="px-4 py-3 text-xs font-mono text-gray-500 uppercase">
+                        {s.gst_number || "Unregistered"}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {s.batch_count}
+                      <td className="px-4 py-3">
+                        <span className="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg text-xs font-bold border border-emerald-100">
+                          {s.batch_count} Batches
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <button
                           onClick={() => handleDelete(s.id)}
-                          className="text-xs font-bold px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition"
+                          className="text-[10px] uppercase font-black px-3 py-1.5 rounded-lg bg-red-50 text-red-500 border border-red-100 hover:bg-red-500 hover:text-white transition-all"
                         >
                           Delete
                         </button>
@@ -218,7 +247,12 @@ export default function AdminSuppliers() {
             </tbody>
           </table>
         </div>
-        <div className="px-4 pb-4">
+        {!loading && suppliers.length === 0 && (
+          <div className="text-center py-16 text-gray-400">
+            No supplier records found in the directory.
+          </div>
+        )}
+        <div className="px-4 py-4 border-t border-gray-50 bg-gray-50/30">
           <Pagination
             page={page}
             total={total}

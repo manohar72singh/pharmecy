@@ -135,7 +135,7 @@ export default function Home() {
               <span style={{ color: "#fbbf24" }}>at Your Doorstep</span>
             </h1>
             <p className="text-emerald-100 text-lg mb-8 leading-relaxed">
-              Genuine medicines, fast delivery, expert care — sab kuch ek jagah.
+              Genuine medicines, fast delivery, expert care — all in one place.
             </p>
             <form onSubmit={handleSearch} className="flex gap-2 max-w-lg">
               <input
@@ -205,7 +205,7 @@ export default function Home() {
             {
               emoji: "🎉",
               title: "FIRST15",
-              sub: "First order 15% off",
+              sub: "15% off on first order",
               color: "from-orange-500 to-orange-600",
             },
             {
@@ -308,7 +308,7 @@ export default function Home() {
                 Have a Prescription?
               </h3>
               <p className="text-sm text-gray-500 mt-1">
-                Upload karein aur hum aapka order prepare karenge.
+                Upload it here and we will prepare your order.
               </p>
               <div className="flex flex-wrap gap-3 mt-2">
                 {[
@@ -360,7 +360,7 @@ export default function Home() {
         ) : medicines.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <div className="text-5xl mb-3">💊</div>
-            <p className="font-semibold">Koi medicine nahi mili</p>
+            <p className="font-semibold">No medicines found</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -388,8 +388,8 @@ export default function Home() {
               Never Run Out of Medicines
             </h3>
             <p className="text-emerald-100 mt-2 text-sm max-w-md">
-              Subscribe to auto-refill aur har mahine medicines paayein — up to
-              15% extra discount!
+              Subscribe to auto-refill and get medicines delivered every month —
+              with up to 15% extra discount!
             </p>
             <div className="flex flex-wrap gap-3 mt-4">
               {[
@@ -430,12 +430,12 @@ export default function Home() {
             {
               icon: "✅",
               title: "100% Genuine",
-              desc: "Verified distributors se direct",
+              desc: "Directly from verified distributors",
             },
             {
               icon: "🚚",
               title: "Fast Delivery",
-              desc: "Same-day delivery within city",
+              desc: "Same-day delivery within the city",
             },
             {
               icon: "💰",

@@ -41,10 +41,14 @@ export const getCart = async (req, res) => {
       0,
     );
 
-    return success(res, { items, total, count: items.length }, "Cart fetched.");
+    return success(
+      res,
+      { items, total, count: items.length },
+      "Cart retrieved successfully.",
+    );
   } catch (err) {
     console.error(err);
-    return error(res, "Cart fetch failed.", 500);
+    return error(res, "Failed to retrieve cart items.", 500);
   }
 };
 
@@ -60,16 +64,17 @@ export const addToCart = async (req, res) => {
     } = req.body;
 
     if (!medicine_id || !batch_id)
-      return error(res, "medicine_id aur batch_id zaroori hai.", 400);
+      return error(res, "Medicine ID and Batch ID are required.", 400);
 
     // Batch + stock check
     const [batch] = await pool.query(
       "SELECT id, available_quantity FROM medicine_batches WHERE id = ? AND medicine_id = ?",
       [batch_id, medicine_id],
     );
-    if (batch.length === 0) return error(res, "Batch nahi mila.", 404);
+    if (batch.length === 0)
+      return error(res, "Requested medicine batch not found.", 404);
     if (batch[0].available_quantity < quantity)
-      return error(res, "Itna stock available nahi hai.", 400);
+      return error(res, "Requested quantity is not available in stock.", 400);
 
     // Already in cart?
     const [existing] = await pool.query(
@@ -80,7 +85,7 @@ export const addToCart = async (req, res) => {
     if (existing.length > 0) {
       const newQty = existing[0].quantity + quantity;
       if (newQty > batch[0].available_quantity)
-        return error(res, "Stock limit exceed ho gayi.", 400);
+        return error(res, "Stock limit exceeded for this item.", 400);
       await pool.query(
         "UPDATE cart SET quantity = ?, updated_at = NOW() WHERE id = ?",
         [newQty, existing[0].id],
@@ -92,10 +97,10 @@ export const addToCart = async (req, res) => {
       );
     }
 
-    return success(res, {}, "Item cart mein add ho gaya.");
+    return success(res, {}, "Item added to cart successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Cart add fail hua.", 500);
+    return error(res, "Failed to add item to cart.", 500);
   }
 };
 
@@ -107,13 +112,13 @@ export const updateCartItem = async (req, res) => {
     const { quantity } = req.body;
 
     if (!quantity || quantity < 1)
-      return error(res, "Quantity kam se kam 1 honi chahiye.", 400);
+      return error(res, "Quantity must be at least 1.", 400);
 
     const [item] = await pool.query(
       "SELECT ci.id, ci.batch_id FROM cart ci WHERE ci.id = ? AND ci.user_id = ?",
       [id, userId],
     );
-    if (item.length === 0) return error(res, "Item nahi mila.", 404);
+    if (item.length === 0) return error(res, "Cart item not found.", 404);
 
     // Stock check
     const [batch] = await pool.query(
@@ -121,17 +126,17 @@ export const updateCartItem = async (req, res) => {
       [item[0].batch_id],
     );
     if (batch[0].available_quantity < quantity)
-      return error(res, "Itna stock available nahi hai.", 400);
+      return error(res, "Insufficient stock for the requested quantity.", 400);
 
     await pool.query(
       "UPDATE cart SET quantity = ?, updated_at = NOW() WHERE id = ?",
       [quantity, id],
     );
 
-    return success(res, {}, "Quantity update ho gayi.");
+    return success(res, {}, "Cart quantity updated successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Update fail hua.", 500);
+    return error(res, "Failed to update cart quantity.", 500);
   }
 };
 
@@ -145,13 +150,13 @@ export const removeCartItem = async (req, res) => {
       "SELECT id FROM cart WHERE id = ? AND user_id = ?",
       [id, userId],
     );
-    if (item.length === 0) return error(res, "Item nahi mila.", 404);
+    if (item.length === 0) return error(res, "Cart item not found.", 404);
 
     await pool.query("DELETE FROM cart WHERE id = ?", [id]);
-    return success(res, {}, "Item remove ho gaya.");
+    return success(res, {}, "Item removed from cart.");
   } catch (err) {
     console.error(err);
-    return error(res, "Remove fail hua.", 500);
+    return error(res, "Failed to remove item from cart.", 500);
   }
 };
 
@@ -159,10 +164,10 @@ export const removeCartItem = async (req, res) => {
 export const clearCart = async (req, res) => {
   try {
     await pool.query("DELETE FROM cart WHERE user_id = ?", [req.user.id]);
-    return success(res, {}, "Cart clear ho gayi.");
+    return success(res, {}, "Cart cleared successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Cart clear fail hua.", 500);
+    return error(res, "Failed to clear cart.", 500);
   }
 };
 
@@ -173,7 +178,7 @@ export const syncCart = async (req, res) => {
     const { items } = req.body; // [{ medicine_id, batch_id, quantity }]
 
     if (!items || !Array.isArray(items))
-      return error(res, "Items array zaroori hai.", 400);
+      return error(res, "Invalid items format. Array is required.", 400);
 
     for (const item of items) {
       const { medicine_id, batch_id, quantity = 1 } = item;
@@ -230,10 +235,9 @@ export const syncCart = async (req, res) => {
       [userId],
     );
 
-    // localStorage clear karo
     return success(res, { items: cartItems }, "Cart synced successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Cart sync fail hua.", 500);
+    return error(res, "Internal server error during cart sync.", 500);
   }
 };

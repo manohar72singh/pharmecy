@@ -8,10 +8,14 @@ export const getNotifications = async (req, res) => {
       [req.user.id],
     );
     const unread = rows.filter((n) => !n.is_read).length;
-    return success(res, { notifications: rows, unread }, "Fetched.");
+    return success(
+      res,
+      { notifications: rows, unread },
+      "Notifications retrieved successfully.",
+    );
   } catch (err) {
     console.error(err);
-    return error(res, "Fetch failed.", 500);
+    return error(res, "Failed to retrieve notifications.", 500);
   }
 };
 
@@ -20,10 +24,10 @@ export const markRead = async (req, res) => {
     await pool.query("UPDATE notifications SET is_read = 1 WHERE user_id = ?", [
       req.user.id,
     ]);
-    return success(res, {}, "Sab read mark ho gayi.");
+    return success(res, {}, "All notifications marked as read.");
   } catch (err) {
     console.error(err);
-    return error(res, "Failed.", 500);
+    return error(res, "Failed to update notifications.", 500);
   }
 };
 
@@ -33,9 +37,9 @@ export const markOneRead = async (req, res) => {
       "UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?",
       [req.params.id, req.user.id],
     );
-    return success(res, {}, "Read.");
+    return success(res, {}, "Notification marked as read.");
   } catch (err) {
     console.error(err);
-    return error(res, "Failed.", 500);
+    return error(res, "Failed to update notification status.", 500);
   }
 };

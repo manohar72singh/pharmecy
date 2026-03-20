@@ -12,7 +12,7 @@ const PAYMENT_METHODS = [
     id: "cod",
     icon: "💵",
     label: "Cash on Delivery",
-    sub: "Delivery pe cash dena hoga",
+    sub: "Pay when you receive your order",
   },
   {
     id: "online",
@@ -25,7 +25,7 @@ const PAYMENT_METHODS = [
     id: "wallet",
     icon: "👛",
     label: "MediShop Wallet",
-    sub: "Instant payment",
+    sub: "Instant payment from wallet",
   },
 ];
 
@@ -40,7 +40,7 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [showNewAddr, setShowNewAddr] = useState(false);
   const [couponCode, setCouponCode] = useState("");
-  const [couponApplied, setCouponApplied] = useState(null); // { discount_amount, code, title }
+  const [couponApplied, setCouponApplied] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -55,12 +55,10 @@ export default function Checkout() {
       return;
     }
 
-    // Cart se aya coupon load karo
     const savedCoupon = localStorage.getItem("cartCoupon");
     if (savedCoupon) {
       try {
         const parsed = JSON.parse(savedCoupon);
-        // discount_amount number ensure karo
         if (parsed)
           parsed.discount_amount = parseFloat(parsed.discount_amount) || 0;
         setCouponApplied(parsed);
@@ -111,7 +109,8 @@ export default function Checkout() {
 
   // ── Apply Coupon ─────────────────────────────────────
   const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) return setCouponError("Coupon code enter karo.");
+    if (!couponCode.trim())
+      return setCouponError("Please enter a coupon code.");
     setCouponLoading(true);
     setCouponError("");
     try {
@@ -140,7 +139,7 @@ export default function Checkout() {
 
   // ── Place Order ───────────────────────────────────
   const handlePlaceOrder = async () => {
-    if (!selectedAddr) return setError("Address select karo.");
+    if (!selectedAddr) return setError("Please select a delivery address.");
     setPlacing(true);
     setError("");
     try {
@@ -156,13 +155,12 @@ export default function Checkout() {
       localStorage.removeItem("cartCoupon");
       window.dispatchEvent(new Event("cartUpdated"));
     } catch (err) {
-      setError(err.response?.data?.message || "Order place karna fail hua.");
+      setError(err.response?.data?.message || "Failed to place order.");
     } finally {
       setPlacing(false);
     }
   };
 
-  // ── Loading ───────────────────────────────────────
   if (loading)
     return (
       <div className="min-h-screen bg-gray-50">
@@ -187,14 +185,14 @@ export default function Checkout() {
             🎉
           </div>
           <h2 className="text-3xl font-black text-gray-900 mb-2">
-            Order Ho Gaya!
+            Order Placed Successfully!
           </h2>
           <p className="text-gray-500 mb-1">
             Order ID:{" "}
             <strong className="text-gray-800">#{orderSuccess.order_id}</strong>
           </p>
           <p className="text-gray-500 mb-6">
-            Total:{" "}
+            Total Amount:{" "}
             <strong className="text-emerald-600">
               ₹{parseFloat(orderSuccess.total_amount).toFixed(2)}
             </strong>
@@ -202,11 +200,17 @@ export default function Checkout() {
 
           {orderSuccess.payment_mode === "cod" ? (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 text-sm text-amber-800">
-              💵 <strong>Cash on Delivery</strong> — delivery pe payment karein
+              <p>
+                💵 <strong>Cash on Delivery</strong> — Please keep the cash
+                ready at the time of delivery.
+              </p>
             </div>
           ) : (
             <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6 text-sm text-blue-800">
-              💳 Payment complete karo — bank redirect hoga
+              <p>
+                💳 Processing payment — you will be redirected to our secure
+                payment gateway.
+              </p>
             </div>
           )}
 
@@ -218,14 +222,14 @@ export default function Checkout() {
                 background: "linear-gradient(135deg, #065f46, #059669)",
               }}
             >
-              My Orders Dekho →
+              View My Orders →
             </Link>
             <Link
               to="/"
               className="px-6 py-3 rounded-2xl font-bold text-sm border-2"
               style={{ borderColor: "#059669", color: "#059669" }}
             >
-              Home Jao
+              Go to Home
             </Link>
           </div>
         </div>
@@ -236,7 +240,6 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center gap-2 text-xs text-gray-400">
@@ -253,7 +256,6 @@ export default function Checkout() {
         </div>
       </div>
 
-      {/* Step Indicator */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-0 max-w-md">
@@ -311,16 +313,12 @@ export default function Checkout() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* ── LEFT — Steps ── */}
           <div className="lg:col-span-2 space-y-6">
-            {/* ── STEP 1: Address ── */}
             {step === 1 && (
               <div>
                 <h2 className="text-xl font-black text-gray-900 mb-4">
                   📍 Delivery Address
                 </h2>
-
-                {/* Saved Addresses */}
                 {addresses.length > 0 && (
                   <div className="space-y-3 mb-4">
                     {addresses.map((addr) => (
@@ -385,14 +383,12 @@ export default function Checkout() {
                     ))}
                   </div>
                 )}
-
-                {/* Add New Address Toggle */}
                 {!showNewAddr ? (
                   <button
                     onClick={() => setShowNewAddr(true)}
                     className="w-full py-3.5 rounded-2xl border-2 border-dashed border-gray-200 text-sm font-bold text-gray-500 hover:border-emerald-400 hover:text-emerald-600 transition flex items-center justify-center gap-2"
                   >
-                    <span className="text-lg">+</span> Naya Address Add Karein
+                    <span className="text-lg">+</span> Add New Address
                   </button>
                 ) : (
                   <AddressForm
@@ -407,7 +403,6 @@ export default function Checkout() {
                     showCancel={addresses.length > 0}
                   />
                 )}
-
                 {selectedAddr && !showNewAddr && (
                   <button
                     onClick={() => setStep(2)}
@@ -416,13 +411,12 @@ export default function Checkout() {
                       background: "linear-gradient(135deg, #065f46, #059669)",
                     }}
                   >
-                    Payment Method Chunein →
+                    Select Payment Method →
                   </button>
                 )}
               </div>
             )}
 
-            {/* ── STEP 2: Payment ── */}
             {step === 2 && (
               <div>
                 <h2 className="text-xl font-black text-gray-900 mb-4">
@@ -468,27 +462,26 @@ export default function Checkout() {
                     </div>
                   ))}
                 </div>
-
                 {paymentMethod === "cod" && (
                   <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-800">
-                    💵 Delivery pe <strong>cash ready rakhein</strong>. Exact
-                    amount preferred.
+                    💵 Please <strong>keep the exact cash ready</strong> at the
+                    time of delivery.
                   </div>
                 )}
                 {(paymentMethod === "online" || paymentMethod === "upi") && (
                   <div className="mt-4 bg-blue-50 border border-blue-200 rounded-2xl p-4 text-sm text-blue-800">
-                    🔒 Order place hone ke baad{" "}
-                    <strong>secure payment gateway</strong> pe redirect karenge.
+                    🔒 You will be redirected to a{" "}
+                    <strong>secure payment gateway</strong> after placing the
+                    order.
                   </div>
                 )}
-
                 <div className="flex gap-3 mt-4">
                   <button
                     onClick={() => setStep(1)}
                     className="px-6 py-3.5 rounded-2xl font-bold text-sm border-2 transition"
                     style={{ borderColor: "#e5e7eb", color: "#6b7280" }}
                   >
-                    ← Wapas
+                    ← Back
                   </button>
                   <button
                     onClick={() => setStep(3)}
@@ -497,20 +490,17 @@ export default function Checkout() {
                       background: "linear-gradient(135deg, #065f46, #059669)",
                     }}
                   >
-                    Order Review Karein →
+                    Review Order →
                   </button>
                 </div>
               </div>
             )}
 
-            {/* ── STEP 3: Review ── */}
             {step === 3 && (
               <div>
                 <h2 className="text-xl font-black text-gray-900 mb-4">
                   📋 Order Review
                 </h2>
-
-                {/* Delivery Address Summary */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2">
@@ -547,7 +537,6 @@ export default function Checkout() {
                   )}
                 </div>
 
-                {/* Payment Summary */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-bold text-gray-700 text-sm">
@@ -566,7 +555,6 @@ export default function Checkout() {
                   </p>
                 </div>
 
-                {/* Coupon Apply */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
                   <h3 className="font-bold text-gray-700 text-sm mb-3">
                     🏷️ Coupon Code
@@ -578,7 +566,7 @@ export default function Checkout() {
                           {couponApplied.code} applied! ✅
                         </p>
                         <p className="text-xs text-emerald-600 mt-0.5">
-                          ₹{couponApplied.discount_amount.toFixed(2)} ki bachat
+                          Saved ₹{couponApplied.discount_amount.toFixed(2)}
                         </p>
                       </div>
                       <button
@@ -597,9 +585,8 @@ export default function Checkout() {
                           setCouponCode(e.target.value.toUpperCase());
                           setCouponError("");
                         }}
-                        placeholder="COUPON CODE YAHAN"
-                        className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm
-                                   font-bold tracking-widest focus:outline-none focus:border-emerald-400 focus:bg-white transition"
+                        placeholder="ENTER COUPON CODE"
+                        className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm font-bold tracking-widest focus:outline-none focus:border-emerald-400 focus:bg-white transition"
                       />
                       <button
                         onClick={handleApplyCoupon}
@@ -624,11 +611,10 @@ export default function Checkout() {
                     to="/offers"
                     className="text-xs text-emerald-600 font-bold mt-2 block hover:underline transition"
                   >
-                    🏷️ Available coupons dekho →
+                    🏷️ View all available coupons →
                   </Link>
                 </div>
 
-                {/* Items */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
                   <h3 className="font-bold text-gray-700 text-sm mb-3">
                     🛍️ Items ({totalItems})
@@ -677,7 +663,7 @@ export default function Checkout() {
                     className="px-6 py-3.5 rounded-2xl font-bold text-sm border-2 transition"
                     style={{ borderColor: "#e5e7eb", color: "#6b7280" }}
                   >
-                    ← Wapas
+                    ← Back
                   </button>
                   <button
                     onClick={handlePlaceOrder}
@@ -689,39 +675,15 @@ export default function Checkout() {
                         : "linear-gradient(135deg, #065f46, #059669)",
                     }}
                   >
-                    {placing ? (
-                      <>
-                        <svg
-                          className="animate-spin h-4 w-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8v8z"
-                          />
-                        </svg>
-                        Order Place Ho Raha Hai...
-                      </>
-                    ) : (
-                      `🎉 Order Place Karo — ₹${total.toFixed(2)}`
-                    )}
+                    {placing
+                      ? "Placing Order..."
+                      : `🎉 Place Order — ₹${total.toFixed(2)}`}
                   </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* ── RIGHT — Price Summary ── */}
           <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-gray-100 p-5 sticky top-4">
               <h3 className="font-bold text-gray-900 mb-4">Price Details</h3>
@@ -756,13 +718,11 @@ export default function Checkout() {
                 </div>
                 {(saved > 0 || couponDiscount > 0) && (
                   <p className="text-xs text-green-600 font-bold bg-green-50 px-3 py-2 rounded-lg text-center">
-                    🎉 ₹{(saved + couponDiscount).toFixed(2)} ki saving ho rahi
-                    hai!
+                    🎉 You are saving ₹{(saved + couponDiscount).toFixed(2)} on
+                    this order!
                   </p>
                 )}
               </div>
-
-              {/* Mini cart preview */}
               <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
                 {cart.slice(0, 3).map((item) => (
                   <div
@@ -778,13 +738,12 @@ export default function Checkout() {
                 ))}
                 {cart.length > 3 && (
                   <p className="text-xs text-gray-400 text-center">
-                    +{cart.length - 3} aur items
+                    +{cart.length - 3} more items
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Trust */}
             <div className="bg-white rounded-2xl border border-gray-100 p-4">
               {[
                 { icon: "🔒", text: "100% Secure Checkout" },

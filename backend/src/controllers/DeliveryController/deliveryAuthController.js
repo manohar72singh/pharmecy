@@ -16,12 +16,12 @@ export const getDeliveryProfile = async (req, res) => {
     );
 
     if (rows.length === 0)
-      return error(res, "Delivery boy profile nahi mila.", 404);
+      return error(res, "Delivery partner profile not found.", 404);
 
-    return success(res, rows[0], "Profile fetched.");
+    return success(res, rows[0], "Profile retrieved successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Fetch failed.", 500);
+    return error(res, "Failed to retrieve profile.", 500);
   }
 };
 
@@ -33,7 +33,8 @@ export const toggleAvailability = async (req, res) => {
       [req.user.id],
     );
 
-    if (rows.length === 0) return error(res, "Delivery boy nahi mila.", 404);
+    if (rows.length === 0)
+      return error(res, "Delivery partner record not found.", 404);
 
     const newStatus = rows[0].is_available ? 0 : 1;
 
@@ -45,10 +46,10 @@ export const toggleAvailability = async (req, res) => {
     return success(
       res,
       { is_available: newStatus },
-      newStatus ? "Ab aap Online hain! 🟢" : "Ab aap Offline hain. 🔴",
+      newStatus ? "You are now Online! 🟢" : "You are now Offline. 🔴",
     );
   } catch (err) {
     console.error(err);
-    return error(res, "Update failed.", 500);
+    return error(res, "Status update failed.", 500);
   }
 };

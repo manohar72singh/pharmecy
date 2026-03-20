@@ -78,7 +78,7 @@ export default function Profile() {
 
   // ── Update Profile ────────────────────────────────
   const handleInfoSave = async () => {
-    if (!infoForm.name) return showMsg("error", "Name zaroori hai.");
+    if (!infoForm.name) return showMsg("error", "Name is required.");
     setSaving(true);
     try {
       const { data } = await userService.updateProfile(infoForm);
@@ -89,7 +89,7 @@ export default function Profile() {
         "user",
         JSON.stringify({ ...user, name: infoForm.name }),
       );
-      showMsg("success", "Profile update ho gaya! ✅");
+      showMsg("success", "Profile updated successfully! ✅");
     } catch (err) {
       showMsg("error", err.response?.data?.message || "Update failed.");
     } finally {
@@ -102,14 +102,14 @@ export default function Profile() {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024)
-      return showMsg("error", "Photo 2MB se chhoti honi chahiye.");
+      return showMsg("error", "Image size must be less than 2MB.");
     const formData = new FormData();
     formData.append("photo", file);
     setPhotoLoading(true);
     try {
       const { data } = await userService.uploadPhoto(formData);
       setProfile({ ...profile, profile_image: data.data.profile_image });
-      showMsg("success", "Photo upload ho gayi! ✅");
+      showMsg("success", "Photo uploaded successfully! ✅");
     } catch (err) {
       showMsg("error", "Photo upload failed.", err);
     } finally {
@@ -121,19 +121,19 @@ export default function Profile() {
   const handlePassChange = async () => {
     const { old_password, new_password, confirm_password } = passForm;
     if (!old_password || !new_password || !confirm_password)
-      return showMsg("error", "Sabhi fields fill karo.");
+      return showMsg("error", "Please fill in all fields.");
     if (new_password.length < 6)
-      return showMsg("error", "New password 6+ characters ka hona chahiye.");
+      return showMsg("error", "New password must be at least 6 characters.");
     if (new_password !== confirm_password)
       return showMsg(
         "error",
-        "New password aur confirm password match nahi karte.",
+        "New password and confirm password do not match.",
       );
     setSaving(true);
     try {
       await userService.changePassword({ old_password, new_password });
       setPassForm({ old_password: "", new_password: "", confirm_password: "" });
-      showMsg("success", "Password change ho gaya! ✅");
+      showMsg("success", "Password changed successfully! ✅");
     } catch (err) {
       showMsg(
         "error",
@@ -149,7 +149,7 @@ export default function Profile() {
     try {
       await addressService.remove(id);
       setAddresses(addresses.filter((a) => a.id !== id));
-      showMsg("success", "Address delete ho gaya.");
+      showMsg("success", "Address deleted successfully.");
     } catch (err) {
       showMsg("error", "Delete failed.", err);
     }
@@ -163,7 +163,7 @@ export default function Profile() {
         addresses.map((a) => ({ ...a, is_default: a.id === id ? 1 : 0 })),
       );
     } catch (err) {
-      showMsg("error", "Failed.", err);
+      showMsg("error", "Failed to set default address.", err);
     }
   };
 
@@ -181,7 +181,7 @@ export default function Profile() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Profile load ho raha hai...</p>
+          <p className="text-gray-500 text-sm">Loading your profile...</p>
         </div>
       </div>
     );
@@ -210,9 +210,7 @@ export default function Profile() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* ── LEFT SIDEBAR ── */}
           <div className="lg:col-span-1 space-y-4">
-            {/* Avatar Card */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center">
-              {/* Photo */}
               <div className="relative w-24 h-24 mx-auto mb-4">
                 {photoUrl ? (
                   <img
@@ -230,7 +228,6 @@ export default function Profile() {
                     {avatarText}
                   </div>
                 )}
-                {/* Upload button */}
                 <button
                   onClick={() => photoRef.current?.click()}
                   disabled={photoLoading}
@@ -268,7 +265,6 @@ export default function Profile() {
               </p>
             </div>
 
-            {/* Nav Tabs */}
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
               {TABS.map((t, idx) => (
                 <button
@@ -286,7 +282,6 @@ export default function Profile() {
               ))}
             </div>
 
-            {/* Quick Links */}
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
               <Link
                 to="/orders"
@@ -311,14 +306,12 @@ export default function Profile() {
 
           {/* ── RIGHT CONTENT ── */}
           <div className="lg:col-span-3">
-            {/* ── TAB: Personal Info ── */}
             {tab === "info" && (
               <div className="bg-white rounded-2xl border border-gray-100 p-6">
                 <h2 className="text-lg font-black text-gray-900 mb-6">
                   👤 Personal Information
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Name */}
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-gray-600 mb-1.5">
                       Full Name *
@@ -333,7 +326,6 @@ export default function Profile() {
                     />
                   </div>
 
-                  {/* Phone — readonly */}
                   <div>
                     <label className="block text-xs font-bold text-gray-600 mb-1.5">
                       Phone Number
@@ -350,11 +342,10 @@ export default function Profile() {
                       </span>
                     </div>
                     <p className="text-xs text-gray-400 mt-1">
-                      Phone number change nahi ho sakta.
+                      Phone number cannot be changed.
                     </p>
                   </div>
 
-                  {/* Email */}
                   <div>
                     <label className="block text-xs font-bold text-gray-600 mb-1.5">
                       Email Address
@@ -370,7 +361,6 @@ export default function Profile() {
                     />
                   </div>
 
-                  {/* DOB */}
                   <div>
                     <label className="block text-xs font-bold text-gray-600 mb-1.5">
                       Date of Birth
@@ -388,7 +378,6 @@ export default function Profile() {
                     />
                   </div>
 
-                  {/* Gender */}
                   <div>
                     <label className="block text-xs font-bold text-gray-600 mb-1.5">
                       Gender
@@ -420,37 +409,11 @@ export default function Profile() {
                       : "linear-gradient(135deg, #065f46, #059669)",
                   }}
                 >
-                  {saving ? (
-                    <>
-                      <svg
-                        className="animate-spin h-4 w-4"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8v8z"
-                        />
-                      </svg>
-                      Saving...
-                    </>
-                  ) : (
-                    "💾 Save Changes"
-                  )}
+                  {saving ? "Saving..." : "💾 Save Changes"}
                 </button>
               </div>
             )}
 
-            {/* ── TAB: Addresses ── */}
             {tab === "addresses" && (
               <div className="space-y-4">
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
@@ -476,13 +439,13 @@ export default function Profile() {
                     <div className="text-center py-12">
                       <div className="text-5xl mb-3">📍</div>
                       <p className="text-gray-500 font-semibold mb-2">
-                        Koi address nahi hai
+                        No addresses found
                       </p>
                       <button
                         onClick={() => setShowNewAddr(true)}
                         className="text-sm font-bold text-emerald-600 hover:underline"
                       >
-                        + Pehla address add karo
+                        + Add your first address
                       </button>
                     </div>
                   ) : (
@@ -508,11 +471,9 @@ export default function Profile() {
                                   </span>
                                 )}
                               </div>
-                              {addr.phone && (
-                                <p className="text-xs text-gray-500 mb-1">
-                                  {addr.phone}
-                                </p>
-                              )}
+                              <p className="text-xs text-gray-500 mb-1">
+                                {addr.phone}
+                              </p>
                               <p className="text-sm text-gray-600">
                                 {addr.address_line1}
                                 {addr.address_line2
@@ -546,13 +507,11 @@ export default function Profile() {
                   )}
                 </div>
 
-                {/* AddressForm — neeche show hoga */}
                 {showNewAddr && (
                   <AddressForm
                     onSave={(saved, allAddrs) => {
                       setAddresses(allAddrs);
                       setShowNewAddr(false);
-                      // showMsg("success", "Address add ho gaya! ✅");
                     }}
                     onCancel={() => setShowNewAddr(false)}
                     showCancel={true}
@@ -561,7 +520,6 @@ export default function Profile() {
               </div>
             )}
 
-            {/* ── TAB: Change Password ── */}
             {tab === "password" && (
               <div className="bg-white rounded-2xl border border-gray-100 p-6">
                 <h2 className="text-lg font-black text-gray-900 mb-6">
@@ -619,23 +577,18 @@ export default function Profile() {
                         passForm.new_password &&
                         passForm.confirm_password && (
                           <p
-                            className={`text-xs mt-1 font-semibold ${
-                              passForm.new_password ===
-                              passForm.confirm_password
-                                ? "text-green-500"
-                                : "text-red-500"
-                            }`}
+                            className={`text-xs mt-1 font-semibold ${passForm.new_password === passForm.confirm_password ? "text-green-500" : "text-red-500"}`}
                           >
                             {passForm.new_password === passForm.confirm_password
-                              ? "✓ Match ho raha hai"
-                              : "✗ Match nahi ho raha"}
+                              ? "✓ Passwords match"
+                              : "✗ Passwords do not match"}
                           </p>
                         )}
                     </div>
                   ))}
 
                   <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-700">
-                    💡 Password kam se kam 6 characters ka hona chahiye.
+                    💡 Password must be at least 6 characters long.
                   </div>
 
                   <button
@@ -648,32 +601,7 @@ export default function Profile() {
                         : "linear-gradient(135deg, #065f46, #059669)",
                     }}
                   >
-                    {saving ? (
-                      <>
-                        <svg
-                          className="animate-spin h-4 w-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8v8z"
-                          />
-                        </svg>
-                        Changing...
-                      </>
-                    ) : (
-                      "🔒 Change Password"
-                    )}
+                    {saving ? "Changing..." : "🔒 Change Password"}
                   </button>
                 </div>
               </div>

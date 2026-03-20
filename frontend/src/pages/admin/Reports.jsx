@@ -36,41 +36,45 @@ export default function AdminReports() {
 
   return (
     <div className="space-y-6">
-      {/* Date Filter */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3 flex-wrap">
+      {/* Date Range Filter */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-4 flex-wrap shadow-sm">
         <div className="flex items-center gap-2">
-          <label className="text-sm font-bold text-gray-600">From:</label>
+          <label className="text-xs font-black uppercase text-gray-500 tracking-wider">
+            From:
+          </label>
           <input
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400"
+            className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400 bg-gray-50 transition-all"
           />
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm font-bold text-gray-600">To:</label>
+          <label className="text-xs font-black uppercase text-gray-500 tracking-wider">
+            To:
+          </label>
           <input
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400"
+            className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400 bg-gray-50 transition-all"
           />
         </div>
         <button
           onClick={load}
-          className="px-4 py-2 rounded-xl text-white text-sm font-bold"
+          className="px-6 py-2 rounded-xl text-white text-sm font-bold shadow-md hover:opacity-90 transition-opacity"
           style={{ background: "linear-gradient(135deg,#065f46,#059669)" }}
         >
-          Apply Filter
+          Generate Report
         </button>
       </div>
 
-      {/* Summary Cards */}
+      {/* Performance Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
             label: "Total Revenue",
-            value: `₹${parseFloat(data?.summary?.revenue || 0).toFixed(0)}`,
+            value: `₹${parseFloat(data?.summary?.revenue || 0).toLocaleString("en-IN")}`,
             icon: "💰",
             color: "text-emerald-600",
           },
@@ -81,13 +85,13 @@ export default function AdminReports() {
             color: "text-blue-600",
           },
           {
-            label: "Delivered",
+            label: "Successful Deliveries",
             value: data?.summary?.delivered || 0,
             icon: "✅",
             color: "text-green-600",
           },
           {
-            label: "Cancelled",
+            label: "Order Cancellations",
             value: data?.summary?.cancelled || 0,
             icon: "❌",
             color: "text-red-500",
@@ -95,78 +99,88 @@ export default function AdminReports() {
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white rounded-2xl border border-gray-100 p-5"
+            className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm"
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-gray-500 font-semibold">{s.label}</p>
-                <p className={`text-3xl font-black mt-1 ${s.color}`}>
+                <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest">
+                  {s.label}
+                </p>
+                <p className={`text-2xl font-black mt-1 ${s.color}`}>
                   {s.value}
                 </p>
               </div>
-              <span className="text-3xl">{s.icon}</span>
+              <span className="text-3xl opacity-80">{s.icon}</span>
             </div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Medicines — Paginated */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        {/* Top Performing Medicines */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
-            <h3 className="font-bold text-gray-900">
-              🏆 Top Selling Medicines
+            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+              🏆 Best Selling Products
             </h3>
-            <span className="text-xs text-gray-400">
-              {(data?.top_medicines || []).length} total
+            <span className="text-[10px] font-bold uppercase text-gray-400 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+              {data?.top_medicines?.length || 0} Products
             </span>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-gray-50 min-h-[300px]">
             {(data?.top_medicines || [])
               .slice((medPage - 1) * MED_PER_PAGE, medPage * MED_PER_PAGE)
               .map((m, i) => {
                 const globalIdx = (medPage - 1) * MED_PER_PAGE + i;
                 return (
-                  <div key={i} className="flex items-center gap-3 px-5 py-3">
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50/50 transition-colors"
+                  >
                     <span
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0 ${
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0 ${
                         globalIdx === 0
-                          ? "bg-amber-400"
+                          ? "bg-amber-400 shadow-sm"
                           : globalIdx === 1
-                            ? "bg-gray-400"
+                            ? "bg-gray-400 shadow-sm"
                             : globalIdx === 2
-                              ? "bg-orange-400"
+                              ? "bg-orange-400 shadow-sm"
                               : "bg-gray-200 text-gray-600"
                       }`}
                     >
                       {globalIdx + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
+                      <p className="text-sm font-bold text-gray-900 truncate">
                         {m.name}
                       </p>
-                      <p className="text-xs text-gray-400">{m.brand}</p>
+                      <p className="text-[10px] uppercase font-bold text-gray-400 tracking-tighter">
+                        {m.brand}
+                      </p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-bold text-emerald-600">
-                        {m.sold} sold
+                      <p className="text-sm font-black text-emerald-600">
+                        {m.sold} Units
                       </p>
-                      <p className="text-xs text-gray-400">
-                        ₹{parseFloat(m.revenue).toFixed(0)}
+                      <p className="text-[10px] font-bold text-gray-400 uppercase">
+                        ₹{parseFloat(m.revenue).toLocaleString("en-IN")}
                       </p>
                     </div>
                   </div>
                 );
               })}
             {(data?.top_medicines || []).length === 0 && (
-              <p className="text-center py-8 text-gray-400 text-sm">No data</p>
+              <div className="flex flex-col items-center justify-center py-20 text-gray-400 italic text-sm">
+                No sales data available for this period.
+              </div>
             )}
           </div>
-          {/* Pagination */}
+
+          {/* Internal Pagination */}
           {(data?.top_medicines || []).length > MED_PER_PAGE && (
-            <div className="px-5 py-3 border-t border-gray-50 flex items-center justify-between">
-              <p className="text-xs text-gray-400">
-                {(medPage - 1) * MED_PER_PAGE + 1}–
+            <div className="px-5 py-3 border-t border-gray-50 flex items-center justify-between bg-gray-50/30">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                Showing {(medPage - 1) * MED_PER_PAGE + 1}–
                 {Math.min(
                   medPage * MED_PER_PAGE,
                   (data?.top_medicines || []).length,
@@ -177,34 +191,10 @@ export default function AdminReports() {
                 <button
                   onClick={() => setMedPage((p) => Math.max(1, p - 1))}
                   disabled={medPage === 1}
-                  className="px-3 py-1 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition"
+                  className="w-8 h-8 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-40 transition-all flex items-center justify-center shadow-sm"
                 >
                   ←
                 </button>
-                {Array.from(
-                  {
-                    length: Math.ceil(
-                      (data?.top_medicines || []).length / MED_PER_PAGE,
-                    ),
-                  },
-                  (_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setMedPage(i + 1)}
-                      className={`w-7 h-7 rounded-lg text-xs font-bold transition ${medPage === i + 1 ? "text-white" : "border border-gray-200 text-gray-600 hover:bg-gray-50"}`}
-                      style={
-                        medPage === i + 1
-                          ? {
-                              background:
-                                "linear-gradient(135deg,#065f46,#059669)",
-                            }
-                          : {}
-                      }
-                    >
-                      {i + 1}
-                    </button>
-                  ),
-                )}
                 <button
                   onClick={() =>
                     setMedPage((p) =>
@@ -220,7 +210,7 @@ export default function AdminReports() {
                     medPage ===
                     Math.ceil((data?.top_medicines || []).length / MED_PER_PAGE)
                   }
-                  className="px-3 py-1 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition"
+                  className="w-8 h-8 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:bg-white disabled:opacity-40 transition-all flex items-center justify-center shadow-sm"
                 >
                   →
                 </button>
@@ -229,12 +219,14 @@ export default function AdminReports() {
           )}
         </div>
 
-        {/* Category Revenue */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        {/* Revenue contribution by Category */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-gray-50">
-            <h3 className="font-bold text-gray-900">📂 Category Revenue</h3>
+            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+              📂 Revenue by Category
+            </h3>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-gray-50 p-2">
             {(data?.category_revenue || []).map((c, i) => {
               const maxRevenue = Math.max(
                 ...(data?.category_revenue || []).map((x) =>
@@ -244,27 +236,35 @@ export default function AdminReports() {
               const pct =
                 maxRevenue > 0 ? (parseFloat(c.revenue) / maxRevenue) * 100 : 0;
               return (
-                <div key={i} className="px-5 py-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-semibold text-gray-900">
+                <div
+                  key={i}
+                  className="px-3 py-4 hover:bg-gray-50/50 rounded-xl transition-colors"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-bold text-gray-900">
                       {c.category}
                     </p>
-                    <p className="text-sm font-bold text-emerald-600">
-                      ₹{parseFloat(c.revenue).toFixed(0)}
+                    <p className="text-sm font-black text-emerald-600">
+                      ₹{parseFloat(c.revenue).toLocaleString("en-IN")}
                     </p>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
+                  <div className="w-full bg-gray-100 rounded-full h-2">
                     <div
-                      className="h-1.5 rounded-full"
+                      className="h-2 rounded-full shadow-inner"
                       style={{
                         width: `${pct}%`,
-                        background: "linear-gradient(135deg,#065f46,#059669)",
+                        background: "linear-gradient(90deg,#065f46,#10b981)",
                       }}
                     />
                   </div>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {c.sold} units sold
-                  </p>
+                  <div className="flex justify-between mt-2">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter italic">
+                      {c.sold} units sold
+                    </p>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                      {Math.round(pct)}% of Peak
+                    </p>
+                  </div>
                 </div>
               );
             })}
@@ -272,21 +272,24 @@ export default function AdminReports() {
         </div>
       </div>
 
-      {/* Daily Revenue Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-50">
-          <h3 className="font-bold text-gray-900">
-            📅 Daily Revenue (Last 30 days)
+      {/* Daily Transaction History */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-gray-50 bg-gray-50/30 flex justify-between items-center">
+          <h3 className="font-bold text-gray-900 flex items-center gap-2">
+            📅 Daily Revenue Overview
           </h3>
+          <span className="text-[10px] font-black uppercase text-emerald-600 tracking-widest">
+            Last 30 Active Days
+          </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                {["Date", "Orders", "Revenue"].map((h) => (
+              <tr className="border-b border-gray-100 bg-gray-50/50">
+                {["Date", "Total Orders", "Net Revenue"].map((h) => (
                   <th
                     key={h}
-                    className="text-left px-5 py-3 text-xs font-bold text-gray-500 uppercase"
+                    className="text-left px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest"
                   >
                     {h}
                   </th>
@@ -295,17 +298,22 @@ export default function AdminReports() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {(data?.daily_revenue || []).map((d, i) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  <td className="px-5 py-3 font-semibold text-gray-900">
+                <tr
+                  key={i}
+                  className="hover:bg-emerald-50/30 transition-colors"
+                >
+                  <td className="px-5 py-4 font-bold text-gray-800">
                     {new Date(d.date).toLocaleDateString("en-IN", {
-                      day: "numeric",
+                      day: "2-digit",
                       month: "short",
                       year: "numeric",
                     })}
                   </td>
-                  <td className="px-5 py-3 text-gray-600">{d.orders}</td>
-                  <td className="px-5 py-3 font-bold text-emerald-600">
-                    ₹{parseFloat(d.revenue).toFixed(0)}
+                  <td className="px-5 py-4 text-gray-600 font-medium">
+                    {d.orders} Orders
+                  </td>
+                  <td className="px-5 py-4 font-black text-emerald-600">
+                    ₹{parseFloat(d.revenue).toLocaleString("en-IN")}
                   </td>
                 </tr>
               ))}
@@ -313,9 +321,9 @@ export default function AdminReports() {
                 <tr>
                   <td
                     colSpan={3}
-                    className="px-5 py-10 text-center text-gray-400"
+                    className="px-5 py-12 text-center text-gray-400 italic text-sm"
                   >
-                    No data
+                    No transaction history found for the selected period.
                   </td>
                 </tr>
               )}

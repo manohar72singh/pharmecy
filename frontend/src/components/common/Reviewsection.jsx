@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import reviewService from "../../services/reviewService";
+import reviewService from "../../services/reviewservice";
 
 const StarRating = ({ rating, setRating, readonly = false }) => (
   <div className="flex gap-1">
@@ -20,8 +20,6 @@ export default function ReviewSection({ medicineId, readonly = true }) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  // readonly mode mein form kabhi nahi dikhega
-  const canReview = !readonly && isLoggedIn && !alreadyReviewed;
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
@@ -29,13 +27,14 @@ export default function ReviewSection({ medicineId, readonly = true }) {
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const isLoggedIn = !!localStorage.getItem("token");
+  const alreadyReviewed = reviews.some((r) => r.user_id === user?.id);
+  const canReview = !readonly && isLoggedIn && !alreadyReviewed;
 
   useEffect(() => {
     if (!medicineId) return;
     reviewService
       .getByMedicine(medicineId)
       .then((res) => {
-        console.log("Reviews:", res.data);
         setReviews(res.data.data || []);
       })
       .catch((err) => {
@@ -54,7 +53,7 @@ export default function ReviewSection({ medicineId, readonly = true }) {
     : 0;
 
   const handleSubmit = async () => {
-    if (!rating) return showMsg("error", "Rating zaroori hai.");
+    if (!rating) return showMsg("error", "Please provide a rating.");
     setSaving(true);
     try {
       const { data } = await reviewService.add({
@@ -66,7 +65,7 @@ export default function ReviewSection({ medicineId, readonly = true }) {
         {
           ...data.data,
           id: data.data.id,
-          user_name: user?.name || "Aap",
+          user_name: user?.name || "You",
           rating,
           comment,
           created_at: new Date(),
@@ -76,25 +75,13 @@ export default function ReviewSection({ medicineId, readonly = true }) {
       setShowForm(false);
       setRating(5);
       setComment("");
-      showMsg("success", "Review add ho gaya! ⭐");
+      showMsg("success", "Review added successfully! ⭐");
     } catch (err) {
-      showMsg("error", err.response?.data?.message || "Review add nahi hua.");
+      showMsg("error", err.response?.data?.message || "Failed to add review.");
     } finally {
       setSaving(false);
     }
   };
-
-  // const handleDelete = async (id) => {
-  //   try {
-  //     await reviewService.remove(id);
-  //     setReviews((prev) => prev.filter((r) => r.id !== id));
-  //     showMsg("success", "Review delete ho gaya.");
-  //   } catch {
-  //     showMsg("error", "Delete failed.");
-  //   }
-  // };
-
-  const alreadyReviewed = reviews.some((r) => r.user_id === user?.id);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5 mt-6">
@@ -120,7 +107,7 @@ export default function ReviewSection({ medicineId, readonly = true }) {
             className="text-sm font-bold text-white px-4 py-2 rounded-xl"
             style={{ background: "linear-gradient(135deg, #065f46, #059669)" }}
           >
-            + Review Do
+            + Write a Review
           </button>
         )}
       </div>
@@ -141,7 +128,7 @@ export default function ReviewSection({ medicineId, readonly = true }) {
       {/* Review Form */}
       {showForm && canReview && (
         <div className="bg-gray-50 rounded-2xl p-4 mb-4 border border-gray-200">
-          <h4 className="font-bold text-gray-900 mb-3">Apna Review Likhein</h4>
+          <h4 className="font-bold text-gray-900 mb-3">Write Your Review</h4>
           <div className="mb-3">
             <p className="text-xs font-bold text-gray-600 mb-1">Rating *</p>
             <StarRating rating={rating} setRating={setRating} />
@@ -154,7 +141,7 @@ export default function ReviewSection({ medicineId, readonly = true }) {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
-              placeholder="Is medicine ke baare mein likhein..."
+              placeholder="Share your experience with this medicine..."
               className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400 resize-none"
             />
           </div>
@@ -175,7 +162,7 @@ export default function ReviewSection({ medicineId, readonly = true }) {
                   : "linear-gradient(135deg, #065f46, #059669)",
               }}
             >
-              {saving ? "Saving..." : "Submit ⭐"}
+              {saving ? "Saving..." : "Submit Review ⭐"}
             </button>
           </div>
         </div>
@@ -183,14 +170,16 @@ export default function ReviewSection({ medicineId, readonly = true }) {
 
       {/* Reviews List */}
       {loading ? (
-        <div className="text-center py-6 text-gray-400 text-sm">Loading...</div>
+        <div className="text-center py-6 text-gray-400 text-sm">
+          Loading reviews...
+        </div>
       ) : reviews.length === 0 ? (
         <div className="text-center py-8">
           <div className="text-4xl mb-2">⭐</div>
-          <p className="text-gray-500 font-semibold text-sm">
-            Koi review nahi abhi
+          <p className="text-gray-500 font-semibold text-sm">No reviews yet</p>
+          <p className="text-gray-400 text-xs mt-1">
+            Be the first to review this product!
           </p>
-          <p className="text-gray-400 text-xs mt-1">Pehle review likhein!</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -217,17 +206,10 @@ export default function ReviewSection({ medicineId, readonly = true }) {
                       {new Date(review.created_at).toLocaleDateString("en-IN", {
                         day: "numeric",
                         month: "short",
+                        year: "numeric",
                       })}
                     </span>
                   )}
-                  {/* {review.user_id === user?.id && (
-                    <button
-                      onClick={() => handleDelete(review.id)}
-                      className="text-xs text-red-400 hover:text-red-600 font-bold"
-                    >
-                      🗑️
-                    </button>
-                  )} */}
                 </div>
               </div>
               {review.comment && (

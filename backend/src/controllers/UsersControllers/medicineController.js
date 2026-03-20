@@ -104,16 +104,15 @@ export const getMedicines = async (req, res) => {
       count[0].total,
       page,
       limit,
-      "Medicines fetched.",
+      "Medicines retrieved successfully.",
     );
   } catch (err) {
     console.error(err);
-    return error(res, "Failed to fetch medicines.", 500);
+    return error(res, "Internal server error while fetching medicines.", 500);
   }
 };
 
 // ── Get featured medicines ────────────────────────────
-// ✅ FIX: batch_id aur stock_id add kiye — pehle missing the isliye cart mein undefined aa raha tha
 export const getFeaturedMedicines = async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -146,10 +145,14 @@ export const getFeaturedMedicines = async (req, res) => {
       ORDER BY m.id DESC
       LIMIT 8
     `);
-    return success(res, rows, "Featured medicines fetched.");
+    return success(res, rows, "Featured medicines retrieved successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Failed to fetch featured medicines.", 500);
+    return error(
+      res,
+      "Internal server error while fetching featured medicines.",
+      500,
+    );
   }
 };
 
@@ -186,7 +189,8 @@ export const getMedicineById = async (req, res) => {
       [id],
     );
 
-    if (rows.length === 0) return error(res, "Medicine not found.", 404);
+    if (rows.length === 0)
+      return error(res, "Medicine product not found.", 404);
 
     const [images] = await pool.query(
       `
@@ -198,10 +202,18 @@ export const getMedicineById = async (req, res) => {
       [id],
     );
 
-    return success(res, { ...rows[0], images }, "Medicine fetched.");
+    return success(
+      res,
+      { ...rows[0], images },
+      "Medicine details retrieved successfully.",
+    );
   } catch (err) {
     console.error(err);
-    return error(res, "Failed to fetch medicine.", 500);
+    return error(
+      res,
+      "Internal server error while fetching medicine details.",
+      500,
+    );
   }
 };
 
@@ -218,9 +230,9 @@ export const getCategories = async (req, res) => {
       GROUP BY c.id, c.name, c.slug, c.image
       ORDER BY c.sort_order ASC
     `);
-    return success(res, rows, "Categories fetched.");
+    return success(res, rows, "Categories retrieved successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Failed to fetch categories.", 500);
+    return error(res, "Internal server error while fetching categories.", 500);
   }
 };

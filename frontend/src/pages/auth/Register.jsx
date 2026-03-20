@@ -24,22 +24,34 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.phone || !form.password)
-      return setError("Sabhi required fields fill karo.");
+      return setError("Please fill in all required fields.");
     if (form.phone.length !== 10)
-      return setError("Phone number 10 digits ka hona chahiye.");
+      return setError("Phone number must be 10 digits.");
     if (form.password.length < 6)
-      return setError("Password kam se kam 6 characters ka hona chahiye.");
+      return setError("Password must be at least 6 characters.");
     if (form.password !== form.confirmPassword)
-      return setError("Dono passwords match nahi kar rahe.");
+      return setError("Passwords do not match.");
     setLoading(true);
     try {
-      await authService.register({
+      const response = await authService.register({
         name: form.name,
         phone: form.phone,
         email: form.email,
         password: form.password,
       });
-      navigate("/verify-otp", { state: { phone: form.phone } });
+
+      // ✅ Get OTP from response and pass to verify page
+      const otpFromBackend = response?.data?.data?.otp || "";
+
+      console.log("📦 Registration Response:", response.data);
+      console.log("🔢 OTP Received:", otpFromBackend);
+
+      navigate("/verify-otp", {
+        state: {
+          phone: form.phone,
+          otp: otpFromBackend, // ✅ OTP pass ho raha hai
+        },
+      });
     } catch (err) {
       setError(
         err.response?.data?.message || "Registration failed. Try again.",
@@ -129,7 +141,7 @@ export default function Register() {
             className="text-xs leading-relaxed mb-5"
             style={{ color: "#a7f3d0" }}
           >
-            Free account banao aur pao exclusive discounts, fast delivery aur
+            Create a free account to get exclusive discounts, fast delivery, and
             24/7 support.
           </p>
 
@@ -139,7 +151,7 @@ export default function Register() {
               {
                 icon: "🎁",
                 title: "Welcome Bonus",
-                sub: "First order 15% off",
+                sub: "15% off first order",
               },
               {
                 icon: "📋",
@@ -149,7 +161,7 @@ export default function Register() {
               {
                 icon: "🔔",
                 title: "Refill Reminders",
-                sub: "Never miss dawai",
+                sub: "Never miss medicine",
               },
               { icon: "💳", title: "Easy Returns", sub: "7-day returns" },
             ].map((b, i) => (
@@ -237,10 +249,10 @@ export default function Register() {
           {/* Heading */}
           <div className="mb-4">
             <h2 className="text-2xl font-black text-gray-900 mb-0.5">
-              Account Banao 🎉
+              Create Account 🎉
             </h2>
             <p className="text-gray-400 text-xs">
-              Free mein register karo — sirf 1 minute lagega
+              Register for free — it only takes a minute
             </p>
           </div>
 
@@ -266,7 +278,7 @@ export default function Register() {
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  placeholder="Apna pura naam likhein"
+                  placeholder="Enter your full name"
                   className={`${inputClass} pl-10`}
                   onFocus={focusStyle}
                   onBlur={blurStyle}
@@ -298,7 +310,7 @@ export default function Register() {
                 />
               </div>
               <p className="text-[11px] text-gray-400 mt-1">
-                OTP is number pe aayega
+                OTP will be sent to this number
               </p>
             </div>
 
@@ -401,7 +413,7 @@ export default function Register() {
                   name="confirmPassword"
                   value={form.confirmPassword}
                   onChange={handleChange}
-                  placeholder="Password dobara likhein"
+                  placeholder="Confirm your password"
                   className={`${inputClass} pr-12`}
                   style={{
                     borderColor:
@@ -516,7 +528,7 @@ export default function Register() {
               to="/"
               className="text-xs text-gray-400 hover:text-emerald-600 transition"
             >
-              ← Wapas Home pe jao
+              ← Back to Home
             </Link>
           </p>
         </div>

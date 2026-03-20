@@ -60,12 +60,11 @@ export default function Prescription() {
     setTimeout(() => setMsg({ type: "", text: "" }), 4000);
   };
 
-  // ── File Select ───────────────────────────────────
   const handleFileChange = (e) => {
     const f = e.target.files[0];
     if (!f) return;
     if (f.size > 5 * 1024 * 1024)
-      return showMsg("error", "File 5MB se chhoti honi chahiye.");
+      return showMsg("error", "File size must be less than 5MB.");
     setFile(f);
     if (f.type.startsWith("image/")) {
       setPreview(URL.createObjectURL(f));
@@ -74,9 +73,8 @@ export default function Prescription() {
     }
   };
 
-  // ── Upload ────────────────────────────────────────
   const handleUpload = async () => {
-    if (!file) return showMsg("error", "Pehle prescription select karo.");
+    if (!file) return showMsg("error", "Please select a prescription first.");
     const formData = new FormData();
     formData.append("prescription", file);
     setUploading(true);
@@ -91,7 +89,7 @@ export default function Prescription() {
       if (fileRef.current) fileRef.current.value = "";
       showMsg(
         "success",
-        "Prescription upload ho gayi! Admin jaldi verify karega. ✅",
+        "Prescription uploaded successfully! Our team will verify it shortly. ✅",
       );
     } catch (err) {
       showMsg("error", err.response?.data?.message || "Upload failed.");
@@ -100,19 +98,17 @@ export default function Prescription() {
     }
   };
 
-  // ── Delete ────────────────────────────────────────
   const handleDelete = async (id) => {
     try {
       await prescriptionService.remove(id);
       setPrescriptions((prev) => prev.filter((p) => p.id !== id));
       setDeleteId(null);
-      showMsg("success", "Prescription delete ho gayi.");
+      showMsg("success", "Prescription deleted successfully.");
     } catch (err) {
       showMsg("error", err.response?.data?.message || "Delete failed.");
     }
   };
 
-  // ── Order from Prescription ───────────────────────
   const handleOrder = (prescription) => {
     navigate("/medicines", { state: { prescription_id: prescription.id } });
   };
@@ -122,7 +118,7 @@ export default function Prescription() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Load ho raha hai...</p>
+          <p className="text-gray-500 text-sm">Loading...</p>
         </div>
       </div>
     );
@@ -163,10 +159,10 @@ export default function Prescription() {
         >
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
             <h3 className="text-lg font-black text-gray-900 mb-2">
-              Delete Karein?
+              Delete Prescription?
             </h3>
             <p className="text-sm text-gray-500 mb-6">
-              Yeh prescription permanently delete ho jaayegi.
+              This prescription will be permanently deleted from your account.
             </p>
             <div className="flex gap-3">
               <button
@@ -213,14 +209,13 @@ export default function Prescription() {
           </div>
         )}
 
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-black text-gray-900">
               My Prescriptions
             </h1>
             <p className="text-sm text-gray-400 mt-0.5">
-              {prescriptions.length} total
+              {prescriptions.length} total prescriptions
             </p>
           </div>
         </div>
@@ -229,11 +224,8 @@ export default function Prescription() {
           {/* ── Upload Section ── */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl border border-gray-100 p-5 sticky top-4">
-              <h3 className="font-bold text-gray-900 mb-4">
-                📤 Upload Prescription
-              </h3>
+              <h3 className="font-bold text-gray-900 mb-4">📤 Upload New</h3>
 
-              {/* Drop Zone */}
               <div
                 onClick={() => fileRef.current?.click()}
                 className={`relative border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition mb-4 ${
@@ -277,7 +269,7 @@ export default function Prescription() {
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-4xl">📋</div>
                     <p className="text-sm font-bold text-gray-700">
-                      Click karke upload karo
+                      Click to upload
                     </p>
                     <p className="text-xs text-gray-400">
                       JPG, PNG, PDF • Max 5MB
@@ -286,7 +278,6 @@ export default function Prescription() {
                 )}
               </div>
 
-              {/* Change / Upload Buttons */}
               {preview && (
                 <button
                   onClick={() => {
@@ -296,7 +287,7 @@ export default function Prescription() {
                   }}
                   className="w-full mb-2 py-2 rounded-xl text-sm font-bold border-2 border-gray-200 text-gray-500 hover:bg-gray-50 transition"
                 >
-                  🔄 Change
+                  🔄 Change File
                 </button>
               )}
 
@@ -312,39 +303,13 @@ export default function Prescription() {
                     : "linear-gradient(135deg, #065f46, #059669)",
                 }}
               >
-                {uploading ? (
-                  <>
-                    <svg
-                      className="animate-spin h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8z"
-                      />
-                    </svg>
-                    Uploading...
-                  </>
-                ) : (
-                  "📤 Upload Karo"
-                )}
+                {uploading ? "Uploading..." : "📤 Upload Now"}
               </button>
 
-              {/* Info */}
               <div className="mt-4 bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-700 space-y-1">
-                <p>📌 Upload ke baad admin 24 hrs mein verify karega</p>
-                <p>📌 Approved hone pe medicines order kar sakte ho</p>
-                <p>📌 Schedule H/X medicines ke liye prescription zaroori</p>
+                <p>📌 Verification usually takes up to 24 hours.</p>
+                <p>📌 You can order medicines once approved.</p>
+                <p>📌 Essential for Schedule H/X medications.</p>
               </div>
             </div>
           </div>
@@ -355,10 +320,10 @@ export default function Prescription() {
               <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center">
                 <div className="text-6xl mb-4">📋</div>
                 <h3 className="text-lg font-black text-gray-800 mb-2">
-                  Koi prescription nahi
+                  No prescriptions found
                 </h3>
                 <p className="text-gray-400 text-sm">
-                  Doctor ki prescription upload karo
+                  Upload your doctor's prescription to get started.
                 </p>
               </div>
             ) : (
@@ -376,7 +341,6 @@ export default function Prescription() {
                       key={rx.id}
                       className={`bg-white rounded-2xl border-2 ${statusCfg.border} overflow-hidden hover:shadow-md transition`}
                     >
-                      {/* Status Strip */}
                       <div
                         className={`${statusCfg.bg} px-5 py-2.5 flex items-center justify-between`}
                       >
@@ -400,7 +364,6 @@ export default function Prescription() {
                       </div>
 
                       <div className="p-5 flex items-start gap-4">
-                        {/* Image / PDF Preview */}
                         <div
                           className="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden cursor-pointer hover:opacity-80 transition"
                           onClick={() => imgUrl && !isPdf && setViewImg(imgUrl)}
@@ -421,7 +384,6 @@ export default function Prescription() {
                           )}
                         </div>
 
-                        {/* Details */}
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-gray-900 text-sm">
                             Prescription #{rx.id}
@@ -445,35 +407,34 @@ export default function Prescription() {
                             </p>
                           )}
 
-                          {/* Status Messages */}
                           {rx.status === "pending" && (
                             <p className="text-xs text-amber-600 font-semibold mt-2">
-                              ⏳ Admin verify kar raha hai — 24 hrs mein
-                              response milega
+                              ⏳ Verification in progress — expect a response
+                              within 24 hours.
                             </p>
                           )}
                           {rx.status === "rejected" && (
                             <p className="text-xs text-red-500 font-semibold mt-2">
-                              ❌ Rejected — dobara clear image upload karo
+                              ❌ Rejected — Please upload a clearer image of the
+                              prescription.
                             </p>
                           )}
                           {rx.status === "approved" && (
                             <p className="text-xs text-emerald-600 font-semibold mt-2">
-                              ✅ Approved — ab medicines order kar sakte ho!
+                              ✅ Approved — You can now order medicines using
+                              this prescription.
                             </p>
                           )}
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
                       <div className="px-5 pb-4 flex gap-2 flex-wrap">
-                        {/* View */}
                         {imgUrl && !isPdf && (
                           <button
                             onClick={() => setViewImg(imgUrl)}
                             className="px-3 py-2 rounded-xl text-xs font-bold border-2 border-gray-200 text-gray-600 hover:bg-gray-50 transition"
                           >
-                            🔍 View
+                            🔍 View Image
                           </button>
                         )}
                         {isPdf && imgUrl && (
@@ -487,7 +448,6 @@ export default function Prescription() {
                           </a>
                         )}
 
-                        {/* Order Now */}
                         {rx.status === "approved" && (
                           <button
                             onClick={() => handleOrder(rx)}
@@ -497,11 +457,10 @@ export default function Prescription() {
                                 "linear-gradient(135deg, #065f46, #059669)",
                             }}
                           >
-                            🛒 Order Karo
+                            🛒 Order Medicines
                           </button>
                         )}
 
-                        {/* Delete */}
                         {rx.status !== "approved" && (
                           <button
                             onClick={() => setDeleteId(rx.id)}

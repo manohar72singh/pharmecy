@@ -97,8 +97,8 @@ export default function Wallet() {
 
         {/* Info Banner */}
         <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 text-sm text-blue-700">
-          💡 Wallet balance orders pe use kar sakte ho — checkout pe "Wallet"
-          payment method choose karo.
+          💡 You can use your wallet balance for orders — simply choose "Wallet"
+          as your payment method during checkout.
         </div>
 
         {/* Transactions */}
@@ -111,10 +111,11 @@ export default function Wallet() {
             <div className="p-12 text-center">
               <div className="text-5xl mb-3">📭</div>
               <p className="text-gray-500 font-semibold">
-                Koi transaction nahi
+                No transactions found
               </p>
               <p className="text-gray-400 text-sm mt-1">
-                Orders place karne ke baad yahan dikhega
+                Your transaction history will appear here after you place an
+                order.
               </p>
             </div>
           ) : (

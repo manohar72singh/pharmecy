@@ -76,20 +76,22 @@ export default function Cart() {
   // ── Eligible coupons based on cart value ─────────
   const eligibleCoupons = allCoupons.filter((c) => {
     if (c.discount_type === "flat") {
-      // flat coupon — subtotal se bada discount nahi hona chahiye
       return parseFloat(c.discount_value) <= subtotal;
     }
-    return true; // percentage always eligible
+    return true;
   });
 
-  // ── Apply Coupon (DB se validate) ────────────────
+  // ── Apply Coupon (DB validate) ────────────────
   const handleApply = async () => {
     if (!couponCode.trim())
-      return setCouponMsg({ type: "error", text: "Coupon code enter karo." });
+      return setCouponMsg({
+        type: "error",
+        text: "Please enter a coupon code.",
+      });
     if (!isLoggedIn)
       return setCouponMsg({
         type: "error",
-        text: "Coupon apply karne ke liye login karein.",
+        text: "Please login to apply coupons.",
       });
 
     setCouponLoading(true);
@@ -108,7 +110,7 @@ export default function Cart() {
       localStorage.removeItem("cartCoupon");
       setCouponMsg({
         type: "error",
-        text: err.response?.data?.message || "Invalid coupon.",
+        text: err.response?.data?.message || "Invalid coupon code.",
       });
     } finally {
       setCouponLoading(false);
@@ -122,12 +124,12 @@ export default function Cart() {
     setCouponCode("");
   };
 
-  // ── Quick Apply from suggestion ───────────────────
+  // ── Quick Apply ───────────────────
   const quickApply = async (code) => {
     if (!isLoggedIn)
       return setCouponMsg({
         type: "error",
-        text: "Coupon apply karne ke liye login karein.",
+        text: "Please login to apply coupons.",
       });
     setCouponLoading(true);
     setCouponMsg({ type: "", text: "" });
@@ -139,7 +141,7 @@ export default function Cart() {
     } catch (err) {
       setCouponMsg({
         type: "error",
-        text: err.response?.data?.message || "Invalid coupon.",
+        text: err.response?.data?.message || "Invalid coupon code.",
       });
     } finally {
       setCouponLoading(false);
@@ -159,13 +161,12 @@ export default function Cart() {
         localCart.update(item.medicine_id, qty);
         setCart(localCart.get());
       }
-      // Reset coupon on qty change
       if (applied) {
         setApplied(null);
         localStorage.removeItem("cartCoupon");
         setCouponMsg({
           type: "info",
-          text: "Cart update hua — coupon dobara apply karo.",
+          text: "Cart updated. Please re-apply your coupon.",
         });
       }
       window.dispatchEvent(new Event("cartUpdated"));
@@ -218,7 +219,7 @@ export default function Cart() {
       navigate("/login", {
         state: {
           from: "/checkout",
-          message: "Checkout ke liye pehle login karein",
+          message: "Please login to proceed to checkout.",
         },
       });
     } else {
@@ -226,35 +227,33 @@ export default function Cart() {
     }
   };
 
-  // ── Loading ───────────────────────────────────────
   if (loading)
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Cart load ho rahi hai...</p>
+          <p className="text-gray-500 text-sm">Loading your cart...</p>
         </div>
       </div>
     );
 
-  // ── Empty Cart ────────────────────────────────────
   if (cart.length === 0)
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-2xl mx-auto px-4 py-20 text-center">
           <div className="text-8xl mb-6">🛒</div>
           <h2 className="text-2xl font-black text-gray-800 mb-2">
-            Aapka cart khali hai!
+            Your cart is empty!
           </h2>
           <p className="text-gray-500 mb-8">
-            Kuch medicines add karein aur healthy rahein 💊
+            Add some medicines to your cart and stay healthy 💊
           </p>
           <Link
             to="/medicines"
             className="inline-block text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg"
             style={{ background: "linear-gradient(135deg, #065f46, #059669)" }}
           >
-            Medicines Browse Karein →
+            Browse Medicines →
           </Link>
         </div>
       </div>
@@ -275,15 +274,14 @@ export default function Cart() {
         </div>
       </div>
 
-      {/* Guest Banner */}
       {!user && (
         <div className="bg-amber-50 border-b border-amber-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm text-amber-800">
               <span className="text-lg">👤</span>
               <span>
-                <strong>Login karein</strong> — orders track karein aur
-                exclusive discounts paayein!
+                <strong>Login now</strong> to track your orders and enjoy
+                exclusive discounts!
               </span>
             </div>
             <Link
@@ -315,7 +313,6 @@ export default function Cart() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* ── Cart Items ── */}
           <div className="lg:col-span-2 space-y-4">
             {cart.map((item) => {
               const price = parseFloat(item.price);
@@ -419,15 +416,11 @@ export default function Cart() {
             </Link>
           </div>
 
-          {/* ── Right Sidebar ── */}
           <div className="space-y-4">
-            {/* ── Coupon Section ── */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
                 <span>🎟️</span> Apply Coupon
               </h3>
-
-              {/* Applied coupon */}
               {applied ? (
                 <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl mb-3">
                   <div>
@@ -435,7 +428,7 @@ export default function Cart() {
                       {applied.code} ✅
                     </p>
                     <p className="text-xs text-emerald-600 mt-0.5">
-                      ₹{applied.discount_amount.toFixed(2)} ki bachat
+                      Saved ₹{applied.discount_amount.toFixed(2)}
                     </p>
                   </div>
                   <button
@@ -455,7 +448,7 @@ export default function Cart() {
                       setCouponMsg({ type: "", text: "" });
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleApply()}
-                    placeholder="Coupon code enter karo"
+                    placeholder="Enter coupon code"
                     className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                   />
                   <button
@@ -471,22 +464,14 @@ export default function Cart() {
                 </div>
               )}
 
-              {/* Message */}
               {couponMsg.text && (
                 <p
-                  className={`text-xs font-semibold mb-3 ${
-                    couponMsg.type === "success"
-                      ? "text-emerald-600"
-                      : couponMsg.type === "info"
-                        ? "text-blue-500"
-                        : "text-red-500"
-                  }`}
+                  className={`text-xs font-semibold mb-3 ${couponMsg.type === "success" ? "text-emerald-600" : couponMsg.type === "info" ? "text-blue-500" : "text-red-500"}`}
                 >
                   {couponMsg.text}
                 </p>
               )}
 
-              {/* Eligible Coupons — Horizontal Scroll, max 4 */}
               {!applied && eligibleCoupons.length > 0 && (
                 <div>
                   <p className="text-xs text-gray-400 font-semibold mb-2">
@@ -535,26 +520,22 @@ export default function Cart() {
                 </div>
               )}
 
-              {/* No eligible coupons */}
               {!applied &&
                 eligibleCoupons.length === 0 &&
                 allCoupons.length > 0 && (
                   <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 text-xs text-amber-700">
-                    💡 Thoda aur add karo — coupons eligible ho jaayenge!
+                    💡 Add more items to your cart to unlock exclusive coupons!
                   </div>
                 )}
-
               <Link
                 to="/offers"
                 className="text-xs text-emerald-600 font-bold mt-3 block hover:underline"
               >
-                🏷️ Saare offers dekho →
+                🏷️ View all offers →
               </Link>
             </div>
 
-            {/* ── Price Summary ── */}
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              {/* Total row — always visible, click to toggle */}
               <button
                 onClick={() => setPriceOpen((o) => !o)}
                 className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition"
@@ -585,7 +566,6 @@ export default function Cart() {
                 </div>
               </button>
 
-              {/* Dropdown detail */}
               {priceOpen && (
                 <div className="px-5 pb-4 border-t border-gray-50">
                   <div className="space-y-3 text-sm pt-3">
@@ -615,8 +595,8 @@ export default function Cart() {
                     </div>
                     {delivery > 0 && (
                       <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
-                        ₹{(299 - subtotal).toFixed(0)} aur add karein — FREE
-                        delivery paayein!
+                        Add ₹{(299 - subtotal).toFixed(0)} more for FREE
+                        delivery!
                       </p>
                     )}
                     <div className="border-t border-gray-100 pt-3 flex justify-between font-black text-gray-900">
@@ -627,15 +607,14 @@ export default function Cart() {
                     </div>
                     {saved + couponDiscount > 0 && (
                       <p className="text-xs text-green-600 font-bold bg-green-50 px-3 py-2 rounded-lg text-center">
-                        🎉 ₹{(saved + couponDiscount).toFixed(2)} ki bachat ho
-                        rahi hai!
+                        🎉 You are saving ₹{(saved + couponDiscount).toFixed(2)}{" "}
+                        on this order!
                       </p>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Checkout Button */}
               <div className="px-5 pb-5">
                 <button
                   onClick={handleCheckout}
@@ -644,19 +623,16 @@ export default function Cart() {
                     background: "linear-gradient(135deg, #065f46, #059669)",
                   }}
                 >
-                  {user
-                    ? "Proceed to Checkout →"
-                    : "Login karke Checkout karein →"}
+                  {user ? "Proceed to Checkout →" : "Login to Checkout →"}
                 </button>
                 {!user && (
                   <p className="text-center text-xs text-gray-400 mt-2">
-                    Cart items save rahenge login ke baad ✅
+                    Your items will be saved after you login ✅
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Trust badges */}
             <div className="bg-white rounded-2xl border border-gray-100 p-4">
               {[
                 { icon: "🔒", text: "100% Secure Payments" },

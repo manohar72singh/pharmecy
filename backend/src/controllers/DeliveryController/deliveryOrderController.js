@@ -11,7 +11,8 @@ export const getAssignedOrders = async (req, res) => {
       "SELECT id FROM delivery_boys WHERE user_id = ?",
       [req.user.id],
     );
-    if (dbRows.length === 0) return error(res, "Delivery boy nahi mila.", 404);
+    if (dbRows.length === 0)
+      return error(res, "Delivery partner profile not found.", 404);
 
     const deliveryBoyId = dbRows[0].id;
 
@@ -56,11 +57,11 @@ export const getAssignedOrders = async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
       },
-      "Orders fetched.",
+      "Assigned orders retrieved successfully.",
     );
   } catch (err) {
     console.error(err);
-    return error(res, "Fetch failed.", 500);
+    return error(res, "Failed to retrieve assigned orders.", 500);
   }
 };
 
@@ -71,7 +72,8 @@ export const getOrderDetail = async (req, res) => {
       "SELECT id FROM delivery_boys WHERE user_id = ?",
       [req.user.id],
     );
-    if (dbRows.length === 0) return error(res, "Delivery boy nahi mila.", 404);
+    if (dbRows.length === 0)
+      return error(res, "Delivery partner profile not found.", 404);
 
     const deliveryBoyId = dbRows[0].id;
 
@@ -92,7 +94,7 @@ export const getOrderDetail = async (req, res) => {
       [req.params.id, deliveryBoyId],
     );
 
-    if (orderRows.length === 0) return error(res, "Order nahi mila.", 404);
+    if (orderRows.length === 0) return error(res, "Order not found.", 404);
 
     const [items] = await pool.query(
       `SELECT
@@ -104,10 +106,14 @@ export const getOrderDetail = async (req, res) => {
       [req.params.id],
     );
 
-    return success(res, { ...orderRows[0], items }, "Order fetched.");
+    return success(
+      res,
+      { ...orderRows[0], items },
+      "Order details retrieved successfully.",
+    );
   } catch (err) {
     console.error(err);
-    return error(res, "Fetch failed.", 500);
+    return error(res, "Failed to retrieve order details.", 500);
   }
 };
 
@@ -115,13 +121,14 @@ export const getOrderDetail = async (req, res) => {
 export const verifyOTP = async (req, res) => {
   try {
     const { otp } = req.body;
-    if (!otp) return error(res, "OTP enter karo.", 400);
+    if (!otp) return error(res, "Please enter the OTP.", 400);
 
     const [dbRows] = await pool.query(
       "SELECT id FROM delivery_boys WHERE user_id = ?",
       [req.user.id],
     );
-    if (dbRows.length === 0) return error(res, "Delivery boy nahi mila.", 404);
+    if (dbRows.length === 0)
+      return error(res, "Delivery partner profile not found.", 404);
 
     const deliveryBoyId = dbRows[0].id;
 
@@ -133,13 +140,13 @@ export const verifyOTP = async (req, res) => {
     );
 
     if (assignment.length === 0)
-      return error(res, "Assignment nahi mila.", 404);
+      return error(res, "Delivery assignment not found.", 404);
 
     if (assignment[0].otp_verified)
-      return error(res, "Yeh order already delivered hai.", 400);
+      return error(res, "This order has already been delivered.", 400);
 
     if (assignment[0].delivery_otp !== otp.toString())
-      return error(res, "Galat OTP! Dobara try karo.", 400);
+      return error(res, "Invalid OTP! Please try again.", 400);
 
     const conn = await pool.getConnection();
     try {
@@ -154,6 +161,7 @@ export const verifyOTP = async (req, res) => {
         "UPDATE orders SET order_status = 'delivered' WHERE id = ?",
         [req.params.id],
       );
+
       await conn.query(
         "UPDATE delivery_boys SET total_deliveries = total_deliveries + 1 WHERE user_id = ?",
         [req.user.id],
@@ -175,10 +183,10 @@ export const verifyOTP = async (req, res) => {
     return success(
       res,
       { order_id: req.params.id },
-      "Order delivered! OTP verified ✅",
+      "Order delivered successfully! OTP verified. ✅",
     );
   } catch (err) {
     console.error(err);
-    return error(res, "OTP verify failed.", 500);
+    return error(res, "OTP verification failed.", 500);
   }
 };

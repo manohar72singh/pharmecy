@@ -57,9 +57,9 @@ export default function DeliveryHistory() {
         </div>
         <div className="grid grid-cols-4 gap-2">
           {[
-            { label: "Aaj", value: earnings?.today || 0 },
-            { label: "Hafte", value: earnings?.this_week || 0 },
-            { label: "Mahine", value: earnings?.this_month || 0 },
+            { label: "Today", value: earnings?.today || 0 },
+            { label: "This Week", value: earnings?.this_week || 0 },
+            { label: "This Month", value: earnings?.this_month || 0 },
             { label: "Total", value: earnings?.total || 0 },
           ].map((s) => (
             <div
@@ -86,10 +86,10 @@ export default function DeliveryHistory() {
         <div className="bg-white rounded-3xl border border-gray-100 text-center py-20 shadow-sm">
           <div className="text-6xl mb-4">📜</div>
           <h3 className="text-lg font-black text-gray-800 mb-2">
-            Koi history nahi abhi
+            No history yet
           </h3>
           <p className="text-gray-400 text-sm">
-            Delivery complete karo — history yahan dikhegi.
+            Complete your first delivery to see your history here.
           </p>
         </div>
       ) : (

@@ -7,10 +7,10 @@ export const getPlans = async (req, res) => {
     const [rows] = await pool.query(
       `SELECT * FROM subscription_plans ORDER BY id ASC`,
     );
-    return success(res, rows, "Plans fetched.");
+    return success(res, rows, "Subscription plans retrieved successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Plans fetch failed.", 500);
+    return error(res, "Failed to retrieve subscription plans.", 500);
   }
 };
 
@@ -20,8 +20,8 @@ export const getMySubscriptions = async (req, res) => {
     const [subs] = await pool.query(
       `
       SELECT s.*,
-             sp.name AS plan_name, sp.frequency, sp.discount_percent,
-             ca.full_name AS addr_name, ca.city, ca.address_line1, ca.pincode
+              sp.name AS plan_name, sp.frequency, sp.discount_percent,
+              ca.full_name AS addr_name, ca.city, ca.address_line1, ca.pincode
       FROM subscriptions s
       JOIN subscription_plans sp ON s.plan_id    = sp.id
       JOIN customer_addresses ca ON s.address_id = ca.id
@@ -36,10 +36,10 @@ export const getMySubscriptions = async (req, res) => {
       const [items] = await pool.query(
         `
         SELECT si.*, 
-               m.name AS medicine_name, m.brand, m.pack_size,
-               mi.image_url,
-               mc.slug AS category_slug,
-               mb.selling_price AS unit_price
+                m.name AS medicine_name, m.brand, m.pack_size,
+                mi.image_url,
+                mc.slug AS category_slug,
+                mb.selling_price AS unit_price
         FROM subscription_items si
         JOIN medicines m ON si.medicine_id = m.id
         LEFT JOIN medicine_images mi ON mi.medicine_id = m.id AND mi.is_primary = 1
@@ -55,10 +55,10 @@ export const getMySubscriptions = async (req, res) => {
       sub.items = items;
     }
 
-    return success(res, subs, "Subscriptions fetched.");
+    return success(res, subs, "Subscriptions retrieved successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Fetch failed.", 500);
+    return error(res, "Failed to retrieve subscriptions.", 500);
   }
 };
 
@@ -73,7 +73,7 @@ export const createSubscription = async (req, res) => {
     if (!plan_id || !address_id || !items?.length)
       return error(
         res,
-        "Plan, address aur kam se kam ek medicine zaroori hai.",
+        "Subscription plan, delivery address, and at least one medicine are required.",
         400,
       );
 
@@ -82,7 +82,7 @@ export const createSubscription = async (req, res) => {
       "SELECT * FROM subscription_plans WHERE id = ?",
       [plan_id],
     );
-    if (!plans.length) return error(res, "Plan nahi mila.", 404);
+    if (!plans.length) return error(res, "Subscription plan not found.", 404);
     const plan = plans[0];
 
     const freqDays = { weekly: 7, biweekly: 14, monthly: 30, quarterly: 90 };
@@ -113,7 +113,6 @@ export const createSubscription = async (req, res) => {
     }
 
     // ── Create First Order ────────────────────────
-    // Order number generate
     const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "");
     const rand = Math.floor(1000 + Math.random() * 9000);
     const orderNumber = `SUB-${dateStr}-${rand}`;
@@ -208,13 +207,17 @@ export const createSubscription = async (req, res) => {
         total_amount: totalAmount.toFixed(2),
         payment_mode,
       },
-      "Subscription create ho gayi aur pehla order place ho gaya! 🎉",
+      "Subscription created successfully and the first order has been placed! 🎉",
       201,
     );
   } catch (err) {
     await conn.rollback();
     console.error(err);
-    return error(res, "Subscription create failed.", 500);
+    return error(
+      res,
+      "Internal server error while creating subscription.",
+      500,
+    );
   } finally {
     conn.release();
   }
@@ -227,9 +230,9 @@ export const togglePause = async (req, res) => {
       `SELECT id, status FROM subscriptions WHERE id = ? AND user_id = ?`,
       [req.params.id, req.user.id],
     );
-    if (!rows.length) return error(res, "Subscription nahi mili.", 404);
+    if (!rows.length) return error(res, "Subscription record not found.", 404);
     if (rows[0].status === "cancelled")
-      return error(res, "Cancelled subscription resume nahi ho sakti.", 400);
+      return error(res, "Cancelled subscriptions cannot be resumed.", 400);
 
     const newStatus = rows[0].status === "active" ? "paused" : "active";
     await pool.query(`UPDATE subscriptions SET status = ? WHERE id = ?`, [
@@ -241,12 +244,12 @@ export const togglePause = async (req, res) => {
       res,
       { status: newStatus },
       newStatus === "paused"
-        ? "Subscription pause ho gayi."
-        : "Subscription resume ho gayi.",
+        ? "Subscription has been paused."
+        : "Subscription has been resumed.",
     );
   } catch (err) {
     console.error(err);
-    return error(res, "Toggle failed.", 500);
+    return error(res, "Failed to update subscription status.", 500);
   }
 };
 
@@ -257,18 +260,18 @@ export const cancelSubscription = async (req, res) => {
       `SELECT id, status FROM subscriptions WHERE id = ? AND user_id = ?`,
       [req.params.id, req.user.id],
     );
-    if (!rows.length) return error(res, "Subscription nahi mili.", 404);
+    if (!rows.length) return error(res, "Subscription record not found.", 404);
     if (rows[0].status === "cancelled")
-      return error(res, "Pehle se cancel hai.", 400);
+      return error(res, "Subscription is already cancelled.", 400);
 
     await pool.query(
       `UPDATE subscriptions SET status = 'cancelled' WHERE id = ?`,
       [req.params.id],
     );
-    return success(res, {}, "Subscription cancel ho gayi.");
+    return success(res, {}, "Subscription has been cancelled successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Cancel failed.", 500);
+    return error(res, "Failed to cancel subscription.", 500);
   }
 };
 
@@ -279,7 +282,7 @@ export const getSubscriptionOrders = async (req, res) => {
       `SELECT id, status FROM subscriptions WHERE id = ? AND user_id = ?`,
       [req.params.id, req.user.id],
     );
-    if (!rows.length) return error(res, "Subscription nahi mili.", 404);
+    if (!rows.length) return error(res, "Subscription record not found.", 404);
 
     const [orders] = await pool.query(
       `
@@ -292,9 +295,13 @@ export const getSubscriptionOrders = async (req, res) => {
       [req.params.id],
     );
 
-    return success(res, orders, "Orders fetched.");
+    return success(
+      res,
+      orders,
+      "Subscription order history retrieved successfully.",
+    );
   } catch (err) {
     console.error(err);
-    return error(res, "Fetch failed.", 500);
+    return error(res, "Failed to retrieve subscription orders.", 500);
   }
 };

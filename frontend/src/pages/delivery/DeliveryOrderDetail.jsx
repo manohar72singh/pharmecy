@@ -40,14 +40,17 @@ export default function DeliveryOrderDetail() {
 
   const handleVerify = async () => {
     const otpString = otp.join("");
-    if (otpString.length !== 6) return setOtpError("6 digit OTP enter karo.");
+    if (otpString.length !== 6)
+      return setOtpError("Please enter the 6-digit OTP.");
     setVerifying(true);
     try {
       await deliveryService.verifyOTP(id, otpString);
-      setMsg("Order delivered! ✅");
+      setMsg("Order delivered successfully! ✅");
       setTimeout(() => navigate("/delivery"), 1500);
     } catch (err) {
-      setOtpError(err.response?.data?.message || "Galat OTP! Dobara try karo.");
+      setOtpError(
+        err.response?.data?.message || "Invalid OTP! Please try again.",
+      );
       setOtp(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     } finally {
@@ -66,12 +69,12 @@ export default function DeliveryOrderDetail() {
     return (
       <div className="text-center py-20">
         <div className="text-5xl mb-3">❌</div>
-        <p className="text-gray-500 font-bold">Order nahi mila.</p>
+        <p className="text-gray-500 font-bold">Order not found.</p>
         <Link
           to="/delivery/orders"
           className="text-emerald-600 font-bold text-sm mt-2 block"
         >
-          ← Wapas Jao
+          ← Go Back to Orders
         </Link>
       </div>
     );
@@ -143,7 +146,7 @@ export default function DeliveryOrderDetail() {
             </div>
             <div className="pt-2 border-t border-gray-50">
               <p className="text-xs text-gray-400 font-semibold mb-1.5">
-                📍 Address
+                📍 Delivery Address
               </p>
               <p className="font-semibold text-gray-800 text-sm">
                 {order.address_line1}
@@ -160,7 +163,7 @@ export default function DeliveryOrderDetail() {
         <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
           <div className="px-5 py-3 border-b border-gray-50 flex items-center gap-2">
             <span>💳</span>
-            <h2 className="font-black text-gray-900 text-sm">Payment</h2>
+            <h2 className="font-black text-gray-900 text-sm">Payment Info</h2>
           </div>
           <div className="px-5 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -188,8 +191,8 @@ export default function DeliveryOrderDetail() {
           </div>
           {order.payment_mode === "cod" && (
             <div className="mx-5 mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-100 text-xs font-bold text-amber-700">
-              💵 Customer se ₹{parseFloat(order.total_amount).toFixed(0)} cash
-              collect karna hai!
+              💵 Please collect ₹{parseFloat(order.total_amount).toFixed(0)}{" "}
+              cash from the customer.
             </div>
           )}
         </div>
@@ -199,7 +202,7 @@ export default function DeliveryOrderDetail() {
           <div className="px-5 py-3 border-b border-gray-50 flex items-center gap-2">
             <span>🛍️</span>
             <h2 className="font-black text-gray-900 text-sm">
-              Items ({order.items?.length || 0})
+              Items List ({order.items?.length || 0})
             </h2>
           </div>
           <div className="divide-y divide-gray-50">
@@ -232,7 +235,7 @@ export default function DeliveryOrderDetail() {
           </div>
         </div>
 
-        {/* OTP */}
+        {/* OTP Verification Section */}
         {!order.otp_verified ? (
           <div className="bg-white rounded-3xl border-2 border-emerald-300 overflow-hidden shadow-md">
             <div
@@ -241,10 +244,10 @@ export default function DeliveryOrderDetail() {
             >
               <div className="text-3xl mb-1">🔐</div>
               <h2 className="font-black text-gray-900 text-base">
-                Delivery OTP Verify Karo
+                Verify Delivery OTP
               </h2>
               <p className="text-xs text-gray-500 mt-0.5">
-                Customer se 6 digit OTP lo
+                Collect the 6-digit OTP from the customer
               </p>
             </div>
             <div className="px-5 py-5">
@@ -306,10 +309,10 @@ export default function DeliveryOrderDetail() {
                         d="M4 12a8 8 0 018-8v8z"
                       />
                     </svg>{" "}
-                    Verify Ho Raha Hai...
+                    Verifying...
                   </>
                 ) : (
-                  "✅ OTP Verify Karo & Deliver Karo"
+                  "✅ Verify OTP & Mark Delivered"
                 )}
               </button>
             </div>
@@ -322,7 +325,7 @@ export default function DeliveryOrderDetail() {
             <div className="text-5xl mb-3">🎉</div>
             <p className="font-black text-white text-xl">Order Delivered!</p>
             <p className="text-emerald-300 text-xs mt-1">
-              OTP verified — delivery complete
+              OTP verified — transaction complete
             </p>
           </div>
         )}
@@ -331,7 +334,7 @@ export default function DeliveryOrderDetail() {
           to="/delivery/orders"
           className="block text-center text-sm font-bold text-gray-500 hover:text-emerald-600 py-3 transition"
         >
-          ← Wapas Orders pe Jao
+          ← Return to Assigned Orders
         </Link>
       </div>
     </div>

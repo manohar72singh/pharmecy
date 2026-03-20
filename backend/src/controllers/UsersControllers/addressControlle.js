@@ -8,10 +8,10 @@ export const getAddresses = async (req, res) => {
       "SELECT * FROM customer_addresses WHERE user_id = ? ORDER BY is_default DESC, id DESC",
       [req.user.id],
     );
-    return success(res, rows, "Addresses fetched.");
+    return success(res, rows, "Addresses retrieved successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Addresses fetch failed.", 500);
+    return error(res, "Failed to retrieve addresses.", 500);
   }
 };
 
@@ -28,10 +28,11 @@ export const addAddress = async (req, res) => {
       pincode,
       is_default,
     } = req.body;
+
     if (!full_name || !address_line1 || !city || !pincode)
       return error(
         res,
-        "Full name, address, city aur pincode zaroori hai.",
+        "Full name, address line 1, city, and pincode are required.",
         400,
       );
 
@@ -66,10 +67,15 @@ export const addAddress = async (req, res) => {
       ],
     );
 
-    return success(res, { id: result.insertId }, "Address add ho gaya.", 201);
+    return success(
+      res,
+      { id: result.insertId },
+      "Address added successfully.",
+      201,
+    );
   } catch (err) {
     console.error(err);
-    return error(res, "Address add failed.", 500);
+    return error(res, "Failed to add address.", 500);
   }
 };
 
@@ -92,7 +98,7 @@ export const updateAddress = async (req, res) => {
       "SELECT id FROM customer_addresses WHERE id = ? AND user_id = ?",
       [id, req.user.id],
     );
-    if (addr.length === 0) return error(res, "Address nahi mila.", 404);
+    if (addr.length === 0) return error(res, "Address not found.", 404);
 
     if (is_default) {
       await pool.query(
@@ -116,10 +122,10 @@ export const updateAddress = async (req, res) => {
       ],
     );
 
-    return success(res, {}, "Address update ho gaya.");
+    return success(res, {}, "Address updated successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Address update failed.", 500);
+    return error(res, "Failed to update address.", 500);
   }
 };
 
@@ -131,7 +137,7 @@ export const deleteAddress = async (req, res) => {
       "SELECT id, is_default FROM customer_addresses WHERE id = ? AND user_id = ?",
       [id, req.user.id],
     );
-    if (addr.length === 0) return error(res, "Address nahi mila.", 404);
+    if (addr.length === 0) return error(res, "Address not found.", 404);
 
     await pool.query("DELETE FROM customer_addresses WHERE id = ?", [id]);
 
@@ -143,10 +149,10 @@ export const deleteAddress = async (req, res) => {
       );
     }
 
-    return success(res, {}, "Address delete ho gaya.");
+    return success(res, {}, "Address deleted successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Address delete failed.", 500);
+    return error(res, "Failed to delete address.", 500);
   }
 };
 
@@ -162,9 +168,9 @@ export const setDefaultAddress = async (req, res) => {
       "UPDATE customer_addresses SET is_default = 1 WHERE id = ? AND user_id = ?",
       [id, req.user.id],
     );
-    return success(res, {}, "Default address set ho gaya.");
+    return success(res, {}, "Default address set successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Failed.", 500);
+    return error(res, "Operation failed.", 500);
   }
 };

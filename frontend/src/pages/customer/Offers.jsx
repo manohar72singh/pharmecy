@@ -109,11 +109,11 @@ export default function Offers() {
             🎉 Special Deals
           </p>
           <h1 className="text-3xl sm:text-4xl font-black text-white mb-3">
-            Aaj ke Best Offers
+            Best Offers of the Day
           </h1>
           <p className="text-emerald-100 text-base mb-6">
-            Medicines pe zabardast bachat — coupons copy karo aur checkout pe
-            apply karo!
+            Get huge savings on medicines — copy the coupons and apply them at
+            checkout!
           </p>
           <Link
             to="/medicines"
@@ -139,7 +139,7 @@ export default function Offers() {
                 Free Delivery on All Orders!
               </h2>
               <p className="text-pink-100 text-sm">
-                Code: <strong>MEDIFREE</strong> use karo — aaj sirf!
+                Use Code: <strong>MEDIFREE</strong> — Valid for today only!
               </p>
             </div>
             <button
@@ -172,7 +172,6 @@ export default function Offers() {
               {coupons.map((coupon) => {
                 const cfg =
                   TYPE_CONFIG[coupon.discount_type] || TYPE_CONFIG.flat;
-                const days = getDaysLeft(coupon.valid_until);
                 const isCopied = copied === coupon.code;
                 return (
                   <div
@@ -265,27 +264,27 @@ export default function Offers() {
         {/* ── How to Use ── */}
         <div className="bg-white rounded-3xl border border-gray-100 p-6">
           <h2 className="text-lg font-black text-gray-900 mb-5">
-            💡 Coupon Kaise Use Karein?
+            💡 How to Use Coupons?
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               {
                 step: "1",
                 icon: "🛒",
-                title: "Cart Bharo",
-                desc: "Apni medicines cart mein add karo",
+                title: "Fill Your Cart",
+                desc: "Add your required medicines to the cart",
               },
               {
                 step: "2",
                 icon: "📋",
-                title: "Code Copy Karo",
-                desc: "Upar se coupon code copy karo",
+                title: "Copy the Code",
+                desc: "Copy your preferred coupon code from above",
               },
               {
                 step: "3",
                 icon: "✅",
-                title: "Checkout Pe Apply",
-                desc: "Checkout mein coupon field mein paste karo",
+                title: "Apply at Checkout",
+                desc: "Paste the code in the coupon field during checkout",
               },
             ].map((s) => (
               <div key={s.step} className="flex items-start gap-3">

@@ -30,10 +30,10 @@ const STATUS_CONFIG = {
 };
 
 const FREQ_LABELS = {
-  weekly: { label: "Har Hafte", days: 7, icon: "📅" },
-  biweekly: { label: "Har 2 Hafte", days: 14, icon: "📆" },
-  monthly: { label: "Har Mahine", days: 30, icon: "🗓️" },
-  quarterly: { label: "Har 3 Mahine", days: 90, icon: "📋" },
+  weekly: { label: "Weekly", days: 7, icon: "📅" },
+  biweekly: { label: "Bi-Weekly", days: 14, icon: "📆" },
+  monthly: { label: "Monthly", days: 30, icon: "🗓️" },
+  quarterly: { label: "Quarterly", days: 90, icon: "📋" },
 };
 
 // ── Confirm Modal ─────────────────────────────────────
@@ -42,7 +42,7 @@ const ConfirmModal = ({
   msg,
   onConfirm,
   onCancel,
-  confirmLabel = "Haan",
+  confirmLabel = "Yes",
   danger = false,
 }) => (
   <div
@@ -57,7 +57,7 @@ const ConfirmModal = ({
           onClick={onCancel}
           className="flex-1 py-3 rounded-xl font-bold text-sm border-2 border-gray-200 text-gray-600 hover:bg-gray-50 transition"
         >
-          Nahi
+          No
         </button>
         <button
           onClick={onConfirm}
@@ -81,7 +81,6 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // DB se cart fetch karo
   useEffect(() => {
     const isLoggedIn = !!localStorage.getItem("token");
     const loadCart = async () => {
@@ -108,10 +107,10 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
   const selectedPlan = plans.find((p) => p.id === parseInt(planId));
 
   const handleCreate = async () => {
-    if (!planId) return setError("Plan select karo.");
-    if (!addrId) return setError("Address select karo.");
+    if (!planId) return setError("Please select a plan.");
+    if (!addrId) return setError("Please select a delivery address.");
     if (!selectedItems.length)
-      return setError("Kam se kam ek medicine select karo.");
+      return setError("Please select at least one medicine.");
     setSaving(true);
     try {
       const { data } = await subscriptionService.create({
@@ -125,7 +124,7 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
       });
       onCreated(data.data);
     } catch (err) {
-      setError(err.response?.data?.message || "Create failed.");
+      setError(err.response?.data?.message || "Creation failed.");
       setSaving(false);
     }
   };
@@ -136,14 +135,11 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
       style={{ background: "rgba(0,0,0,0.6)" }}
     >
       <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
-        {/* Header */}
         <div
           className="px-6 py-4 border-b border-gray-100 flex items-center justify-between"
           style={{ background: "linear-gradient(135deg, #065f46, #059669)" }}
         >
-          <h2 className="text-white font-black text-lg">
-            🔄 Naya Subscription
-          </h2>
+          <h2 className="text-white font-black text-lg">🔄 New Subscription</h2>
           <button
             onClick={onClose}
             className="text-white/70 hover:text-white text-2xl"
@@ -159,13 +155,12 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
             </div>
           )}
 
-          {/* Step 1 — Plan */}
           <div className="mb-6">
             <h3 className="font-bold text-gray-900 mb-3">
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-white text-xs font-black mr-2">
                 1
               </span>
-              Plan Choose Karo
+              Choose a Plan
             </h3>
             <div className="grid grid-cols-2 gap-3">
               {plans.map((plan) => (
@@ -195,23 +190,22 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
             </div>
           </div>
 
-          {/* Step 2 — Medicines from cart */}
           <div className="mb-6">
             <h3 className="font-bold text-gray-900 mb-3">
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-white text-xs font-black mr-2">
                 2
               </span>
-              Medicines Select Karo
+              Select Medicines
             </h3>
             {cartItems.length === 0 ? (
               <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 text-sm text-amber-700">
-                ⚠️ Cart mein koi medicine nahi hai.{" "}
+                ⚠️ Your cart is empty.{" "}
                 <Link
                   to="/medicines"
                   className="font-bold underline"
                   onClick={onClose}
                 >
-                  Medicines add karo
+                  Browse medicines
                 </Link>
               </div>
             ) : (
@@ -259,7 +253,6 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
             )}
           </div>
 
-          {/* Step 3 — Address */}
           <div className="mb-6">
             <h3 className="font-bold text-gray-900 mb-3">
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-white text-xs font-black mr-2">
@@ -269,7 +262,7 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
             </h3>
             {addresses.length === 0 ? (
               <p className="text-sm text-red-500">
-                Pehle address add karo (Profile → Addresses)
+                Please add an address first (Profile → Addresses)
               </p>
             ) : (
               <div className="space-y-2">
@@ -310,7 +303,6 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
             )}
           </div>
 
-          {/* Step 4 — Payment */}
           <div className="mb-6">
             <h3 className="font-bold text-gray-900 mb-3">
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 text-white text-xs font-black mr-2">
@@ -343,12 +335,11 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
             </div>
             {paymentMode === "cod" && (
               <p className="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mt-2">
-                💵 Pehli delivery pe cash ready rakhein
+                💵 Please keep cash ready for the first delivery.
               </p>
             )}
           </div>
 
-          {/* Summary */}
           {selectedPlan && selectedItems.length > 0 && (
             <div className="bg-gray-50 rounded-2xl p-4 mb-4">
               <p className="text-xs font-bold text-gray-500 uppercase mb-2">
@@ -366,7 +357,7 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Medicines</span>
+                  <span className="text-gray-600">Items</span>
                   <span className="font-bold">
                     {selectedItems.length} items
                   </span>
@@ -391,32 +382,7 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
                 : "linear-gradient(135deg, #065f46, #059669)",
             }}
           >
-            {saving ? (
-              <>
-                <svg
-                  className="animate-spin h-4 w-4"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8z"
-                  />
-                </svg>
-                Creating...
-              </>
-            ) : (
-              "✅ Subscription Create Karo"
-            )}
+            {saving ? "Creating..." : "✅ Create Subscription"}
           </button>
         </div>
       </div>
@@ -424,7 +390,6 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
   );
 };
 
-// ── Main Page ─────────────────────────────────────────
 export default function Subscription() {
   const [subs, setSubs] = useState([]);
   const [plans, setPlans] = useState([]);
@@ -471,7 +436,7 @@ export default function Subscription() {
       );
       showMsg("success", data.message);
     } catch (err) {
-      showMsg("error", err.response?.data?.message || "Failed.");
+      showMsg("error", err.response?.data?.message || "Operation failed.");
     } finally {
       setActing(false);
       setModal(null);
@@ -485,9 +450,9 @@ export default function Subscription() {
       setSubs((prev) =>
         prev.map((s) => (s.id === id ? { ...s, status: "cancelled" } : s)),
       );
-      showMsg("success", "Subscription cancel ho gayi.");
+      showMsg("success", "Subscription cancelled successfully.");
     } catch (err) {
-      showMsg("error", err.response?.data?.message || "Failed.");
+      showMsg("error", err.response?.data?.message || "Operation failed.");
     } finally {
       setActing(false);
       setModal(null);
@@ -499,7 +464,7 @@ export default function Subscription() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Load ho raha hai...</p>
+          <p className="text-gray-500 text-sm">Loading...</p>
         </div>
       </div>
     );
@@ -510,7 +475,6 @@ export default function Subscription() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Modals */}
       {showCreate && (
         <CreateModal
           plans={plans}
@@ -520,17 +484,10 @@ export default function Subscription() {
             setShowCreate(false);
             setLoading(true);
             loadAll();
-            if (orderData?.payment_mode === "cod") {
-              showMsg(
-                "success",
-                `Subscription create ho gayi! 🎉 Order #${orderData.order_number} placed — delivery pe ₹${orderData.total_amount} cash dena hoga.`,
-              );
-            } else {
-              showMsg(
-                "success",
-                `Subscription create ho gayi! 🎉 Pehla order #${orderData.order_number} placed — ₹${orderData.total_amount}`,
-              );
-            }
+            showMsg(
+              "success",
+              `Subscription created! 🎉 Order #${orderData.order_number} has been placed.`,
+            );
           }}
         />
       )}
@@ -538,18 +495,18 @@ export default function Subscription() {
         <ConfirmModal
           title={
             subs.find((s) => s.id === modal.id)?.status === "active"
-              ? "Pause Karein?"
-              : "Resume Karein?"
+              ? "Pause Subscription?"
+              : "Resume Subscription?"
           }
           msg={
             subs.find((s) => s.id === modal.id)?.status === "active"
-              ? "Delivery temporarily rok jaayegi."
-              : "Agle cycle se delivery shuru hogi."
+              ? "Deliveries will be temporarily stopped."
+              : "Deliveries will resume from the next cycle."
           }
           confirmLabel={
             subs.find((s) => s.id === modal.id)?.status === "active"
-              ? "Pause Karo"
-              : "Resume Karo"
+              ? "Pause Now"
+              : "Resume Now"
           }
           onConfirm={() => handleToggle(modal.id)}
           onCancel={() => setModal(null)}
@@ -557,16 +514,15 @@ export default function Subscription() {
       )}
       {modal?.type === "cancel" && (
         <ConfirmModal
-          title="Cancel Karein?"
+          title="Cancel Subscription?"
           danger
-          msg="Cancel hone ke baad wapas activate nahi hogi. Naya subscription banana padega."
-          confirmLabel="Haan, Cancel"
+          msg="Once cancelled, it cannot be reactivated. You will need to create a new one."
+          confirmLabel="Confirm Cancellation"
           onConfirm={() => handleCancel(modal.id)}
           onCancel={() => setModal(null)}
         />
       )}
 
-      {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center gap-2 text-xs text-gray-400">
@@ -580,20 +536,14 @@ export default function Subscription() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Toast */}
         {msg.text && (
           <div
-            className={`mb-5 flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold ${
-              msg.type === "success"
-                ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
-                : "bg-red-50 border border-red-200 text-red-600"
-            }`}
+            className={`mb-5 flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold ${msg.type === "success" ? "bg-emerald-50 border border-emerald-200 text-emerald-700" : "bg-red-50 border border-red-200 text-red-600"}`}
           >
             {msg.type === "success" ? "✅" : "⚠️"} {msg.text}
           </div>
         )}
 
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-black text-gray-900">
@@ -608,11 +558,10 @@ export default function Subscription() {
             className="text-sm font-bold text-white px-4 py-2.5 rounded-xl transition"
             style={{ background: "linear-gradient(135deg, #065f46, #059669)" }}
           >
-            + Naya Subscribe
+            + Create New
           </button>
         </div>
 
-        {/* Plans Banner */}
         {plans.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
             {plans.map((plan) => (
@@ -637,15 +586,14 @@ export default function Subscription() {
           </div>
         )}
 
-        {/* Empty */}
         {subs.length === 0 && (
           <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center mb-6">
             <div className="text-6xl mb-4">🔄</div>
             <h3 className="text-lg font-black text-gray-800 mb-2">
-              Koi subscription nahi hai
+              No subscriptions found
             </h3>
             <p className="text-gray-400 text-sm mb-6">
-              Auto-refill enable karo — medicines khud ghar aayengi!
+              Enable auto-refill to get your medicines delivered automatically!
             </p>
             <button
               onClick={() => setShowCreate(true)}
@@ -654,12 +602,11 @@ export default function Subscription() {
                 background: "linear-gradient(135deg, #065f46, #059669)",
               }}
             >
-              Pehla Subscription Banao →
+              Start Subscribing →
             </button>
           </div>
         )}
 
-        {/* Subscription Groups */}
         {[
           { label: "✅ Active", list: activeSubs },
           { label: "⏸️ Paused", list: pausedSubs },
@@ -680,14 +627,12 @@ export default function Subscription() {
                       (new Date(sub.next_delivery_date) - new Date()) /
                         (1000 * 60 * 60 * 24),
                     );
-                    const isExpanded = expandedId === sub.id;
 
                     return (
                       <div
                         key={sub.id}
                         className={`bg-white rounded-2xl border-2 ${statusCfg.border} overflow-hidden transition-all`}
                       >
-                        {/* Header Strip */}
                         <div
                           className={`${statusCfg.bg} px-5 py-2.5 flex items-center justify-between`}
                         >
@@ -708,9 +653,7 @@ export default function Subscription() {
                           </div>
                         </div>
 
-                        {/* Body */}
                         <div className="p-5">
-                          {/* Medicines list */}
                           <div className="space-y-3 mb-4">
                             {(sub.items || []).map((item) => (
                               <div
@@ -754,14 +697,9 @@ export default function Subscription() {
                             ))}
                           </div>
 
-                          {/* Next Delivery */}
                           {sub.status !== "cancelled" && (
                             <div
-                              className={`rounded-xl px-4 py-3 flex items-center justify-between mb-4 ${
-                                daysLeft <= 2
-                                  ? "bg-amber-50 border border-amber-100"
-                                  : "bg-gray-50"
-                              }`}
+                              className={`rounded-xl px-4 py-3 flex items-center justify-between mb-4 ${daysLeft <= 2 ? "bg-amber-50 border border-amber-100" : "bg-gray-50"}`}
                             >
                               <div>
                                 <p className="text-xs text-gray-500 font-semibold">
@@ -780,8 +718,8 @@ export default function Subscription() {
                                   <span className="font-normal text-gray-400 text-xs">
                                     (
                                     {daysLeft > 0
-                                      ? `${daysLeft} din mein`
-                                      : "Aaj!"}
+                                      ? `in ${daysLeft} days`
+                                      : "Today!"}
                                     )
                                   </span>
                                 </p>
@@ -797,7 +735,6 @@ export default function Subscription() {
                             </div>
                           )}
 
-                          {/* Action Buttons */}
                           {sub.status !== "cancelled" && (
                             <div className="flex gap-2">
                               <button
@@ -805,11 +742,7 @@ export default function Subscription() {
                                   setModal({ type: "pause", id: sub.id })
                                 }
                                 disabled={acting}
-                                className={`flex-1 py-2.5 rounded-xl font-bold text-sm border-2 transition ${
-                                  sub.status === "active"
-                                    ? "border-amber-300 text-amber-600 hover:bg-amber-50"
-                                    : "border-emerald-400 text-emerald-600 hover:bg-emerald-50"
-                                }`}
+                                className={`flex-1 py-2.5 rounded-xl font-bold text-sm border-2 transition ${sub.status === "active" ? "border-amber-300 text-amber-600 hover:bg-amber-50" : "border-emerald-400 text-emerald-600 hover:bg-emerald-50"}`}
                               >
                                 {sub.status === "active"
                                   ? "⏸️ Pause"

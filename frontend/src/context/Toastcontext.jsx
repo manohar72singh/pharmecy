@@ -157,13 +157,15 @@ function CartToastCard({ toast, onRemove }) {
             {toast.name || "Item"}
           </p>
           <p className="text-xs text-gray-400 mt-0.5">
-            Cart mein add ho gaya!{" "}
+            Added to cart successfully!{" "}
             {toast.price && (
               <span className="text-emerald-600 font-bold">{toast.price}</span>
             )}
           </p>
           {toast.qty && (
-            <p className="text-xs text-gray-300 mt-0.5">Qty: {toast.qty}</p>
+            <p className="text-xs text-gray-300 mt-0.5">
+              Quantity: {toast.qty}
+            </p>
           )}
         </div>
 
@@ -303,15 +305,6 @@ export function ToastProvider({ children }) {
 
   /**
    * showToast(message, type?, duration?, extra?)
-   * @param {string} message   - "Order placed!"
-   * @param {string} type      - "success" | "error" | "warning" | "info" | "order" | "delivery" | "prescription"
-   * @param {number} duration  - ms, default 3000
-   * @param {object} extra     - { title: "Order #123" } optional heading
-   *
-   * @example
-   * showToast("Saved!", "success")
-   * showToast("Something went wrong", "error", 5000)
-   * showToast("Assigned!", "delivery", 3000, { title: "Delivery #45" })
    */
   const showToast = useCallback(
     (message, type = "success", duration = 3000, extra = {}) => {
@@ -322,8 +315,6 @@ export function ToastProvider({ children }) {
 
   /**
    * showCartToast({ name, price?, qty? })
-   * @example
-   * showCartToast({ name: "Paracetamol 500mg", price: "₹12", qty: 2 })
    */
   const showCartToast = useCallback(
     (medicine, duration = 3000) => {
@@ -333,8 +324,7 @@ export function ToastProvider({ children }) {
   );
 
   /**
-   * dismiss(id) — manually hatao
-   * id = showToast(...) se milta hai
+   * dismiss(id)
    */
   const dismiss = useCallback((id) => removeToast(id), [removeToast]);
 
@@ -368,7 +358,6 @@ export function ToastProvider({ children }) {
   );
 }
 
-// ── useToast Hook ─────────────────────────────────────
 export function useToast() {
   const ctx = useContext(ToastContext);
   if (!ctx) throw new Error("useToast must be used inside <ToastProvider>");

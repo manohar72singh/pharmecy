@@ -34,11 +34,9 @@ const STATES = [
   "West Bengal",
 ];
 
-// onSave(savedAddress, allAddresses) — parent ko naya address milega
-// onCancel() — form band karo
 export default function AddressForm({ onSave, onCancel, showCancel = true }) {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const { showToast } = useToast(); // ✅ Fix 1: destructure kiya, duplicate hataya
+  const { showToast } = useToast();
   const [form, setForm] = useState({
     full_name: user?.name || "",
     phone: "",
@@ -63,25 +61,25 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
 
   const handleSubmit = async () => {
     if (!form.full_name || !form.address_line1 || !form.city || !form.pincode)
-      return setError("Full name, address, city aur pincode zaroori hain.");
+      return setError("Full name, address, city, and pincode are required.");
     if (form.pincode.length !== 6)
-      return setError("Pincode 6 digits ka hona chahiye.");
+      return setError("Pincode must be exactly 6 digits.");
 
     setSaving(true);
     try {
-      const addRes = await addressService.add(form); // ✅ Fix 2: addRes rakha
-      const newId = addRes.data?.data?.id || addRes.data?.id; // ✅ Fix 2: dono cases handle
+      const addRes = await addressService.add(form);
+      const newId = addRes.data?.data?.id || addRes.data?.id;
 
       const res = await addressService.getAll();
-      const allAddrs = res.data?.data || res.data || []; // ✅ Fix 2: fallback
+      const allAddrs = res.data?.data || res.data || [];
       const saved = allAddrs.find((a) => a.id === newId) || allAddrs[0];
 
-      showToast("Address save ho gaya! 📍", "success"); // ✅ Ab sahi kaam karega
+      showToast("Address saved successfully! 📍", "success");
       onSave?.(saved, allAddrs);
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Address save nahi hua, dobara try karo.",
+          "Failed to save address. Please try again.",
       );
     } finally {
       setSaving(false);
@@ -92,7 +90,7 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
     <div className="bg-white rounded-2xl border border-gray-100 p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold text-gray-900">📍 Naya Address Add Karein</h3>
+        <h3 className="font-bold text-gray-900">📍 Add New Address</h3>
         {showCancel && onCancel && (
           <button
             onClick={onCancel}
@@ -122,7 +120,7 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
             name="full_name"
             value={form.full_name}
             onChange={set}
-            placeholder="Apna pura naam likhein"
+            placeholder="Enter your full name"
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm
                        focus:outline-none focus:border-emerald-400 focus:bg-white transition"
           />
@@ -131,7 +129,7 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
         {/* Phone */}
         <div>
           <label className="block text-xs font-bold text-gray-600 mb-1">
-            Phone
+            Phone Number
           </label>
           <input
             type="tel"
@@ -172,7 +170,7 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
             name="address_line1"
             value={form.address_line1}
             onChange={set}
-            placeholder="Ghar/flat no., gali, mohalla"
+            placeholder="House/Flat no., Street, Locality"
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm
                        focus:outline-none focus:border-emerald-400 focus:bg-white transition"
           />
@@ -189,7 +187,7 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
             name="address_line2"
             value={form.address_line2}
             onChange={set}
-            placeholder="Area, landmark"
+            placeholder="Area, Landmark"
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm
                        focus:outline-none focus:border-emerald-400 focus:bg-white transition"
           />
@@ -205,7 +203,7 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
             name="city"
             value={form.city}
             onChange={set}
-            placeholder="Noida"
+            placeholder="e.g. Noida"
             className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm
                        focus:outline-none focus:border-emerald-400 focus:bg-white transition"
           />
@@ -224,7 +222,9 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
                        focus:outline-none focus:border-emerald-400 transition"
           >
             {STATES.map((s) => (
-              <option key={s}>{s}</option>
+              <option key={s} value={s}>
+                {s}
+              </option>
             ))}
           </select>
         </div>
@@ -243,7 +243,7 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
             htmlFor="addr_default"
             className="text-sm text-gray-600 cursor-pointer select-none"
           >
-            Is address ko default set karo
+            Set as default address
           </label>
         </div>
       </div>
@@ -284,7 +284,7 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
             Saving...
           </>
         ) : (
-          "💾 Address Save Karo"
+          "💾 Save Address"
         )}
       </button>
     </div>

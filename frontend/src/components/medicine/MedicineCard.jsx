@@ -4,6 +4,7 @@ import MedicineImage from "../common/MedicineImage";
 import cartService, { localCart } from "../../services/cartService";
 import wishlistService from "../../services/wishlistService";
 import { useToast } from "../../context/ToastContext";
+
 const ScheduleBadge = ({ code }) => {
   const colors = {
     OTC: "bg-green-100 text-green-700",
@@ -35,10 +36,9 @@ export default function MedicineCard({ med }) {
   // ── Wishlist status check on mount ───────────────
   useEffect(() => {
     if (!isLoggedIn) return;
-    // Agar wishlist localStorage mein cache hai to check karo
     const cached = JSON.parse(localStorage.getItem("wishlistIds") || "[]");
     if (cached.includes(med.id)) setWishlisted(true);
-  }, [med.id]);
+  }, [med.id, isLoggedIn]);
 
   // ── Add to Cart ───────────────────────────────────
   const addToCart = async () => {
@@ -63,7 +63,7 @@ export default function MedicineCard({ med }) {
       setTimeout(() => setAdded(false), 2000);
     } catch (err) {
       console.error("Cart add error:", err);
-      setCartError("Cart mein add nahi hua. Dobara try karein.");
+      setCartError("Failed to add to cart. Please try again.");
       setTimeout(() => setCartError(null), 3000);
     }
   };
@@ -82,7 +82,6 @@ export default function MedicineCard({ med }) {
       const newState = data.data.wishlisted;
       setWishlisted(newState);
 
-      // Update localStorage cache
       const cached = JSON.parse(localStorage.getItem("wishlistIds") || "[]");
       if (newState) {
         localStorage.setItem(
@@ -150,14 +149,11 @@ export default function MedicineCard({ med }) {
               {med.name}
             </h3>
           </Link>
-          {/* ❤️ Wishlist Button */}
           <button
             onClick={toggleWishlist}
             disabled={wishLoading}
             className="flex-shrink-0 p-1 rounded-lg hover:bg-red-50 transition"
-            title={
-              wishlisted ? "Wishlist se remove karo" : "Wishlist mein add karo"
-            }
+            title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           >
             <span
               className={`text-base transition ${wishLoading ? "opacity-50" : ""}`}

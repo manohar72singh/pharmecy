@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import medicineService from "../../services/medicineService";
 import MedicineImage from "../../components/common/MedicineImage";
-import cartService, { localCart } from "../../services/cartService"; // ✅ add
-import ReviewSection from "../../components/common/ReviewSection"; // ✅ NEW
+import cartService, { localCart } from "../../services/cartService";
+import ReviewSection from "../../components/common/ReviewSection";
 import { useToast } from "../../context/ToastContext";
 
 // ── Schedule Badge ────────────────────────────────────
@@ -62,7 +62,7 @@ export default function MedicineDetail() {
     medicineService
       .getById(id)
       .then(({ data }) => setMed(data.data))
-      .catch(() => setError("Medicine nahi mili."))
+      .catch(() => setError("Medicine not found."))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -71,7 +71,6 @@ export default function MedicineDetail() {
   const discount = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
   const inStock = (med?.available_quantity || 0) > 0;
 
-  // ✅ FIX: cartService use karo, localCart nahi
   const addToCart = async () => {
     const isLoggedIn = !!localStorage.getItem("token");
     setCartError("");
@@ -79,7 +78,7 @@ export default function MedicineDetail() {
     try {
       if (isLoggedIn) {
         if (!med.batch_id) {
-          setCartError("Stock unavailable. Please refresh.");
+          setCartError("Stock unavailable. Please refresh the page.");
           return;
         }
         await cartService.addToCart({
@@ -91,7 +90,6 @@ export default function MedicineDetail() {
         localCart.add(med, quantity);
       }
 
-      // ✅ Toast show karo
       showCartToast({
         name: med.name,
         price: `₹${price.toFixed(2)}`,
@@ -102,7 +100,7 @@ export default function MedicineDetail() {
       setTimeout(() => setAdded(false), 2000);
     } catch (err) {
       console.error("Cart add error:", err);
-      setCartError("Cart mein add nahi hua. Dobara try karein.");
+      setCartError("Could not add to cart. Please try again.");
       setTimeout(() => setCartError(""), 3000);
     }
   };
@@ -125,13 +123,13 @@ export default function MedicineDetail() {
         <div className="flex flex-col items-center justify-center py-32 gap-4">
           <div className="text-6xl">😕</div>
           <h2 className="text-xl font-bold text-gray-700">
-            Medicine nahi mili
+            Medicine Not Found
           </h2>
           <Link
             to="/medicines"
             className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm"
           >
-            ← Wapas Medicines pe jao
+            ← Back to Medicines
           </Link>
         </div>
       </div>
@@ -313,8 +311,7 @@ export default function MedicineDetail() {
                     Prescription Required
                   </p>
                   <p className="text-xs text-amber-600 mt-0.5">
-                    Yeh medicine order karne ke liye valid prescription upload
-                    karni hogi.
+                    A valid prescription is required to order this medicine.
                   </p>
                   <Link
                     to="/prescription"
@@ -332,13 +329,12 @@ export default function MedicineDetail() {
                     Prescription Not Required
                   </p>
                   <p className="text-xs text-green-600 mt-0.5">
-                    Yeh medicine bina prescription ke order ki ja sakti hai.
+                    This medicine can be ordered without a prescription.
                   </p>
                 </div>
               </div>
             )}
 
-            {/* ✅ Cart error */}
             {cartError && (
               <p className="text-sm text-red-500 bg-red-50 px-4 py-2.5 rounded-xl">
                 ⚠️ {cartError}
@@ -488,15 +484,16 @@ export default function MedicineDetail() {
               <div className="text-sm text-gray-600 leading-relaxed space-y-3">
                 <p>
                   {med.description ||
-                    "Yeh medicine doctor ki salah se hi lein."}
+                    "Please consult a doctor before using this medicine."}
                 </p>
                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mt-4">
                   <p className="text-xs font-bold text-amber-800 mb-1">
                     ⚠️ Disclaimer
                   </p>
                   <p className="text-xs text-amber-700">
-                    Yeh information sirf educational purpose ke liye hai. Koi
-                    bhi medicine lene se pehle doctor se zaroor consult karein.
+                    The information provided here is for educational purposes
+                    only. Please consult a qualified doctor before taking any
+                    medication.
                   </p>
                 </div>
               </div>
@@ -507,11 +504,11 @@ export default function MedicineDetail() {
                 {[
                   {
                     icon: "🌡️",
-                    text: "Cool aur dry jagah rakhein (25°C se kam)",
+                    text: "Store in a cool and dry place (below 25°C)",
                   },
-                  { icon: "☀️", text: "Seedhi dhoop se bachayein" },
-                  { icon: "👶", text: "Bachon ki pahunch se door rakhein" },
-                  { icon: "📦", text: "Original packaging mein rakhein" },
+                  { icon: "☀️", text: "Protect from direct sunlight" },
+                  { icon: "👶", text: "Keep out of reach of children" },
+                  { icon: "📦", text: "Store in original packaging" },
                   {
                     icon: "📅",
                     text: `Expiry date: ${med.expiry_date ? new Date(med.expiry_date).toLocaleDateString("en-IN") : "N/A"}`,

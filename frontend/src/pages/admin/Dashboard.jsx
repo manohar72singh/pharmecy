@@ -80,7 +80,7 @@ export default function Dashboard() {
           label="Today's Revenue"
           value={`₹${parseFloat(stats?.today_revenue || 0).toFixed(0)}`}
           color="text-emerald-600"
-          sub="Today"
+          sub="Updated today"
         />
         <StatCard
           icon="👥"
@@ -88,7 +88,7 @@ export default function Dashboard() {
           value={stats?.total_users}
           color="text-purple-600"
           to="/admin/users"
-          sub="Registered"
+          sub="Registered users"
         />
         <StatCard
           icon="💊"
@@ -96,7 +96,7 @@ export default function Dashboard() {
           value={stats?.total_medicines}
           color="text-amber-600"
           to="/admin/medicines"
-          sub="In catalog"
+          sub="In inventory"
         />
       </div>
 
@@ -107,7 +107,7 @@ export default function Dashboard() {
           value={stats?.pending_orders}
           color="text-amber-600"
           to="/admin/orders"
-          sub="Need attention"
+          sub="Action required"
         />
         <StatCard
           icon="📋"
@@ -115,7 +115,7 @@ export default function Dashboard() {
           value={stats?.pending_rx}
           color="text-red-500"
           to="/admin/prescriptions"
-          sub="Awaiting review"
+          sub="Needs verification"
         />
         <StatCard
           icon="⚠️"
@@ -123,7 +123,7 @@ export default function Dashboard() {
           value={stats?.low_stock}
           color="text-red-500"
           to="/admin/stock"
-          sub="Below threshold"
+          sub="Refill needed"
         />
         <StatCard
           icon="🔁"
@@ -131,7 +131,7 @@ export default function Dashboard() {
           value={stats?.active_subscriptions}
           color="text-indigo-600"
           to="/admin/subscriptions"
-          sub="Auto-refill"
+          sub="Monthly refills"
         />
       </div>
 
@@ -144,12 +144,12 @@ export default function Dashboard() {
               to="/admin/orders"
               className="text-xs text-emerald-600 font-bold hover:underline"
             >
-              View All →
+              View All Orders →
             </Link>
           </div>
           {recentOrders.length === 0 ? (
             <div className="text-center py-10 text-gray-400 text-sm">
-              Koi order nahi
+              No recent orders found
             </div>
           ) : (
             <>
@@ -176,7 +176,7 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <span
-                        className={`text-xs font-bold px-2 py-1 rounded-full ${ORDER_STATUS_COLORS[order.order_status] || "bg-gray-100 text-gray-600"}`}
+                        className={`text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full ${ORDER_STATUS_COLORS[order.order_status] || "bg-gray-100 text-gray-600"}`}
                       >
                         {order.order_status}
                       </span>
@@ -212,43 +212,43 @@ export default function Dashboard() {
               {
                 to: "/admin/prescriptions",
                 icon: "📋",
-                label: "Review Rx",
+                label: "Verify Rx",
                 color: "bg-amber-50 text-amber-700",
               },
               {
                 to: "/admin/medicines",
                 icon: "💊",
-                label: "Add Medicine",
+                label: "Add Product",
                 color: "bg-emerald-50 text-emerald-700",
               },
               {
                 to: "/admin/stock",
                 icon: "🏪",
-                label: "Update Stock",
+                label: "Inventory",
                 color: "bg-purple-50 text-purple-700",
               },
               {
                 to: "/admin/coupons",
                 icon: "🏷️",
-                label: "Add Coupon",
+                label: "Create Coupon",
                 color: "bg-pink-50 text-pink-700",
               },
               {
                 to: "/admin/delivery",
                 icon: "🚴",
-                label: "Assign Delivery",
+                label: "Dispatch",
                 color: "bg-teal-50 text-teal-700",
               },
               {
                 to: "/admin/users",
                 icon: "👥",
-                label: "Manage Users",
+                label: "User Accounts",
                 color: "bg-indigo-50 text-indigo-700",
               },
               {
                 to: "/admin/reports",
                 icon: "📈",
-                label: "View Reports",
+                label: "Sales Reports",
                 color: "bg-orange-50 text-orange-700",
               },
             ].map((a) => (
@@ -270,25 +270,25 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             {
-              label: "Orders Today",
+              label: "New Orders",
               value: stats?.today_orders,
               icon: "📦",
               color: "text-blue-600",
             },
             {
-              label: "Revenue Today",
+              label: "Net Earnings",
               value: `₹${parseFloat(stats?.today_revenue || 0).toFixed(0)}`,
               icon: "💰",
               color: "text-emerald-600",
             },
             {
-              label: "New Users",
+              label: "Registrations",
               value: stats?.today_users,
               icon: "👤",
               color: "text-purple-600",
             },
             {
-              label: "Delivered",
+              label: "Success Deliveries",
               value: stats?.today_delivered,
               icon: "✅",
               color: "text-green-600",

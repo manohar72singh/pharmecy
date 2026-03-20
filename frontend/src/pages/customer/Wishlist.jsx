@@ -22,7 +22,7 @@ export default function Wishlist() {
       .then((res) => setItems(res.data.data || []))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [isLoggedIn]);
 
   const showMsg = (type, text) => {
     setMsg({ type, text });
@@ -33,9 +33,9 @@ export default function Wishlist() {
     try {
       await wishlistService.remove(medicine_id);
       setItems((prev) => prev.filter((i) => i.medicine_id !== medicine_id));
-      showMsg("success", "Wishlist se remove ho gaya.");
+      showMsg("success", "Item removed from wishlist.");
     } catch {
-      showMsg("error", "Remove failed.");
+      showMsg("error", "Failed to remove item.");
     }
   };
 
@@ -43,7 +43,7 @@ export default function Wishlist() {
     setAdding(item.medicine_id);
     try {
       if (!item.batch_id) {
-        showMsg("error", "Stock available nahi hai abhi.");
+        showMsg("error", "This item is currently out of stock.");
         setAdding(null);
         return;
       }
@@ -55,9 +55,9 @@ export default function Wishlist() {
         category_slug: item.category_slug,
       });
       window.dispatchEvent(new Event("cartUpdated"));
-      showMsg("success", `${item.name} cart mein add ho gaya! 🛒`);
+      showMsg("success", `${item.name} added to cart! 🛒`);
     } catch {
-      showMsg("error", "Cart mein add nahi hua.");
+      showMsg("error", "Could not add to cart.");
     } finally {
       setAdding(null);
     }
@@ -108,7 +108,7 @@ export default function Wishlist() {
           {items.length > 0 && (
             <Link
               to="/medicines"
-              className="text-sm font-bold text-white px-4 py-2.5 rounded-xl"
+              className="text-sm font-bold text-white px-4 py-2.5 rounded-xl transition"
               style={{
                 background: "linear-gradient(135deg, #065f46, #059669)",
               }}
@@ -123,41 +123,41 @@ export default function Wishlist() {
           <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center">
             <div className="text-6xl mb-4">❤️</div>
             <h3 className="text-lg font-black text-gray-800 mb-2">
-              Login karein
+              Please Login
             </h3>
             <p className="text-gray-400 text-sm mb-6">
-              Wishlist ke liye login zaroori hai.
+              You need to be logged in to manage your wishlist.
             </p>
             <Link
               to="/login"
-              className="inline-block text-white font-bold px-6 py-3 rounded-2xl"
+              className="inline-block text-white font-bold px-6 py-3 rounded-2xl transition"
               style={{
                 background: "linear-gradient(135deg, #065f46, #059669)",
               }}
             >
-              Login Karein →
+              Login Now →
             </Link>
           </div>
         )}
 
-        {/* Empty */}
+        {/* Empty State */}
         {isLoggedIn && items.length === 0 && (
           <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center">
             <div className="text-6xl mb-4">💔</div>
             <h3 className="text-lg font-black text-gray-800 mb-2">
-              Wishlist khali hai
+              Your wishlist is empty
             </h3>
             <p className="text-gray-400 text-sm mb-6">
-              Apni pasand ki medicines save karo!
+              Save your favorite medicines to buy them later!
             </p>
             <Link
               to="/medicines"
-              className="inline-block text-white font-bold px-6 py-3 rounded-2xl"
+              className="inline-block text-white font-bold px-6 py-3 rounded-2xl transition"
               style={{
                 background: "linear-gradient(135deg, #065f46, #059669)",
               }}
             >
-              Medicines Browse Karein →
+              Browse Medicines →
             </Link>
           </div>
         )}
@@ -175,7 +175,6 @@ export default function Wishlist() {
                   key={item.id}
                   className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-emerald-200 transition group"
                 >
-                  {/* Image */}
                   <div className="relative">
                     <Link to={`/medicines/${item.medicine_id}`}>
                       <div className="h-44 bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center overflow-hidden">
@@ -188,10 +187,10 @@ export default function Wishlist() {
                         />
                       </div>
                     </Link>
-                    {/* Remove button */}
                     <button
                       onClick={() => handleRemove(item.medicine_id)}
                       className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition"
+                      title="Remove from wishlist"
                     >
                       ❤️
                     </button>
@@ -202,7 +201,6 @@ export default function Wishlist() {
                     )}
                   </div>
 
-                  {/* Info */}
                   <div className="p-4">
                     <Link to={`/medicines/${item.medicine_id}`}>
                       <h3 className="font-bold text-gray-900 text-sm leading-tight hover:text-emerald-600 transition line-clamp-2">
@@ -233,7 +231,7 @@ export default function Wishlist() {
                       <button
                         onClick={() => handleAddToCart(item)}
                         disabled={adding === item.medicine_id}
-                        className="flex-1 py-2.5 rounded-xl text-white text-xs font-bold transition"
+                        className="flex-1 py-2.5 rounded-xl text-white text-xs font-bold transition shadow-sm"
                         style={{
                           background:
                             adding === item.medicine_id
@@ -248,6 +246,7 @@ export default function Wishlist() {
                       <button
                         onClick={() => handleRemove(item.medicine_id)}
                         className="px-3 py-2.5 rounded-xl text-xs font-bold border-2 border-red-200 text-red-400 hover:bg-red-50 transition"
+                        title="Delete"
                       >
                         🗑️
                       </button>

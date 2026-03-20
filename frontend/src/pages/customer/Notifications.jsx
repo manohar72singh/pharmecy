@@ -87,20 +87,20 @@ export default function Notifications() {
               onClick={handleMarkAll}
               className="text-xs font-bold text-emerald-600 hover:underline"
             >
-              Sab read karo ✓
+              Mark all as read ✓
             </button>
           )}
         </div>
 
-        {/* Empty */}
+        {/* Empty State */}
         {notifications.length === 0 && (
           <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center">
             <div className="text-6xl mb-4">🔔</div>
             <h3 className="text-lg font-black text-gray-800 mb-2">
-              Koi notification nahi
+              No notifications yet
             </h3>
             <p className="text-gray-400 text-sm">
-              Orders aur updates yahan dikhenge
+              Your order updates and alerts will appear here.
             </p>
           </div>
         )}

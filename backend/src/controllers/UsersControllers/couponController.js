@@ -21,9 +21,9 @@ export const getActiveCoupons = async (req, res) => {
         const placeholders = usedIds.map(() => "?").join(",");
         [rows] = await pool.query(
           `SELECT id, code, discount_type, discount_value
-           FROM coupons
-           WHERE id NOT IN (${placeholders})
-           ORDER BY id DESC`,
+            FROM coupons
+            WHERE id NOT IN (${placeholders})
+            ORDER BY id DESC`,
           usedIds,
         );
       } else {
@@ -37,10 +37,10 @@ export const getActiveCoupons = async (req, res) => {
       );
     }
 
-    return success(res, rows, "Coupons fetched.");
+    return success(res, rows, "Active coupons retrieved successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Coupons fetch failed.", 500);
+    return error(res, "Failed to retrieve coupons.", 500);
   }
 };
 
@@ -51,13 +51,14 @@ export const applyCoupon = async (req, res) => {
     const userId = req.user.id;
 
     if (!code || !order_amount)
-      return error(res, "Code aur order amount zaroori hain.", 400);
+      return error(res, "Coupon code and order amount are required.", 400);
 
     // Find coupon
     const [coupons] = await pool.query(`SELECT * FROM coupons WHERE code = ?`, [
       code.toUpperCase().trim(),
     ]);
-    if (!coupons.length) return error(res, "Invalid coupon code.", 404);
+    if (!coupons.length)
+      return error(res, "Invalid or expired coupon code.", 404);
 
     const coupon = coupons[0];
 
@@ -67,7 +68,7 @@ export const applyCoupon = async (req, res) => {
       [coupon.id, userId],
     );
     if (used.length)
-      return error(res, "Aapne yeh coupon pehle se use kar liya hai.", 400);
+      return error(res, "You have already used this coupon code.", 400);
 
     // Calculate discount
     let discount = 0;
@@ -91,10 +92,10 @@ export const applyCoupon = async (req, res) => {
         discount_amount: discount,
         final_amount: parseFloat((order_amount - discount).toFixed(2)),
       },
-      `🎉 Coupon apply ho gaya! ₹${discount} ki bachat.`,
+      `Coupon applied successfully! You saved ₹${discount}.`,
     );
   } catch (err) {
     console.error(err);
-    return error(res, "Coupon apply failed.", 500);
+    return error(res, "Internal server error while applying coupon.", 500);
   }
 };

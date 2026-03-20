@@ -30,15 +30,15 @@ export default function AdminPurchase() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
         {total === 0 && !loading ? (
-          <div className="text-center py-16">
-            <div className="text-5xl mb-3">🛒</div>
-            <p className="text-gray-500 font-semibold">
-              Koi purchase order nahi hai
-            </p>
-            <p className="text-gray-400 text-sm mt-1">
-              Purchase orders suppliers se aate hain
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">🛒</div>
+            <h3 className="text-lg font-black text-gray-800 mb-2">
+              No purchase orders found
+            </h3>
+            <p className="text-gray-400 text-sm">
+              Purchase orders from suppliers will appear here.
             </p>
           </div>
         ) : (
@@ -47,16 +47,16 @@ export default function AdminPurchase() {
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
                   {[
-                    "PO #",
-                    "Supplier",
-                    "Created By",
-                    "Total",
+                    "PO Number",
+                    "Supplier Name",
+                    "Issued By",
+                    "Total Amount",
                     "Status",
-                    "Date",
+                    "Creation Date",
                   ].map((h) => (
                     <th
                       key={h}
-                      className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase"
+                      className="text-left px-4 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider"
                     >
                       {h}
                     </th>
@@ -67,33 +67,43 @@ export default function AdminPurchase() {
                 {loading
                   ? [...Array(6)].map((_, i) => (
                       <tr key={i}>
-                        <td colSpan={6} className="px-4 py-3">
+                        <td colSpan={6} className="px-4 py-4">
                           <div className="h-4 bg-gray-100 rounded animate-pulse" />
                         </td>
                       </tr>
                     ))
                   : orders.map((o) => (
-                      <tr key={o.id} className="hover:bg-gray-50">
+                      <tr
+                        key={o.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
                         <td className="px-4 py-3 font-bold text-gray-900">
                           PO-{o.id}
                         </td>
-                        <td className="px-4 py-3 text-gray-600">
+                        <td className="px-4 py-3 text-gray-600 font-medium">
                           {o.supplier_name || "—"}
                         </td>
                         <td className="px-4 py-3 text-gray-600">
                           {o.created_by_name || "—"}
                         </td>
-                        <td className="px-4 py-3 font-bold text-emerald-600">
-                          ₹{parseFloat(o.total_amount || 0).toFixed(0)}
+                        <td className="px-4 py-3 font-black text-emerald-600">
+                          ₹{parseFloat(o.total_amount || 0).toFixed(2)}
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700 capitalize">
+                          <span className="text-[10px] font-black uppercase px-2 py-1 rounded-full bg-blue-100 text-blue-700">
                             {o.status || "pending"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-500">
+                        <td className="px-4 py-3 text-xs text-gray-400">
                           {o.created_at
-                            ? new Date(o.created_at).toLocaleDateString("en-IN")
+                            ? new Date(o.created_at).toLocaleDateString(
+                                "en-IN",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                },
+                              )
                             : "—"}
                         </td>
                       </tr>
@@ -102,7 +112,7 @@ export default function AdminPurchase() {
             </table>
           </div>
         )}
-        <div className="px-4 pb-4">
+        <div className="px-4 py-4 border-t border-gray-50 bg-gray-50/30">
           <Pagination
             page={page}
             total={total}

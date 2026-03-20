@@ -25,17 +25,18 @@ export const placeOrder = async (req, res) => {
     } = req.body;
 
     if (!address_id || !payment_mode)
-      return error(res, "Address aur payment mode zaroori hai.", 400);
+      return error(res, "Delivery address and payment mode are required.", 400);
 
     const validModes = ["cod", "online", "upi", "wallet"];
     if (!validModes.includes(payment_mode))
-      return error(res, "Invalid payment mode.", 400);
+      return error(res, "Invalid payment mode selected.", 400);
 
     const [addr] = await conn.query(
       "SELECT id FROM customer_addresses WHERE id = ? AND user_id = ?",
       [address_id, userId],
     );
-    if (addr.length === 0) return error(res, "Address nahi mila.", 404);
+    if (addr.length === 0)
+      return error(res, "Delivery address not found.", 404);
 
     const [cartItems] = await conn.query(
       `SELECT ci.id, ci.medicine_id, ci.batch_id, ci.quantity,
@@ -47,12 +48,16 @@ export const placeOrder = async (req, res) => {
       [userId],
     );
 
-    if (cartItems.length === 0) return error(res, "Cart khali hai.", 400);
+    if (cartItems.length === 0) return error(res, "Your cart is empty.", 400);
 
     let subtotal = 0;
     for (const item of cartItems) {
       if (item.available_quantity < item.quantity)
-        return error(res, `"${item.name}" ka stock available nahi hai.`, 400);
+        return error(
+          res,
+          `Stock for "${item.name}" is currently unavailable.`,
+          400,
+        );
       subtotal += parseFloat(item.selling_price) * item.quantity;
     }
 
@@ -145,13 +150,13 @@ export const placeOrder = async (req, res) => {
         payment_mode,
         order_status: "placed",
       },
-      "Order place ho gaya! 🎉",
+      "Order placed successfully! 🎉",
       201,
     );
   } catch (err) {
     await conn.rollback();
     console.error(err);
-    return error(res, "Order place karna fail hua.", 500);
+    return error(res, "Failed to place order. Please try again.", 500);
   } finally {
     conn.release();
   }
@@ -173,10 +178,10 @@ export const getMyOrders = async (req, res) => {
        ORDER BY o.created_at DESC`,
       [req.user.id],
     );
-    return success(res, orders, "Orders fetched.");
+    return success(res, orders, "Orders retrieved successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Orders fetch failed.", 500);
+    return error(res, "Failed to retrieve orders.", 500);
   }
 };
 
@@ -197,7 +202,7 @@ export const getOrderDetail = async (req, res) => {
        WHERE o.id = ? AND o.user_id = ?`,
       [id, req.user.id],
     );
-    if (orders.length === 0) return error(res, "Order nahi mila.", 404);
+    if (orders.length === 0) return error(res, "Order not found.", 404);
 
     const [items] = await pool.query(
       `SELECT oi.id, oi.medicine_id, oi.quantity, oi.unit_price, oi.total_price,
@@ -221,11 +226,11 @@ export const getOrderDetail = async (req, res) => {
     return success(
       res,
       { order: orders[0], items, history },
-      "Order detail fetched.",
+      "Order details retrieved successfully.",
     );
   } catch (err) {
     console.error(err);
-    return error(res, "Order detail fetch failed.", 500);
+    return error(res, "Failed to retrieve order details.", 500);
   }
 };
 
@@ -235,19 +240,19 @@ export const cancelOrder = async (req, res) => {
   try {
     await conn.beginTransaction();
     const { id } = req.params;
-    const { reason = "Customer ne cancel kiya" } = req.body;
+    const { reason = "Cancelled by customer" } = req.body;
 
     const [orders] = await conn.query(
       "SELECT id, order_status FROM orders WHERE id = ? AND user_id = ?",
       [id, req.user.id],
     );
-    if (orders.length === 0) return error(res, "Order nahi mila.", 404);
+    if (orders.length === 0) return error(res, "Order not found.", 404);
 
     const cancelable = ["placed", "confirmed", "processing"];
     if (!cancelable.includes(orders[0].order_status))
       return error(
         res,
-        `"${orders[0].order_status}" status mein cancel nahi ho sakta.`,
+        `Order cannot be cancelled while in "${orders[0].order_status}" status.`,
         400,
       );
 
@@ -272,11 +277,11 @@ export const cancelOrder = async (req, res) => {
     );
 
     await conn.commit();
-    return success(res, {}, "Order cancel ho gaya.");
+    return success(res, {}, "Order has been cancelled successfully.");
   } catch (err) {
     await conn.rollback();
     console.error(err);
-    return error(res, "Cancel failed.", 500);
+    return error(res, "An error occurred while cancelling the order.", 500);
   } finally {
     conn.release();
   }

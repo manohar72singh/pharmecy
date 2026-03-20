@@ -16,11 +16,11 @@ export const getProfile = async (req, res) => {
        WHERE u.id = ?`,
       [req.user.id],
     );
-    if (rows.length === 0) return error(res, "User not found.", 404);
-    return success(res, rows[0], "Profile fetched.");
+    if (rows.length === 0) return error(res, "User profile not found.", 404);
+    return success(res, rows[0], "Profile retrieved successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Profile fetch failed.", 500);
+    return error(res, "Failed to retrieve profile.", 500);
   }
 };
 
@@ -29,16 +29,16 @@ export const updateProfile = async (req, res) => {
   try {
     const { name, email, date_of_birth, gender } = req.body;
 
-    if (!name) return error(res, "Name zaroori hai.", 400);
+    if (!name) return error(res, "Name is required.", 400);
 
-    // Email unique check (dusre user ka nahi hona chahiye)
+    // Email unique check
     if (email) {
       const [existing] = await pool.query(
         "SELECT id FROM users WHERE email = ? AND id != ?",
         [email, req.user.id],
       );
       if (existing.length > 0)
-        return error(res, "Yeh email already use ho rahi hai.", 409);
+        return error(res, "This email address is already in use.", 409);
     }
 
     await pool.query(
@@ -51,19 +51,19 @@ export const updateProfile = async (req, res) => {
       [req.user.id],
     );
 
-    return success(res, updated[0], "Profile update ho gaya.");
+    return success(res, updated[0], "Profile updated successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Profile update failed.", 500);
+    return error(res, "Failed to update profile.", 500);
   }
 };
 
 // ── Upload Profile Photo ──────────────────────────────
 export const uploadProfilePhoto = async (req, res) => {
   try {
-    if (!req.file) return error(res, "Photo upload karo.", 400);
+    if (!req.file) return error(res, "Please upload a photo.", 400);
 
-    // Purani photo delete karo
+    // Delete old photo
     const [user] = await pool.query(
       "SELECT profile_image FROM users WHERE id=?",
       [req.user.id],
@@ -82,11 +82,11 @@ export const uploadProfilePhoto = async (req, res) => {
     return success(
       res,
       { profile_image: imageUrl },
-      "Profile photo update ho gaya.",
+      "Profile photo updated successfully.",
     );
   } catch (err) {
     console.error(err);
-    return error(res, "Photo upload failed.", 500);
+    return error(res, "Failed to upload photo.", 500);
   }
 };
 
@@ -96,21 +96,22 @@ export const changePassword = async (req, res) => {
     const { old_password, new_password } = req.body;
 
     if (!old_password || !new_password)
-      return error(res, "Old aur new password zaroori hain.", 400);
+      return error(res, "Both current and new passwords are required.", 400);
+
     if (new_password.length < 6)
       return error(
         res,
-        "New password kam se kam 6 characters ka hona chahiye.",
+        "New password must be at least 6 characters long.",
         400,
       );
 
     const [rows] = await pool.query("SELECT password FROM users WHERE id=?", [
       req.user.id,
     ]);
-    if (rows.length === 0) return error(res, "User not found.", 404);
+    if (rows.length === 0) return error(res, "User record not found.", 404);
 
     const isMatch = await bcrypt.compare(old_password, rows[0].password);
-    if (!isMatch) return error(res, "Old password galat hai.", 400);
+    if (!isMatch) return error(res, "Current password is incorrect.", 400);
 
     const hashed = await bcrypt.hash(new_password, 12);
     await pool.query("UPDATE users SET password=? WHERE id=?", [
@@ -118,9 +119,9 @@ export const changePassword = async (req, res) => {
       req.user.id,
     ]);
 
-    return success(res, {}, "Password change ho gaya.");
+    return success(res, {}, "Password changed successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Password change failed.", 500);
+    return error(res, "Failed to change password.", 500);
   }
 };

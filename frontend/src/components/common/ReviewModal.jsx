@@ -17,11 +17,11 @@ const StarRating = ({ rating, setRating }) => (
 );
 
 const RATING_LABELS = {
-  1: "Bahut Bura 😞",
-  2: "Theek Nahi 😕",
-  3: "Theek Hai 😊",
-  4: "Accha Hai 😄",
-  5: "Bahut Accha! 🤩",
+  1: "Very Poor 😞",
+  2: "Poor 😕",
+  3: "Average 😊",
+  4: "Good 😄",
+  5: "Excellent! 🤩",
 };
 
 export default function ReviewModal({ item, orderId, onClose, onSubmit }) {
@@ -42,7 +42,7 @@ export default function ReviewModal({ item, orderId, onClose, onSubmit }) {
       });
       onSubmit(item.medicine_id);
     } catch (err) {
-      setError(err.response?.data?.message || "Review submit nahi hua.");
+      setError(err.response?.data?.message || "Failed to submit review.");
       setSaving(false);
     }
   };
@@ -55,7 +55,9 @@ export default function ReviewModal({ item, orderId, onClose, onSubmit }) {
       <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100">
-          <h3 className="font-black text-gray-900 text-lg">⭐ Review Do</h3>
+          <h3 className="font-black text-gray-900 text-lg">
+            ⭐ Write a Review
+          </h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-2xl"
@@ -80,7 +82,9 @@ export default function ReviewModal({ item, orderId, onClose, onSubmit }) {
 
           {/* Star Rating */}
           <div className="mb-4">
-            <p className="text-sm font-bold text-gray-700 mb-2">Rating do *</p>
+            <p className="text-sm font-bold text-gray-700 mb-2">
+              Your Rating *
+            </p>
             <StarRating rating={rating} setRating={setRating} />
             {rating > 0 && (
               <p className="text-sm font-semibold text-emerald-600 mt-1">
@@ -92,14 +96,14 @@ export default function ReviewModal({ item, orderId, onClose, onSubmit }) {
           {/* Comment */}
           <div className="mb-4">
             <p className="text-sm font-bold text-gray-700 mb-2">
-              Comment{" "}
+              Review Comment{" "}
               <span className="text-gray-400 font-normal">(optional)</span>
             </p>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={3}
-              placeholder="Is medicine ke baare mein apna experience share karein..."
+              placeholder="Share your experience with this medicine..."
               className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400 resize-none"
             />
           </div>

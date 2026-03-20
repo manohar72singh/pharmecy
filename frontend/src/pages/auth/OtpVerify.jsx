@@ -6,6 +6,7 @@ export default function OtpVerify() {
   const navigate = useNavigate();
   const location = useLocation();
   const phone = location.state?.phone || "";
+  const receivedOtp = location.state?.otp || ""; // ✅ OTP from register response
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
@@ -14,7 +15,16 @@ export default function OtpVerify() {
   const [success, setSuccess] = useState("");
   const [timer, setTimer] = useState(30);
   const [verified, setVerified] = useState(false);
+  const [showOtp, setShowOtp] = useState(true); // ✅ Toggle to show/hide OTP
   const inputs = useRef([]);
+
+  // ✅ Auto-fill OTP if received from registration
+  useEffect(() => {
+    if (receivedOtp && receivedOtp.length === 6) {
+      setOtp(receivedOtp.split(""));
+      setSuccess(` Your OTP is: ${receivedOtp}`);
+    }
+  }, [receivedOtp]);
 
   // Countdown timer
   useEffect(() => {
@@ -57,7 +67,7 @@ export default function OtpVerify() {
 
   const handleVerify = async () => {
     const otpStr = otp.join("");
-    if (otpStr.length < 6) return setError("6-digit OTP enter karo.");
+    if (otpStr.length < 6) return setError("Please enter a 6-digit OTP.");
     setLoading(true);
     try {
       const { data } = await authService.verifyOtp({ phone, otp: otpStr });
@@ -66,7 +76,7 @@ export default function OtpVerify() {
       setVerified(true);
       setTimeout(() => navigate("/"), 2000);
     } catch (err) {
-      setError(err.response?.data?.message || "OTP galat hai. Try again.");
+      setError(err.response?.data?.message || "Invalid OTP. Please try again.");
       setOtp(["", "", "", "", "", ""]);
       inputs.current[0]?.focus();
     } finally {
@@ -77,15 +87,23 @@ export default function OtpVerify() {
   const handleResend = async () => {
     setResending(true);
     try {
-      await authService.resendOtp({ phone });
+      const { data } = await authService.resendOtp({ phone });
+
+      // ✅ Get new OTP from response
+      const newOtp = data?.data?.otp || "";
+      if (newOtp) {
+        setOtp(newOtp.split(""));
+        setSuccess(`✅ New OTP sent: ${newOtp}`);
+      } else {
+        setSuccess("OTP resent successfully!");
+      }
+
       setTimer(30);
-      setSuccess("OTP resend ho gaya!");
       setError("");
-      setOtp(["", "", "", "", "", ""]);
       inputs.current[0]?.focus();
-      setTimeout(() => setSuccess(""), 3000);
+      setTimeout(() => setSuccess(""), 5000);
     } catch (err) {
-      setError(err.response?.data?.message || "Resend failed.");
+      setError(err.response?.data?.message || "Failed to resend OTP.");
     } finally {
       setResending(false);
     }
@@ -177,16 +195,52 @@ export default function OtpVerify() {
             className="text-sm leading-relaxed mb-8"
             style={{ color: "#a7f3d0" }}
           >
-            Ek OTP bheja hai <strong className="text-white">+91 {phone}</strong>{" "}
-            pe. Usse enter karo aur verification complete karo.
+            An OTP has been sent to{" "}
+            <strong className="text-white">+91 {phone}</strong>. Please enter
+            the code to complete your verification.
           </p>
+
+          {/* ✅ OTP Display Box (Development Mode) */}
+          {receivedOtp && showOtp && (
+            <div
+              className="mb-6 p-4 rounded-2xl border-2 border-dashed"
+              style={{
+                background: "rgba(251,191,36,0.15)",
+                borderColor: "#fbbf24",
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span
+                  className="text-xs font-bold uppercase tracking-wider"
+                  style={{ color: "#fbbf24" }}
+                >
+                  🔓 Development Mode
+                </span>
+                <button
+                  onClick={() => setShowOtp(!showOtp)}
+                  className="text-xs text-white hover:text-yellow-300 transition"
+                >
+                  {showOtp ? "Hide" : "Show"}
+                </button>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-white mb-2">Your OTP Code:</p>
+                <div
+                  className="text-3xl font-black tracking-widest"
+                  style={{ color: "#fbbf24" }}
+                >
+                  {receivedOtp}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Steps */}
           <div className="space-y-3">
             {[
-              { step: "1", text: "Phone pe SMS check karo", done: true },
-              { step: "2", text: "6-digit OTP enter karo", done: filled === 6 },
-              { step: "3", text: "Account verify hoga", done: verified },
+              { step: "1", text: "Check your phone for SMS", done: true },
+              { step: "2", text: "Enter the 6-digit OTP", done: filled === 6 },
+              { step: "3", text: "Verify and secure account", done: verified },
             ].map((s) => (
               <div
                 key={s.step}
@@ -276,7 +330,8 @@ export default function OtpVerify() {
                 Verified! 🎉
               </h2>
               <p className="text-gray-400 text-sm mb-6">
-                Account successfully create ho gaya! Home pe ja rahe hain...
+                Your account has been successfully created. Redirecting to
+                home...
               </p>
               <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
             </div>
@@ -293,14 +348,31 @@ export default function OtpVerify() {
                   🔐
                 </div>
                 <h2 className="text-3xl font-black text-gray-900 mb-1">
-                  OTP Verify Karo
+                  OTP Verification
                 </h2>
                 <p className="text-gray-400 text-sm">
-                  6-digit code bheja hai{" "}
-                  <span className="font-bold text-gray-700">+91 {phone}</span>{" "}
-                  pe
+                  Enter the 6-digit code sent to{" "}
+                  <span className="font-bold text-gray-700">+91 {phone}</span>
                 </p>
               </div>
+
+              {/* ✅ OTP Display (Mobile View - Development Mode) */}
+              {receivedOtp && (
+                <div
+                  className="lg:hidden mb-5 p-4 rounded-2xl border-2 border-dashed text-center"
+                  style={{
+                    background: "rgba(251,191,36,0.05)",
+                    borderColor: "#fbbf24",
+                  }}
+                >
+                  <span className="text-xs font-bold uppercase tracking-wider text-amber-600 block mb-2">
+                    🔓 Dev Mode - Your OTP
+                  </span>
+                  <div className="text-2xl font-black tracking-widest text-amber-600">
+                    {receivedOtp}
+                  </div>
+                </div>
+              )}
 
               {/* Error / Success */}
               {error && (
@@ -412,13 +484,16 @@ export default function OtpVerify() {
 
               {/* Resend */}
               <div className="text-center">
-                <p className="text-sm text-gray-500 mb-2">OTP nahi mila?</p>
+                <p className="text-sm text-gray-500 mb-2">
+                  Didn't receive the OTP?
+                </p>
                 {timer > 0 ? (
                   <p
                     className="text-sm font-semibold"
                     style={{ color: "#059669" }}
                   >
-                    Resend in <span className="font-black">{timer}s</span>
+                    Resend available in{" "}
+                    <span className="font-black">{timer}s</span>
                   </p>
                 ) : (
                   <button
@@ -432,19 +507,19 @@ export default function OtpVerify() {
                 )}
               </div>
 
-              {/* Change number */}
+              {/* Navigation links */}
               <div className="mt-6 pt-6 border-t border-gray-100 text-center space-y-2">
                 <Link
                   to="/register"
                   className="text-xs text-gray-400 hover:text-emerald-600 transition block"
                 >
-                  ← Galat number? Change karein
+                  ← Incorrect number? Change it here
                 </Link>
                 <Link
                   to="/"
                   className="text-xs text-gray-400 hover:text-emerald-600 transition block"
                 >
-                  ← Wapas Home pe jao
+                  ← Back to Home
                 </Link>
               </div>
             </>

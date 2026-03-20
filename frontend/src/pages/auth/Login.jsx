@@ -21,7 +21,7 @@ export default function Login() {
     e.preventDefault();
     setError("");
     if (!form.phone || !form.password)
-      return setError("Sabhi fields fill karo.");
+      return setError("Please fill in all fields.");
     setLoading(true);
     try {
       const { data } = await authService.login(form);
@@ -43,7 +43,9 @@ export default function Login() {
         navigate(from);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Phone ya password galat hai.");
+      setError(
+        err.response?.data?.message || "Invalid phone number or password.",
+      );
     } finally {
       setLoading(false);
     }
@@ -118,7 +120,7 @@ export default function Login() {
           </div>
 
           <h2 className="text-white font-black text-3xl leading-tight mb-3">
-            India ki #1
+            India's #1
             <br />
             <span style={{ color: "#fbbf24" }}>Online Pharmacy</span>
           </h2>
@@ -126,8 +128,8 @@ export default function Login() {
             className="text-sm leading-relaxed mb-8"
             style={{ color: "#a7f3d0" }}
           >
-            Genuine medicines, expert care, aur fast delivery — sab kuch ek
-            jagah.
+            Genuine medicines, expert care, and fast delivery — all in one
+            place.
           </p>
 
           <div className="grid grid-cols-2 gap-3 mb-8">
@@ -174,7 +176,7 @@ export default function Login() {
               className="text-sm leading-relaxed italic"
               style={{ color: "#d1fae5" }}
             >
-              "Genuine medicines aur 2 ghante mein delivery — MediShop is
+              "Genuine medicines and delivery within 2 hours — MediShop is
               amazing!"
             </p>
             <div className="flex items-center gap-2 mt-3">
@@ -244,7 +246,7 @@ export default function Login() {
               Welcome back! 👋
             </h2>
             <p className="text-gray-400 text-sm">
-              Apne account mein login karein
+              Please login to your account
             </p>
           </div>
 
@@ -396,7 +398,7 @@ export default function Login() {
               to="/"
               className="text-xs text-gray-400 hover:text-emerald-600 transition"
             >
-              ← Wapas Home pe jao
+              ← Back to Home
             </Link>
           </p>
         </div>

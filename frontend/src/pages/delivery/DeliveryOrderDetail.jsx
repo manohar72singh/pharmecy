@@ -45,7 +45,7 @@ export default function DeliveryOrderDetail() {
     setVerifying(true);
     try {
       await deliveryService.verifyOTP(id, otpString);
-      setMsg("Order delivered successfully! ✅");
+      setMsg("Order delivered successfully!");
       setTimeout(() => navigate("/delivery"), 1500);
     } catch (err) {
       setOtpError(
@@ -312,7 +312,7 @@ export default function DeliveryOrderDetail() {
                     Verifying...
                   </>
                 ) : (
-                  "✅ Verify OTP & Mark Delivered"
+                  " Verify OTP & Mark Delivered"
                 )}
               </button>
             </div>

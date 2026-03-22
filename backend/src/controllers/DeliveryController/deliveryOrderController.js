@@ -183,7 +183,7 @@ export const verifyOTP = async (req, res) => {
     return success(
       res,
       { order_id: req.params.id },
-      "Order delivered successfully! OTP verified. ✅",
+      "Order delivered successfully! OTP verified. ",
     );
   } catch (err) {
     console.error(err);

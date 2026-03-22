@@ -382,7 +382,7 @@ const CreateModal = ({ plans, addresses, onClose, onCreated }) => {
                 : "linear-gradient(135deg, #065f46, #059669)",
             }}
           >
-            {saving ? "Creating..." : "✅ Create Subscription"}
+            {saving ? "Creating..." : " Create Subscription"}
           </button>
         </div>
       </div>

@@ -40,7 +40,7 @@ export default function Register() {
         password: form.password,
       });
 
-      // ✅ Get OTP from response and pass to verify page
+      //  Get OTP from response and pass to verify page
       const otpFromBackend = response?.data?.data?.otp || "";
 
       console.log("📦 Registration Response:", response.data);
@@ -49,7 +49,7 @@ export default function Register() {
       navigate("/verify-otp", {
         state: {
           phone: form.phone,
-          otp: otpFromBackend, // ✅ OTP pass ho raha hai
+          otp: otpFromBackend, // OTP pass ho raha hai
         },
       });
     } catch (err) {

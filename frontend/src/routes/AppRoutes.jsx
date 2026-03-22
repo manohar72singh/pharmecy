@@ -18,9 +18,9 @@ import Prescription from "../pages/customer/Prescription";
 import Subscription from "../pages/customer/Subscription";
 import Profile from "../pages/customer/Profile";
 import Offers from "../pages/customer/Offers";
-import Wishlist from "../pages/customer/Wishlist"; // ✅ NEW
-import Notifications from "../pages/customer/Notifications"; // ✅ NEW
-import Wallet from "../pages/customer/Wallet"; // ✅ NEW
+import Wishlist from "../pages/customer/Wishlist";
+import Notifications from "../pages/customer/Notifications";
+import Wallet from "../pages/customer/Wallet";
 
 // ── Admin Layout
 import AdminLayout from "../pages/admin/AdminLayout";
@@ -362,7 +362,7 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        {/* ── Delivery Boy Protected Routes ── ✅ NEW */}
+        {/* ── Delivery Boy Protected Routes ──*/}
         <Route
           path="/delivery"
           element={

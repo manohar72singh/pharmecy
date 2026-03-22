@@ -79,9 +79,10 @@ const StatusBadge = ({ status }) => {
   };
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${cfg.bg} ${cfg.color}`}
+      className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold ${cfg.bg} ${cfg.color}`}
     >
-      {cfg.icon} {cfg.label}
+      <span className="flex-shrink-0">{cfg.icon}</span>
+      <span className="whitespace-nowrap">{cfg.label}</span>
     </span>
   );
 };
@@ -133,18 +134,20 @@ export default function Orders() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
           <div>
-            <h1 className="text-2xl font-black text-gray-900">My Orders</h1>
-            <p className="text-sm text-gray-400 mt-0.5">
-              {orders.length} total orders
+            <h1 className="text-xl sm:text-2xl font-black text-gray-900">
+              My Orders
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-400 mt-0.5">
+              {orders.length} total {orders.length === 1 ? "order" : "orders"}
             </p>
           </div>
           <Link
             to="/medicines"
-            className="text-sm font-bold text-white px-4 py-2.5 rounded-xl transition"
+            className="text-xs sm:text-sm font-bold text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition whitespace-nowrap"
             style={{ background: "linear-gradient(135deg, #065f46, #059669)" }}
           >
             + New Order
@@ -152,12 +155,12 @@ export default function Orders() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 sm:mb-6 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {FILTERS.map((f) => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+              className={`flex-shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition-all border ${
                 filter === f.key
                   ? "text-white border-transparent shadow-lg"
                   : "bg-white text-gray-500 border-gray-200 hover:border-emerald-300 hover:text-emerald-600"
@@ -180,14 +183,14 @@ export default function Orders() {
 
         {/* Empty State */}
         {filtered.length === 0 && (
-          <div className="text-center py-20">
-            <div className="text-7xl mb-4">📦</div>
-            <h3 className="text-lg font-black text-gray-800 mb-2">
+          <div className="text-center py-12 sm:py-20 px-4">
+            <div className="text-6xl sm:text-7xl mb-4">📦</div>
+            <h3 className="text-base sm:text-lg font-black text-gray-800 mb-2">
               {filter === "all"
                 ? "No orders found yet"
                 : `No ${STATUS_CONFIG[filter]?.label || filter} orders found`}
             </h3>
-            <p className="text-gray-400 text-sm mb-6">
+            <p className="text-gray-400 text-xs sm:text-sm mb-6 max-w-md mx-auto">
               {filter === "all"
                 ? "Start your healthcare journey by placing your first order!"
                 : "There are no orders in this category at the moment."}
@@ -195,7 +198,7 @@ export default function Orders() {
             {filter === "all" && (
               <Link
                 to="/medicines"
-                className="inline-block text-white font-bold px-6 py-3 rounded-2xl"
+                className="inline-block text-white font-bold px-6 py-3 rounded-xl sm:rounded-2xl text-sm"
                 style={{
                   background: "linear-gradient(135deg, #065f46, #059669)",
                 }}
@@ -207,20 +210,20 @@ export default function Orders() {
         )}
 
         {/* Orders List */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filtered.map((order) => (
             <div
               key={order.id}
-              className="bg-white rounded-2xl border border-gray-100 hover:border-emerald-200 hover:shadow-md transition-all overflow-hidden"
+              className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 hover:border-emerald-200 hover:shadow-md transition-all overflow-hidden"
             >
               {/* Order Header */}
-              <div className="px-5 py-4 flex items-center justify-between gap-4 flex-wrap border-b border-gray-50">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div>
-                    <p className="font-black text-gray-900 text-sm">
+              <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start sm:items-center justify-between gap-3 border-b border-gray-50">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-0 sm:block">
+                    <p className="font-black text-gray-900 text-xs sm:text-sm">
                       #{order.order_number}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-[10px] sm:text-xs text-gray-400 sm:mt-0.5">
                       {new Date(order.created_at).toLocaleDateString("en-IN", {
                         day: "numeric",
                         month: "short",
@@ -232,37 +235,47 @@ export default function Orders() {
                 </div>
                 <Link
                   to={`/orders/${order.id}`}
-                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition"
+                  className="text-[10px] sm:text-xs font-bold text-emerald-600 hover:text-emerald-700 transition whitespace-nowrap flex-shrink-0"
                 >
-                  View Details →
+                  Details →
                 </Link>
               </div>
 
               {/* Order Body */}
-              <div className="px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-6 flex-wrap">
+              <div className="px-3 sm:px-5 py-3 sm:py-4">
+                {/* Info Grid */}
+                <div className="grid grid-cols-2 sm:flex sm:items-center gap-3 sm:gap-6 mb-3 sm:mb-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">🛍️</span>
+                    <span className="text-xl sm:text-2xl flex-shrink-0">
+                      🛍️
+                    </span>
                     <div>
-                      <p className="text-xs text-gray-400">Items</p>
-                      <p className="font-bold text-gray-900 text-sm">
+                      <p className="text-[10px] sm:text-xs text-gray-400">
+                        Items
+                      </p>
+                      <p className="font-bold text-gray-900 text-xs sm:text-sm">
                         {order.item_count}{" "}
-                        {order.item_count > 1 ? "medicines" : "medicine"}
+                        <span className="hidden sm:inline">
+                          {order.item_count > 1 ? "medicines" : "medicine"}
+                        </span>
                       </p>
                     </div>
                   </div>
+
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">
+                    <span className="text-xl sm:text-2xl flex-shrink-0">
                       {PAYMENT_ICONS[order.payment_mode] || "💳"}
                     </span>
                     <div>
-                      <p className="text-xs text-gray-400">Payment</p>
-                      <div className="flex items-center gap-1.5">
-                        <p className="font-bold text-gray-900 text-sm uppercase">
+                      <p className="text-[10px] sm:text-xs text-gray-400">
+                        Payment
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <p className="font-bold text-gray-900 text-xs sm:text-sm uppercase">
                           {order.payment_mode}
                         </p>
                         <span
-                          className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full ${
+                          className={`text-[8px] sm:text-[10px] uppercase font-bold px-1 sm:px-1.5 py-0.5 rounded-full ${
                             order.payment_status === "paid"
                               ? "bg-green-100 text-green-600"
                               : order.payment_status === "failed"
@@ -275,25 +288,29 @@ export default function Orders() {
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-400">Total Amount</p>
-                    <p className="font-black text-xl text-emerald-600">
+
+                  <div className="col-span-2 sm:col-span-1">
+                    <p className="text-[10px] sm:text-xs text-gray-400">
+                      Total Amount
+                    </p>
+                    <p className="font-black text-lg sm:text-xl text-emerald-600">
                       ₹{parseFloat(order.total_amount).toFixed(2)}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                {/* Action Buttons */}
+                <div className="flex gap-2 mt-3 sm:mt-4">
                   <Link
                     to={`/orders/${order.id}`}
-                    className="px-4 py-2 rounded-xl text-sm font-bold border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white transition"
+                    className="flex-1 sm:flex-initial px-4 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white transition text-center"
                   >
-                    Details
+                    View Details
                   </Link>
                   {order.order_status === "delivered" && (
                     <Link
                       to="/medicines"
-                      className="px-4 py-2 rounded-xl text-sm font-bold text-white transition"
+                      className="flex-1 sm:flex-initial px-4 py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold text-white transition text-center"
                       style={{
                         background: "linear-gradient(135deg, #065f46, #059669)",
                       }}
@@ -306,26 +323,26 @@ export default function Orders() {
 
               {/* Status Banners */}
               {order.order_status === "delivered" && (
-                <div className="px-5 py-2.5 bg-green-50 border-t border-green-100 text-xs font-semibold text-green-700">
+                <div className="px-3 sm:px-5 py-2 sm:py-2.5 bg-green-50 border-t border-green-100 text-[10px] sm:text-xs font-semibold text-green-700">
                   🎉 Order delivered successfully!
                 </div>
               )}
               {order.order_status === "out_for_delivery" && (
-                <div className="px-5 py-3 bg-emerald-50 border-t border-emerald-100 flex items-center justify-between gap-3 flex-wrap">
-                  <p className="text-xs font-semibold text-emerald-700">
+                <div className="px-3 sm:px-5 py-2.5 sm:py-3 bg-emerald-50 border-t border-emerald-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
+                  <p className="text-[10px] sm:text-xs font-semibold text-emerald-700">
                     🚴 Our delivery partner is on the way and will reach you
                     shortly!
                   </p>
                   <Link
                     to={`/orders/${order.id}`}
-                    className="text-xs font-black text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition"
+                    className="text-[10px] sm:text-xs font-black text-emerald-700 bg-emerald-100 px-2.5 sm:px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition whitespace-nowrap"
                   >
-                    🔐 View Delivery OTP →
+                    🔐 View OTP →
                   </Link>
                 </div>
               )}
               {order.order_status === "cancelled" && (
-                <div className="px-5 py-2.5 bg-red-50 border-t border-red-100 text-xs font-semibold text-red-600">
+                <div className="px-3 sm:px-5 py-2 sm:py-2.5 bg-red-50 border-t border-red-100 text-[10px] sm:text-xs font-semibold text-red-600">
                   ❌ This order has been cancelled.
                 </div>
               )}

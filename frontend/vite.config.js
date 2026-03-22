@@ -6,6 +6,6 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    historyApiFallback: true, // ✅ Refresh pe 404 fix
+    historyApiFallback: true, //  Refresh pe 404 fix
   },
 });

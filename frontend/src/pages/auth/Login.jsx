@@ -28,17 +28,17 @@ export default function Login() {
       localStorage.setItem("token", data.data.token);
       localStorage.setItem("user", JSON.stringify(data.data.user));
 
-      // ✅ FIX: Pehle guest cart ko DB mein sync karo
+      // FIX: Pehle guest cart ko DB mein sync karo
       await syncLocalCartToDB();
 
-      // ✅ FIX: Sync ke BAAD event fire karo — ab Navbar DB se sahi count lega
+      // FIX: Sync ke BAAD event fire karo — ab Navbar DB se sahi count lega
       window.dispatchEvent(new Event("cartUpdated"));
 
       const role = data.data.user.role;
       if (role === "admin" || role === "super_admin" || role === "pharmacist") {
         navigate("/admin/dashboard");
       } else if (role === "delivery_boy") {
-        navigate("/delivery"); // ✅ NEW
+        navigate("/delivery");
       } else {
         navigate(from);
       }
@@ -201,7 +201,7 @@ export default function Login() {
       </div>
 
       {/* ── RIGHT SIDE ── */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white relative">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-4 sm:px-6 py-6 sm:py-8 lg:py-12 bg-white relative">
         <div
           className="absolute top-0 left-0 right-0 h-1 lg:hidden"
           style={{
@@ -211,28 +211,30 @@ export default function Login() {
 
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
+          <div className="lg:hidden text-center mb-6">
             <Link
               to="/"
-              className="inline-flex items-center gap-3 justify-center"
+              className="inline-flex items-center gap-2 sm:gap-3 justify-center"
             >
               <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg"
                 style={{
                   background: "linear-gradient(135deg, #fbbf24, #f59e0b)",
                 }}
               >
                 <span
-                  className="font-black text-xl"
+                  className="font-black text-lg sm:text-xl"
                   style={{ color: "#064e3b" }}
                 >
                   Rx
                 </span>
               </div>
               <div className="text-left">
-                <div className="font-black text-xl text-gray-900">MediShop</div>
+                <div className="font-black text-lg sm:text-xl text-gray-900">
+                  MediShop
+                </div>
                 <div
-                  className="text-xs font-semibold tracking-widest uppercase"
+                  className="text-[10px] sm:text-xs font-semibold tracking-widest uppercase"
                   style={{ color: "#059669" }}
                 >
                   Premium Pharmacy
@@ -241,31 +243,33 @@ export default function Login() {
             </Link>
           </div>
 
-          <div className="mb-8">
-            <h2 className="text-3xl font-black text-gray-900 mb-1">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-1">
               Welcome back! 👋
             </h2>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-xs sm:text-sm">
               Please login to your account
             </p>
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 text-sm px-4 py-3 rounded-2xl mb-6">
+            <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 text-xs sm:text-sm px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl mb-4 sm:mb-6">
               <span>⚠️</span> {error}
             </div>
           )}
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
                 Phone Number
               </label>
               <div className="relative flex items-center">
-                <div className="absolute left-4 flex items-center gap-1.5">
-                  <span className="text-base">🇮🇳</span>
-                  <span className="text-sm font-bold text-gray-500">+91</span>
-                  <div className="w-px h-4 bg-gray-200 ml-1" />
+                <div className="absolute left-3 sm:left-4 flex items-center gap-1 sm:gap-1.5">
+                  <span className="text-sm sm:text-base">🇮🇳</span>
+                  <span className="text-xs sm:text-sm font-bold text-gray-500">
+                    +91
+                  </span>
+                  <div className="w-px h-3 sm:h-4 bg-gray-200 ml-0.5 sm:ml-1" />
                 </div>
                 <input
                   type="tel"
@@ -274,7 +278,7 @@ export default function Login() {
                   onChange={handleChange}
                   placeholder="9876543210"
                   maxLength={10}
-                  className="w-full pl-20 pr-4 py-3.5 rounded-2xl border border-gray-200 bg-gray-50 text-sm font-medium focus:outline-none focus:bg-white transition"
+                  className="w-full pl-16 sm:pl-20 pr-3 sm:pr-4 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl border border-gray-200 bg-gray-50 text-xs sm:text-sm font-medium focus:outline-none focus:bg-white transition"
                   onFocus={(e) => {
                     e.target.style.borderColor = "#059669";
                     e.target.style.boxShadow = "0 0 0 3px rgba(5,150,105,0.1)";
@@ -288,7 +292,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
                 Password
               </label>
               <div className="relative">
@@ -298,7 +302,7 @@ export default function Login() {
                   value={form.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3.5 pr-12 rounded-2xl border border-gray-200 bg-gray-50 text-sm focus:outline-none transition"
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3.5 pr-11 sm:pr-12 rounded-xl sm:rounded-2xl border border-gray-200 bg-gray-50 text-xs sm:text-sm focus:outline-none transition"
                   onFocus={(e) => {
                     e.target.style.borderColor = "#059669";
                     e.target.style.boxShadow = "0 0 0 3px rgba(5,150,105,0.1)";
@@ -312,7 +316,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg transition"
+                  className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-base sm:text-lg transition"
                 >
                   {showPass ? "🙈" : "👁️"}
                 </button>
@@ -322,7 +326,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full text-white font-black py-4 rounded-2xl transition-all duration-200 text-sm flex items-center justify-center gap-2 shadow-lg"
+              className="w-full text-white font-black py-3 sm:py-4 rounded-xl sm:rounded-2xl transition-all duration-200 text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg"
               style={{
                 background: loading
                   ? "#6ee7b7"
@@ -358,9 +362,9 @@ export default function Login() {
               )}
             </button>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="flex-1 h-px bg-gray-100" />
-              <span className="text-xs text-gray-400 font-medium">
+              <span className="text-[10px] sm:text-xs text-gray-400 font-medium whitespace-nowrap">
                 New to MediShop?
               </span>
               <div className="flex-1 h-px bg-gray-100" />
@@ -368,7 +372,7 @@ export default function Login() {
 
             <Link
               to="/register"
-              className="w-full flex items-center justify-center font-bold py-3.5 rounded-2xl transition-all duration-200 text-sm border-2"
+              className="w-full flex items-center justify-center font-bold py-3 sm:py-3.5 rounded-xl sm:rounded-2xl transition-all duration-200 text-xs sm:text-sm border-2"
               style={{ borderColor: "#059669", color: "#059669" }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "#059669";
@@ -383,20 +387,23 @@ export default function Login() {
             </Link>
           </form>
 
-          <div className="flex items-center justify-center gap-6 mt-8 pt-6 border-t border-gray-100">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-100">
             {["🔒 Secure Login", "✅ Verified Pharmacy", "🏥 Licensed"].map(
               (b) => (
-                <span key={b} className="text-xs text-gray-400 font-medium">
+                <span
+                  key={b}
+                  className="text-[10px] sm:text-xs text-gray-400 font-medium"
+                >
                   {b}
                 </span>
               ),
             )}
           </div>
 
-          <p className="text-center mt-4">
+          <p className="text-center mt-3 sm:mt-4">
             <Link
               to="/"
-              className="text-xs text-gray-400 hover:text-emerald-600 transition"
+              className="text-[10px] sm:text-xs text-gray-400 hover:text-emerald-600 transition"
             >
               ← Back to Home
             </Link>

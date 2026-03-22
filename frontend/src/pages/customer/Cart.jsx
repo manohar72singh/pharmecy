@@ -241,16 +241,16 @@ export default function Cart() {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-2xl mx-auto px-4 py-20 text-center">
-          <div className="text-8xl mb-6">🛒</div>
-          <h2 className="text-2xl font-black text-gray-800 mb-2">
+          <div className="text-6xl sm:text-8xl mb-6">🛒</div>
+          <h2 className="text-xl sm:text-2xl font-black text-gray-800 mb-2">
             Your cart is empty!
           </h2>
-          <p className="text-gray-500 mb-8">
+          <p className="text-sm sm:text-base text-gray-500 mb-8">
             Add some medicines to your cart and stay healthy 💊
           </p>
           <Link
             to="/medicines"
-            className="inline-block text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg"
+            className="inline-block text-white font-bold px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl shadow-lg text-sm sm:text-base"
             style={{ background: "linear-gradient(135deg, #065f46, #059669)" }}
           >
             Browse Medicines →
@@ -276,9 +276,9 @@ export default function Cart() {
 
       {!user && (
         <div className="bg-amber-50 border-b border-amber-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-sm text-amber-800">
-              <span className="text-lg">👤</span>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-amber-800">
+              <span className="text-base sm:text-lg flex-shrink-0">👤</span>
               <span>
                 <strong>Login now</strong> to track your orders and enjoy
                 exclusive discounts!
@@ -287,7 +287,7 @@ export default function Cart() {
             <Link
               to="/login"
               state={{ from: "/cart" }}
-              className="flex-shrink-0 text-xs font-bold text-white px-4 py-2 rounded-xl"
+              className="flex-shrink-0 text-xs font-bold text-white px-4 py-2 rounded-xl whitespace-nowrap"
               style={{ background: "#059669" }}
             >
               Login / Register
@@ -296,24 +296,24 @@ export default function Cart() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-black text-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl font-black text-gray-900">
             My Cart{" "}
-            <span className="text-gray-400 font-normal text-lg">
-              ({cart.length} items)
+            <span className="text-gray-400 font-normal text-base sm:text-lg">
+              ({cart.length})
             </span>
           </h1>
           <button
             onClick={clearCartAll}
-            className="text-xs text-red-500 hover:text-red-700 font-semibold border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-lg transition"
+            className="text-[10px] sm:text-xs text-red-500 hover:text-red-700 font-semibold border border-red-200 hover:border-red-400 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition"
           >
             🗑️ Clear All
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
             {cart.map((item) => {
               const price = parseFloat(item.price);
               const mrp = parseFloat(item.mrp);
@@ -322,25 +322,25 @@ export default function Cart() {
               return (
                 <div
                   key={item.id}
-                  className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 flex gap-4 hover:border-emerald-200 transition"
+                  className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-3 sm:p-5 flex gap-3 sm:gap-4 hover:border-emerald-200 transition"
                 >
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center flex-shrink-0 overflow-hidden">
                     <MedicineImage
                       src={item.image_url}
                       alt={item.name}
                       categorySlug={item.category_slug}
-                      className="w-full h-full object-cover rounded-2xl"
+                      className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
                       size="md"
                     />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-gray-900 text-xs sm:text-sm md:text-base leading-tight">
                           {item.name}
                         </h3>
                         {item.pack_size && (
-                          <p className="text-xs text-gray-400 mt-0.5">
+                          <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5">
                             {item.pack_size}
                           </p>
                         )}
@@ -350,7 +350,7 @@ export default function Cart() {
                         className="text-gray-300 hover:text-red-500 transition flex-shrink-0 p-1"
                       >
                         <svg
-                          className="w-4 h-4"
+                          className="w-3 h-3 sm:w-4 sm:h-4"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -364,41 +364,41 @@ export default function Cart() {
                         </svg>
                       </button>
                     </div>
-                    <div className="flex items-center justify-between mt-3 flex-wrap gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-black text-gray-900">
+                    <div className="flex items-center justify-between mt-2 sm:mt-3 flex-wrap gap-2 sm:gap-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <span className="text-base sm:text-lg font-black text-gray-900">
                           ₹{price.toFixed(2)}
                         </span>
                         {mrp > price && (
                           <>
-                            <span className="text-sm text-gray-400 line-through">
+                            <span className="text-xs sm:text-sm text-gray-400 line-through">
                               ₹{mrp.toFixed(2)}
                             </span>
-                            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] sm:text-xs font-bold text-green-600 bg-green-50 px-1.5 sm:px-2 py-0.5 rounded-full">
                               {disc}% off
                             </span>
                           </>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                      <div className="flex items-center gap-1.5 sm:gap-2 bg-gray-50 rounded-lg sm:rounded-xl border border-gray-200 overflow-hidden">
                         <button
                           onClick={() => updateQty(item, item.quantity - 1)}
-                          className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold text-lg transition"
+                          className="w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold text-base sm:text-lg transition"
                         >
                           −
                         </button>
-                        <span className="w-8 text-center font-black text-gray-900 text-sm">
+                        <span className="w-6 sm:w-8 text-center font-black text-gray-900 text-xs sm:text-sm">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateQty(item, item.quantity + 1)}
-                          className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold text-lg transition"
+                          className="w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold text-base sm:text-lg transition"
                         >
                           +
                         </button>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-[10px] sm:text-xs text-gray-400 mt-1.5 sm:mt-2">
                       Item total:{" "}
                       <strong className="text-gray-700">
                         ₹{(price * item.quantity).toFixed(2)}
@@ -410,30 +410,30 @@ export default function Cart() {
             })}
             <Link
               to="/medicines"
-              className="flex items-center gap-2 text-sm text-emerald-600 font-semibold hover:text-emerald-700 mt-2"
+              className="flex items-center gap-2 text-xs sm:text-sm text-emerald-600 font-semibold hover:text-emerald-700 mt-2"
             >
               ← Continue Shopping
             </Link>
           </div>
 
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5">
+              <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-sm sm:text-base">
                 <span>🎟️</span> Apply Coupon
               </h3>
               {applied ? (
-                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl mb-3">
+                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl mb-3">
                   <div>
-                    <p className="font-black text-emerald-700 text-sm">
+                    <p className="font-black text-emerald-700 text-xs sm:text-sm">
                       {applied.code} ✅
                     </p>
-                    <p className="text-xs text-emerald-600 mt-0.5">
+                    <p className="text-[10px] sm:text-xs text-emerald-600 mt-0.5">
                       Saved ₹{applied.discount_amount.toFixed(2)}
                     </p>
                   </div>
                   <button
                     onClick={removeCoupon}
-                    className="text-xs font-bold text-red-400 hover:text-red-600 transition"
+                    className="text-[10px] sm:text-xs font-bold text-red-400 hover:text-red-600 transition"
                   >
                     ✕ Remove
                   </button>
@@ -449,12 +449,12 @@ export default function Cart() {
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleApply()}
                     placeholder="Enter coupon code"
-                    className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                    className="flex-1 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl border border-gray-200 text-xs sm:text-sm font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                   />
                   <button
                     onClick={handleApply}
                     disabled={couponLoading}
-                    className="px-4 py-2.5 rounded-xl text-white text-sm font-bold transition"
+                    className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-white text-xs sm:text-sm font-bold transition"
                     style={{
                       background: couponLoading ? "#6ee7b7" : "#059669",
                     }}
@@ -466,7 +466,7 @@ export default function Cart() {
 
               {couponMsg.text && (
                 <p
-                  className={`text-xs font-semibold mb-3 ${couponMsg.type === "success" ? "text-emerald-600" : couponMsg.type === "info" ? "text-blue-500" : "text-red-500"}`}
+                  className={`text-[10px] sm:text-xs font-semibold mb-3 ${couponMsg.type === "success" ? "text-emerald-600" : couponMsg.type === "info" ? "text-blue-500" : "text-red-500"}`}
                 >
                   {couponMsg.text}
                 </p>
@@ -474,13 +474,10 @@ export default function Cart() {
 
               {!applied && eligibleCoupons.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-2">
+                  <p className="text-[10px] sm:text-xs text-gray-400 font-semibold mb-2">
                     🎁 Available offers ({eligibleCoupons.length})
                   </p>
-                  <div
-                    className="flex gap-2 overflow-x-auto pb-1"
-                    style={{ scrollbarWidth: "none" }}
-                  >
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
                     {eligibleCoupons.map((c) => {
                       const discText =
                         c.discount_type === "flat"
@@ -493,22 +490,22 @@ export default function Cart() {
                       return (
                         <div
                           key={c.id}
-                          className="flex-shrink-0 w-36 border-2 border-dashed border-emerald-200 bg-emerald-50 rounded-xl p-2.5 flex flex-col justify-between gap-1.5"
+                          className="flex-shrink-0 w-32 sm:w-36 border-2 border-dashed border-emerald-200 bg-emerald-50 rounded-xl p-2 sm:p-2.5 flex flex-col justify-between gap-1.5"
                         >
                           <div>
-                            <p className="font-black text-gray-800 text-xs tracking-wider">
+                            <p className="font-black text-gray-800 text-[10px] sm:text-xs tracking-wider">
                               {c.code}
                             </p>
-                            <p className="text-xs font-bold text-emerald-600">
+                            <p className="text-[10px] sm:text-xs font-bold text-emerald-600">
                               {discText}
                             </p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-[10px] sm:text-xs text-gray-400">
                               Save ₹{savingsPreview.toFixed(0)}
                             </p>
                           </div>
                           <button
                             onClick={() => quickApply(c.code)}
-                            className="w-full text-xs font-bold text-white py-1 rounded-lg transition"
+                            className="w-full text-[10px] sm:text-xs font-bold text-white py-1 rounded-lg transition"
                             style={{ background: "#059669" }}
                           >
                             Apply
@@ -523,31 +520,33 @@ export default function Cart() {
               {!applied &&
                 eligibleCoupons.length === 0 &&
                 allCoupons.length > 0 && (
-                  <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 text-xs text-amber-700">
+                  <div className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 text-[10px] sm:text-xs text-amber-700">
                     💡 Add more items to your cart to unlock exclusive coupons!
                   </div>
                 )}
               <Link
                 to="/offers"
-                className="text-xs text-emerald-600 font-bold mt-3 block hover:underline"
+                className="text-[10px] sm:text-xs text-emerald-600 font-bold mt-3 block hover:underline"
               >
                 🏷️ View all offers →
               </Link>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 overflow-hidden">
               <button
                 onClick={() => setPriceOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition"
+                className="w-full flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 hover:bg-gray-50 transition"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-gray-900">Price Details</span>
-                  <span className="text-xs text-gray-400">
+                  <span className="font-bold text-gray-900 text-sm sm:text-base">
+                    Price Details
+                  </span>
+                  <span className="text-[10px] sm:text-xs text-gray-400">
                     ({cart.reduce((s, i) => s + i.quantity, 0)} items)
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-black text-emerald-600 text-lg">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="font-black text-emerald-600 text-base sm:text-lg">
                     ₹{total.toFixed(2)}
                   </span>
                   <svg
@@ -567,8 +566,8 @@ export default function Cart() {
               </button>
 
               {priceOpen && (
-                <div className="px-5 pb-4 border-t border-gray-50">
-                  <div className="space-y-3 text-sm pt-3">
+                <div className="px-4 sm:px-5 pb-3 sm:pb-4 border-t border-gray-50">
+                  <div className="space-y-2.5 sm:space-y-3 text-xs sm:text-sm pt-3">
                     <div className="flex justify-between text-gray-600">
                       <span>MRP Total</span>
                       <span>₹{mrpTotal.toFixed(2)}</span>
@@ -594,19 +593,19 @@ export default function Cart() {
                       </span>
                     </div>
                     {delivery > 0 && (
-                      <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
+                      <p className="text-[10px] sm:text-xs text-amber-600 bg-amber-50 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg">
                         Add ₹{(299 - subtotal).toFixed(0)} more for FREE
                         delivery!
                       </p>
                     )}
-                    <div className="border-t border-gray-100 pt-3 flex justify-between font-black text-gray-900">
+                    <div className="border-t border-gray-100 pt-2.5 sm:pt-3 flex justify-between font-black text-gray-900">
                       <span>Total Amount</span>
                       <span className="text-emerald-600">
                         ₹{total.toFixed(2)}
                       </span>
                     </div>
                     {saved + couponDiscount > 0 && (
-                      <p className="text-xs text-green-600 font-bold bg-green-50 px-3 py-2 rounded-lg text-center">
+                      <p className="text-[10px] sm:text-xs text-green-600 font-bold bg-green-50 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg text-center">
                         🎉 You are saving ₹{(saved + couponDiscount).toFixed(2)}{" "}
                         on this order!
                       </p>
@@ -615,10 +614,10 @@ export default function Cart() {
                 </div>
               )}
 
-              <div className="px-5 pb-5">
+              <div className="px-4 sm:px-5 pb-4 sm:pb-5">
                 <button
                   onClick={handleCheckout}
-                  className="w-full py-4 rounded-2xl text-white font-black text-base shadow-lg transition-transform active:scale-95"
+                  className="w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl text-white font-black text-sm sm:text-base shadow-lg transition-transform active:scale-95"
                   style={{
                     background: "linear-gradient(135deg, #065f46, #059669)",
                   }}
@@ -626,14 +625,14 @@ export default function Cart() {
                   {user ? "Proceed to Checkout →" : "Login to Checkout →"}
                 </button>
                 {!user && (
-                  <p className="text-center text-xs text-gray-400 mt-2">
-                    Your items will be saved after you login ✅
+                  <p className="text-center text-[10px] sm:text-xs text-gray-400 mt-2">
+                    Your items will be saved after you login
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 p-4">
+            <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-3 sm:p-4">
               {[
                 { icon: "🔒", text: "100% Secure Payments" },
                 { icon: "✅", text: "Genuine & Verified Medicines" },
@@ -642,9 +641,12 @@ export default function Cart() {
               ].map((b) => (
                 <div
                   key={b.text}
-                  className="flex items-center gap-3 py-1.5 text-xs text-gray-600"
+                  className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 text-[10px] sm:text-xs text-gray-600"
                 >
-                  <span className="text-base">{b.icon}</span> {b.text}
+                  <span className="text-sm sm:text-base flex-shrink-0">
+                    {b.icon}
+                  </span>{" "}
+                  {b.text}
                 </div>
               ))}
             </div>

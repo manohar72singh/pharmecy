@@ -6,7 +6,7 @@ export default function OtpVerify() {
   const navigate = useNavigate();
   const location = useLocation();
   const phone = location.state?.phone || "";
-  const receivedOtp = location.state?.otp || ""; // ✅ OTP from register response
+  const receivedOtp = location.state?.otp || ""; // OTP from register response
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
@@ -15,10 +15,10 @@ export default function OtpVerify() {
   const [success, setSuccess] = useState("");
   const [timer, setTimer] = useState(30);
   const [verified, setVerified] = useState(false);
-  const [showOtp, setShowOtp] = useState(true); // ✅ Toggle to show/hide OTP
+  const [showOtp, setShowOtp] = useState(true); //  Toggle to show/hide OTP
   const inputs = useRef([]);
 
-  // ✅ Auto-fill OTP if received from registration
+  //  Auto-fill OTP if received from registration
   useEffect(() => {
     if (receivedOtp && receivedOtp.length === 6) {
       setOtp(receivedOtp.split(""));
@@ -89,11 +89,11 @@ export default function OtpVerify() {
     try {
       const { data } = await authService.resendOtp({ phone });
 
-      // ✅ Get new OTP from response
+      // Get new OTP from response
       const newOtp = data?.data?.otp || "";
       if (newOtp) {
         setOtp(newOtp.split(""));
-        setSuccess(`✅ New OTP sent: ${newOtp}`);
+        setSuccess(` New OTP sent: ${newOtp}`);
       } else {
         setSuccess("OTP resent successfully!");
       }
@@ -200,7 +200,7 @@ export default function OtpVerify() {
             the code to complete your verification.
           </p>
 
-          {/* ✅ OTP Display Box (Development Mode) */}
+          {/* OTP Display Box (Development Mode) */}
           {receivedOtp && showOtp && (
             <div
               className="mb-6 p-4 rounded-2xl border-2 border-dashed"
@@ -356,7 +356,7 @@ export default function OtpVerify() {
                 </p>
               </div>
 
-              {/* ✅ OTP Display (Mobile View - Development Mode) */}
+              {/* OTP Display (Mobile View - Development Mode) */}
               {receivedOtp && (
                 <div
                   className="lg:hidden mb-5 p-4 rounded-2xl border-2 border-dashed text-center"

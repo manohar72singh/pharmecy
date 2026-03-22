@@ -31,7 +31,7 @@ export const register = async (req, res) => {
         console.log(`📱 OTP for ${phone}: ${otp}`);
         return success(
           res,
-          { phone, otp }, // ✅ OTP visible in response (development mode)
+          { phone, otp }, //  OTP visible in response (development mode)
           "OTP sent successfully. Please verify your phone number.",
           200,
         );
@@ -52,7 +52,7 @@ export const register = async (req, res) => {
 
     return success(
       res,
-      { user_id: result.insertId, phone, otp }, // ✅ OTP visible in response (development mode)
+      { user_id: result.insertId, phone, otp }, // OTP visible in response (development mode)
       "OTP sent to your phone. Please verify to complete registration.",
       201,
     );
@@ -86,7 +86,7 @@ export const verifyOTP = async (req, res) => {
     if (new Date() > new Date(user.otp_expires_at))
       return error(res, "OTP has expired. Please request a new one.", 400);
 
-    // ✅ Verify user
+    //  Verify user
     await pool.query(
       "UPDATE users SET is_verified = TRUE, otp_code = NULL, otp_expires_at = NULL WHERE id = ?",
       [user.id],
@@ -217,7 +217,7 @@ export const resendOTP = async (req, res) => {
 
     return success(
       res,
-      { phone, otp }, // ✅ OTP visible in response (development mode)
+      { phone, otp }, // OTP visible in response (development mode)
       "A new OTP has been sent to your phone.",
     );
   } catch (err) {

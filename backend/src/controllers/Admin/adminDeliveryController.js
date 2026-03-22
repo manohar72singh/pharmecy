@@ -119,7 +119,7 @@ export const assignDelivery = async (req, res) => {
         delivery_otp: otp,
         delivery_boy_name: dbUser[0]?.name,
       },
-      "Delivery partner assigned and OTP generated successfully. ✅",
+      "Delivery partner assigned and OTP generated successfully. ",
     );
   } catch (err) {
     console.error(err);

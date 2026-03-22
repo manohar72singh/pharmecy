@@ -63,11 +63,11 @@ const STATUS_CONFIG = {
 };
 
 const TRACKING_STEPS = [
-  { key: "placed", label: "Order Placed", icon: "📦" },
+  { key: "placed", label: "Placed", icon: "📦" },
   { key: "confirmed", label: "Confirmed", icon: "✅" },
   { key: "processing", label: "Processing", icon: "⚙️" },
   { key: "packed", label: "Packed", icon: "📫" },
-  { key: "out_for_delivery", label: "Out for Delivery", icon: "🚴" },
+  { key: "out_for_delivery", label: "Delivery", icon: "🚴" },
   { key: "delivered", label: "Delivered", icon: "🎉" },
 ];
 
@@ -89,9 +89,10 @@ const StatusBadge = ({ status }) => {
   };
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold ${cfg.bg} ${cfg.color}`}
+      className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-sm font-bold ${cfg.bg} ${cfg.color}`}
     >
-      {cfg.icon} {cfg.label}
+      <span className="flex-shrink-0">{cfg.icon}</span>
+      <span className="whitespace-nowrap">{cfg.label}</span>
     </span>
   );
 };
@@ -184,7 +185,7 @@ export default function OrderDetail() {
 
   if (error || !order)
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="text-6xl mb-4">😕</div>
           <p className="text-gray-600 font-bold mb-4">
@@ -205,40 +206,47 @@ export default function OrderDetail() {
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <Link to="/" className="hover:text-emerald-600 transition">
+          <div className="flex items-center gap-2 text-xs text-gray-400 overflow-x-auto scrollbar-hide">
+            <Link
+              to="/"
+              className="hover:text-emerald-600 transition whitespace-nowrap flex-shrink-0"
+            >
               Home
             </Link>
-            <span>›</span>
-            <Link to="/orders" className="hover:text-emerald-600 transition">
+            <span className="flex-shrink-0">›</span>
+            <Link
+              to="/orders"
+              className="hover:text-emerald-600 transition whitespace-nowrap flex-shrink-0"
+            >
               My Orders
             </Link>
-            <span>›</span>
-            <span className="text-gray-700 font-medium">
+            <span className="flex-shrink-0">›</span>
+            <span className="text-gray-700 font-medium whitespace-nowrap">
               #{order.order_number}
             </span>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-5">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-5">
         {error && (
-          <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 text-sm px-4 py-3 rounded-2xl">
-            <span>⚠️</span> {error}
+          <div className="flex items-start gap-2 bg-red-50 border border-red-100 text-red-600 text-xs sm:text-sm px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl">
+            <span className="flex-shrink-0">⚠️</span>
+            <span>{error}</span>
           </div>
         )}
 
-        {/* ── Header Card ── */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <div className="flex items-center gap-3 flex-wrap mb-2">
-                <h1 className="text-xl font-black text-gray-900">
+        {/* Header Card */}
+        <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+            <div className="flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                <h1 className="text-lg sm:text-xl font-black text-gray-900">
                   #{order.order_number}
                 </h1>
                 <StatusBadge status={order.order_status} />
               </div>
-              <p className="text-sm text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-400">
                 Placed on{" "}
                 {new Date(order.created_at).toLocaleDateString("en-IN", {
                   day: "numeric",
@@ -249,8 +257,8 @@ export default function OrderDetail() {
                 })}
               </p>
               {order.estimated_delivery && (
-                <p className="text-sm text-emerald-600 font-semibold mt-1">
-                  🚚 Estimated delivery:{" "}
+                <p className="text-xs sm:text-sm text-emerald-600 font-semibold mt-1">
+                  🚚 Est. delivery:{" "}
                   {new Date(order.estimated_delivery).toLocaleDateString(
                     "en-IN",
                     {
@@ -265,7 +273,7 @@ export default function OrderDetail() {
             {["placed", "confirmed"].includes(order.order_status) && (
               <button
                 onClick={() => setShowCancel(true)}
-                className="px-4 py-2 rounded-xl text-sm font-bold border-2 border-red-300 text-red-500 hover:bg-red-500 hover:text-white transition"
+                className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border-2 border-red-300 text-red-500 hover:bg-red-500 hover:text-white transition"
               >
                 Cancel Order
               </button>
@@ -273,7 +281,7 @@ export default function OrderDetail() {
           </div>
 
           {order.order_status === "cancelled" && order.cancellation_reason && (
-            <div className="mt-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">
+            <div className="mt-3 bg-red-50 border border-red-100 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm text-red-600">
               <strong>Cancellation Reason:</strong> {order.cancellation_reason}
             </div>
           )}
@@ -283,43 +291,45 @@ export default function OrderDetail() {
         {order.order_status === "out_for_delivery" &&
           order.delivery_otp &&
           !order.otp_verified && (
-            <div className="bg-white rounded-2xl border-2 border-emerald-300 p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-xl">
+            <div className="bg-white rounded-xl sm:rounded-2xl border-2 border-emerald-300 p-4 sm:p-5">
+              <div className="flex items-start sm:items-center gap-3 mb-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-lg sm:text-xl flex-shrink-0">
                   🚴
                 </div>
                 <div>
-                  <h3 className="font-black text-gray-900">Delivery OTP</h3>
-                  <p className="text-xs text-gray-400">
-                    Please provide this OTP to the delivery partner to receive
-                    your order
+                  <h3 className="font-black text-gray-900 text-sm sm:text-base">
+                    Delivery OTP
+                  </h3>
+                  <p className="text-[10px] sm:text-xs text-gray-400">
+                    Provide this OTP to delivery partner
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2 justify-center my-4">
+              <div className="flex gap-1.5 sm:gap-2 justify-center my-3 sm:my-4">
                 {order.delivery_otp
                   .toString()
                   .split("")
                   .map((digit, idx) => (
                     <div
                       key={idx}
-                      className="w-12 h-14 rounded-xl bg-emerald-50 border-2 border-emerald-300 flex items-center justify-center text-2xl font-black text-emerald-700"
+                      className="w-10 h-12 sm:w-12 sm:h-14 rounded-lg sm:rounded-xl bg-emerald-50 border-2 border-emerald-300 flex items-center justify-center text-xl sm:text-2xl font-black text-emerald-700"
                     >
                       {digit}
                     </div>
                   ))}
               </div>
-              <p className="text-xs text-center text-gray-400 mt-2">
-                ⚠️ This OTP is strictly for delivery verification — do not share
-                it with anyone else.
+              <p className="text-[10px] sm:text-xs text-center text-gray-400 mt-2">
+                ⚠️ For delivery verification only — do not share
               </p>
             </div>
           )}
 
-        {/* ── Order Tracking ── */}
+        {/* Order Tracking */}
         {!["cancelled", "returned"].includes(order.order_status) && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <h3 className="font-bold text-gray-900 mb-5">📍 Order Tracking</h3>
+          <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5">
+            <h3 className="font-bold text-gray-900 mb-4 sm:mb-5 text-sm sm:text-base">
+              📍 Order Tracking
+            </h3>
             <div className="relative">
               <div
                 className="absolute top-5 left-5 right-5 h-0.5 bg-gray-100"
@@ -345,11 +355,11 @@ export default function OrderDetail() {
                   return (
                     <div
                       key={step.key}
-                      className="flex flex-col items-center gap-2"
+                      className="flex flex-col items-center gap-1.5 sm:gap-2"
                       style={{ flex: 1 }}
                     >
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-black border-2 transition-all ${
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg font-black border-2 transition-all ${
                           done
                             ? "border-emerald-500 bg-emerald-500 text-white shadow-lg"
                             : "border-gray-200 bg-white text-gray-300"
@@ -358,7 +368,7 @@ export default function OrderDetail() {
                         {done ? (current ? step.icon : "✓") : step.icon}
                       </div>
                       <p
-                        className={`text-xs font-semibold text-center hidden sm:block ${done ? "text-emerald-600" : "text-gray-400"}`}
+                        className={`text-[10px] sm:text-xs font-semibold text-center ${done ? "text-emerald-600" : "text-gray-400"}`}
                       >
                         {step.label}
                       </p>
@@ -370,23 +380,23 @@ export default function OrderDetail() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* ── LEFT ── */}
-          <div className="lg:col-span-2 space-y-5">
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h3 className="font-bold text-gray-900 mb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
+          {/* LEFT */}
+          <div className="lg:col-span-2 space-y-4 sm:space-y-5">
+            <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5">
+              <h3 className="font-bold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">
                 🛍️ Order Items ({items.length})
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {items.map((item) => {
                   const price = parseFloat(item.unit_price);
                   const total = parseFloat(item.total_price);
                   return (
                     <div
                       key={item.id}
-                      className="flex items-center gap-4 pb-4 border-b border-gray-50 last:border-0 last:pb-0"
+                      className="flex items-center gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-gray-50 last:border-0 last:pb-0"
                     >
-                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center flex-shrink-0 overflow-hidden">
                         <MedicineImage
                           src={item.image_url}
                           alt={item.name}
@@ -396,36 +406,38 @@ export default function OrderDetail() {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-gray-900 text-sm leading-tight">
+                        <p className="font-bold text-gray-900 text-xs sm:text-sm leading-tight">
                           {item.name}
                         </p>
                         {item.brand && (
-                          <p className="text-xs text-gray-400">{item.brand}</p>
+                          <p className="text-[10px] sm:text-xs text-gray-400">
+                            {item.brand}
+                          </p>
                         )}
                         {item.pack_size && (
-                          <p className="text-xs text-gray-400">
+                          <p className="text-[10px] sm:text-xs text-gray-400">
                             {item.pack_size}
                           </p>
                         )}
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
                           ₹{price.toFixed(2)} × {item.quantity}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                        <p className="font-black text-gray-900 text-base">
+                        <p className="font-black text-gray-900 text-sm sm:text-base">
                           ₹{total.toFixed(2)}
                         </p>
                         {order.order_status === "delivered" &&
                           (reviewed.includes(item.medicine_id) ? (
-                            <span className="text-xs text-emerald-600 font-bold">
+                            <span className="text-[10px] sm:text-xs text-emerald-600 font-bold">
                               ✅ Reviewed
                             </span>
                           ) : (
                             <button
                               onClick={() => setReviewItem(item)}
-                              className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg hover:bg-amber-100 transition"
+                              className="text-[10px] sm:text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg hover:bg-amber-100 transition"
                             >
-                              ⭐ Write Review
+                              ⭐ Review
                             </button>
                           ))}
                       </div>
@@ -435,14 +447,14 @@ export default function OrderDetail() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h3 className="font-bold text-gray-900 mb-3">
+            <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5">
+              <h3 className="font-bold text-gray-900 mb-3 text-sm sm:text-base">
                 📍 Delivery Address
               </h3>
-              <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-600">
+              <div className="bg-gray-50 rounded-xl p-3 sm:p-4 text-xs sm:text-sm text-gray-600">
                 <p className="font-bold text-gray-900">{order.full_name}</p>
                 {order.addr_phone && (
-                  <p className="text-gray-500 text-xs mt-0.5">
+                  <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5">
                     {order.addr_phone}
                   </p>
                 )}
@@ -457,26 +469,26 @@ export default function OrderDetail() {
             </div>
 
             {history.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-5">
-                <h3 className="font-bold text-gray-900 mb-4">
+              <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5">
+                <h3 className="font-bold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">
                   🕒 Order History
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-2.5 sm:space-y-3">
                   {history.map((h, idx) => (
-                    <div key={idx} className="flex items-start gap-3">
+                    <div key={idx} className="flex items-start gap-2 sm:gap-3">
                       <div
-                        className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${
+                        className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full mt-1.5 flex-shrink-0 ${
                           idx === history.length - 1
                             ? "bg-emerald-500"
                             : "bg-gray-300"
                         }`}
                       />
                       <div>
-                        <p className="text-sm font-bold text-gray-800 capitalize">
+                        <p className="text-xs sm:text-sm font-bold text-gray-800 capitalize">
                           {STATUS_CONFIG[h.status]?.icon}{" "}
                           {STATUS_CONFIG[h.status]?.label || h.status}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-[10px] sm:text-xs text-gray-400">
                           {new Date(h.created_at).toLocaleDateString("en-IN", {
                             day: "numeric",
                             month: "short",
@@ -493,11 +505,13 @@ export default function OrderDetail() {
             )}
           </div>
 
-          {/* ── RIGHT ── */}
-          <div className="space-y-5">
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h3 className="font-bold text-gray-900 mb-4">💰 Price Details</h3>
-              <div className="space-y-3 text-sm">
+          {/* RIGHT */}
+          <div className="space-y-4 sm:space-y-5">
+            <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5">
+              <h3 className="font-bold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">
+                💰 Price Details
+              </h3>
+              <div className="space-y-2.5 sm:space-y-3 text-xs sm:text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
                   <span>₹{parseFloat(order.subtotal || 0).toFixed(2)}</span>
@@ -530,7 +544,7 @@ export default function OrderDetail() {
                     <span>₹{parseFloat(order.tax_amount).toFixed(2)}</span>
                   </div>
                 )}
-                <div className="border-t border-gray-100 pt-3 flex justify-between font-black text-gray-900 text-base">
+                <div className="border-t border-gray-100 pt-2.5 sm:pt-3 flex justify-between font-black text-gray-900 text-sm sm:text-base">
                   <span>Total</span>
                   <span className="text-emerald-600">
                     ₹{parseFloat(order.total_amount).toFixed(2)}
@@ -539,9 +553,11 @@ export default function OrderDetail() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h3 className="font-bold text-gray-900 mb-3">💳 Payment</h3>
-              <div className="space-y-2 text-sm">
+            <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5">
+              <h3 className="font-bold text-gray-900 mb-3 text-sm sm:text-base">
+                💳 Payment
+              </h3>
+              <div className="space-y-2 text-xs sm:text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Method</span>
                   <span className="font-bold text-gray-900 uppercase">
@@ -551,7 +567,7 @@ export default function OrderDetail() {
                 <div className="flex justify-between">
                   <span className="text-gray-500">Status</span>
                   <span
-                    className={`font-bold px-2 py-0.5 rounded-full text-xs capitalize ${
+                    className={`font-bold px-2 py-0.5 rounded-full text-[10px] sm:text-xs capitalize ${
                       order.payment_status === "paid"
                         ? "bg-green-100 text-green-600"
                         : order.payment_status === "failed"
@@ -568,14 +584,14 @@ export default function OrderDetail() {
             <div className="space-y-2">
               <Link
                 to="/orders"
-                className="w-full flex items-center justify-center py-3 rounded-xl font-bold text-sm border-2 border-gray-200 text-gray-600 hover:border-emerald-400 hover:text-emerald-600 transition"
+                className="w-full flex items-center justify-center py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm border-2 border-gray-200 text-gray-600 hover:border-emerald-400 hover:text-emerald-600 transition"
               >
-                ← Back to My Orders
+                ← Back to Orders
               </Link>
               {order.order_status === "delivered" && (
                 <Link
                   to="/medicines"
-                  className="w-full flex items-center justify-center py-3 rounded-xl font-bold text-sm text-white transition"
+                  className="w-full flex items-center justify-center py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm text-white transition"
                   style={{
                     background: "linear-gradient(135deg, #065f46, #059669)",
                   }}
@@ -588,62 +604,62 @@ export default function OrderDetail() {
         </div>
       </div>
 
-      {/* ── Cancel Modal ── */}
+      {/* Cancel Modal */}
       {showCancel && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: "rgba(0,0,0,0.5)" }}
         >
-          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-lg font-black text-gray-900 mb-1">
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-base sm:text-lg font-black text-gray-900 mb-1">
               Cancel Order?
             </h3>
-            <p className="text-sm text-gray-400 mb-4">
-              Please note that this action cannot be undone once confirmed.
+            <p className="text-xs sm:text-sm text-gray-400 mb-4">
+              This action cannot be undone.
             </p>
             <div className="mb-4">
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                Cancellation Reason (optional)
+              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">
+                Reason (optional)
               </label>
               <select
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-400 bg-gray-50"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:border-emerald-400 bg-gray-50"
               >
                 <option value="">Select a reason...</option>
                 <option value="Order placed by mistake">
                   Order placed by mistake
                 </option>
                 <option value="Better price available elsewhere">
-                  Better price available elsewhere
+                  Better price available
                 </option>
                 <option value="Delivery time is too long">
-                  Delivery time is too long
+                  Delivery time too long
                 </option>
                 <option value="Product no longer needed">
-                  Product no longer needed
+                  Product not needed
                 </option>
                 <option value="Need to change delivery address">
-                  Need to change delivery address
+                  Change address
                 </option>
               </select>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={() => {
                   setShowCancel(false);
                   setError("");
                 }}
-                className="flex-1 py-3 rounded-xl font-bold text-sm border-2 border-gray-200 text-gray-600 hover:border-gray-300 transition"
+                className="flex-1 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm border-2 border-gray-200 text-gray-600 hover:border-gray-300 transition"
               >
-                No, Keep Order
+                Keep Order
               </button>
               <button
                 onClick={handleCancel}
                 disabled={cancelling}
-                className="flex-1 py-3 rounded-xl font-bold text-sm text-white transition bg-red-500 hover:bg-red-600"
+                className="flex-1 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm text-white transition bg-red-500 hover:bg-red-600"
               >
-                {cancelling ? "Cancelling..." : "Yes, Cancel Order"}
+                {cancelling ? "..." : "Cancel Order"}
               </button>
             </div>
           </div>

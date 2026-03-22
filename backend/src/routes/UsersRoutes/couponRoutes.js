@@ -1,17 +1,3 @@
-// import { Router } from "express";
-// import authenticate from "../middleware/authMiddleware.js";
-// import {
-//   getActiveCoupons,
-//   applyCoupon,
-// } from "../controllers/couponController.js";
-
-// const router = Router();
-
-// router.get("/", getActiveCoupons); // Public — GET  /api/coupons
-// router.post("/apply", authenticate, applyCoupon); // Auth   — POST /api/coupons/apply
-
-// export default router;
-
 import { Router } from "express";
 import authenticate from "../../middleware/authMiddleware.js";
 import {

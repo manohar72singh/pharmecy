@@ -4,7 +4,7 @@ import Pagination from "../../components/common/Pagination";
 
 const STATUS_COLORS = {
   pending: "bg-amber-100 text-amber-700",
-  approved: "bg-green-100 text-green-700",
+  verified: "bg-green-100 text-green-700",
   rejected: "bg-red-100 text-red-600",
 };
 const API_URL = import.meta.env.VITE_API_URL?.replace("/api", "");
@@ -78,7 +78,7 @@ export default function AdminPrescriptions() {
 
       {/* Filter Tabs */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 flex gap-3 shadow-sm">
-        {["pending", "approved", "rejected"].map((s) => (
+        {["pending", "verified", "rejected"].map((s) => (
           <button
             key={s}
             onClick={() => {
@@ -96,7 +96,7 @@ export default function AdminPrescriptions() {
                 : {}
             }
           >
-            {s}
+            {s === "verified" ? "approved" : s}
           </button>
         ))}
       </div>
@@ -185,14 +185,14 @@ export default function AdminPrescriptions() {
                         <span
                           className={`text-[10px] uppercase font-black px-2 py-1 rounded-full ${STATUS_COLORS[rx.status] || "bg-gray-100 text-gray-600"}`}
                         >
-                          {rx.status}
+                          {rx.status === "verified" ? "approved" : rx.status}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         {rx.status === "pending" && (
                           <div className="flex gap-2">
                             <button
-                              onClick={() => handleUpdate(rx.id, "approved")}
+                              onClick={() => handleUpdate(rx.id, "verified")}
                               className="text-[10px] font-black uppercase px-3 py-1.5 rounded-lg bg-green-50 text-green-600 border border-green-200 hover:bg-green-600 hover:text-white transition-all"
                             >
                               Approve

@@ -10,7 +10,7 @@ const STATUS_CONFIG = {
     color: "text-amber-600",
     border: "border-amber-200",
   },
-  approved: {
+  verified: {
     label: "Approved",
     icon: "✅",
     bg: "bg-emerald-50",
@@ -419,7 +419,7 @@ export default function Prescription() {
                               prescription.
                             </p>
                           )}
-                          {rx.status === "approved" && (
+                          {rx.status === "verified" && (
                             <p className="text-xs text-emerald-600 font-semibold mt-2">
                               ✅ Approved — You can now order medicines using
                               this prescription.
@@ -448,7 +448,7 @@ export default function Prescription() {
                           </a>
                         )}
 
-                        {rx.status === "approved" && (
+                        {rx.status === "verified" && (
                           <button
                             onClick={() => handleOrder(rx)}
                             className="px-4 py-2 rounded-xl text-xs font-bold text-white transition"
@@ -461,7 +461,7 @@ export default function Prescription() {
                           </button>
                         )}
 
-                        {rx.status !== "approved" && (
+                        {rx.status !== "verified" && (
                           <button
                             onClick={() => setDeleteId(rx.id)}
                             className="px-3 py-2 rounded-xl text-xs font-bold border-2 border-red-200 text-red-500 hover:bg-red-50 transition"

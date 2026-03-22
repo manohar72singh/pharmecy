@@ -44,7 +44,7 @@ export const getPrescriptions = async (req, res) => {
 export const updatePrescriptionStatus = async (req, res) => {
   try {
     const { status, valid_until } = req.body;
-    if (!["pending", "approved", "rejected"].includes(status))
+    if (!["pending", "verified", "rejected"].includes(status))
       return error(res, "Invalid status.", 400);
     await pool.query(
       "UPDATE prescriptions SET status = ?, verified_by = ?, valid_until = ? WHERE id = ?",

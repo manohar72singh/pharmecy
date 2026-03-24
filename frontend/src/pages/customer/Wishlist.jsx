@@ -33,6 +33,13 @@ export default function Wishlist() {
     try {
       await wishlistService.remove(medicine_id);
       setItems((prev) => prev.filter((i) => i.medicine_id !== medicine_id));
+
+      let cached = JSON.parse(localStorage.getItem("wishlistIds") || "[]");
+      cached = cached.map((id) => id?.toString()).filter(Boolean);
+      const updated = cached.filter((id) => id !== medicine_id?.toString());
+      localStorage.setItem("wishlistIds", JSON.stringify(updated));
+      window.dispatchEvent(new Event("wishlistUpdated"));
+
       showMsg("success", "Item removed from wishlist.");
     } catch {
       showMsg("error", "Failed to remove item.");

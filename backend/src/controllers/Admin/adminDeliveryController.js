@@ -71,7 +71,18 @@ export const assignDelivery = async (req, res) => {
 
     if (!delivery_boy_id)
       return error(res, "Please select a delivery partner.", 400);
-
+    const [dbCheck] = await pool.query(
+      "SELECT id, is_available FROM delivery_boys WHERE id = ?",
+      [delivery_boy_id],
+    );
+    if (dbCheck.length === 0)
+      return error(res, "Delivery partner not found.", 404);
+    if (!dbCheck[0].is_available)
+      return error(
+        res,
+        "This delivery partner is currently offline. Please select an available partner.",
+        400,
+      );
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 

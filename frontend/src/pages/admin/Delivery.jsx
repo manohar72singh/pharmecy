@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../services/api";
 import Pagination from "../../components/common/Pagination";
-
+import { useToast } from "../../context/Toastcontext";
 const STATUS_COLORS = {
   confirmed: "bg-purple-100 text-purple-700",
   processing: "bg-cyan-100 text-cyan-700",
@@ -10,6 +10,7 @@ const STATUS_COLORS = {
 };
 
 export default function AdminDelivery() {
+  const { showToast } = useToast();
   const [orders, setOrders] = useState([]);
   const [deliveryBoys, setDeliveryBoys] = useState([]);
   const [total, setTotal] = useState(0);
@@ -39,8 +40,16 @@ export default function AdminDelivery() {
     load();
   }, [page]);
 
-  const handleAssign = async (orderId, deliveryBoyId) => {
+  const handleAssign = async (orderId, deliveryBoyId, resetSelect) => {
     if (!deliveryBoyId) return;
+    const selected = deliveryBoys.find((d) => d.id === parseInt(deliveryBoyId));
+    if (selected && !selected.is_available) {
+      showToast(
+        "This delivery partner is currently offline. Please select an available partner.",
+      );
+      resetSelect?.();
+      return;
+    }
     setAssigning(orderId);
     try {
       const { data } = await api.post(`/admin/delivery/${orderId}/assign`, {
@@ -206,18 +215,31 @@ export default function AdminDelivery() {
                             </span>
                             <select
                               defaultValue=""
-                              onChange={(e) =>
-                                handleAssign(order.id, e.target.value)
-                              }
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                handleAssign(order.id, val, () => {
+                                  e.target.value = "";
+                                });
+                              }}
                               disabled={assigning === order.id}
                               className="text-[10px] px-2 py-1 rounded-lg border border-gray-200 focus:outline-none focus:border-emerald-400 text-gray-500 cursor-pointer bg-white"
                             >
                               <option value="" disabled>
-                                Re-assign Driver...
+                                Re-assign Order...
                               </option>
                               {deliveryBoys.map((db) => (
-                                <option key={db.id} value={db.id}>
+                                <option
+                                  key={db.id}
+                                  value={db.id}
+                                  disabled={!db.is_available}
+                                  style={{
+                                    color: db.is_available
+                                      ? "inherit"
+                                      : "#9ca3af",
+                                  }}
+                                >
                                   {db.is_available ? "🟢" : "🔴"} {db.name}
+                                  {!db.is_available ? " (Offline)" : ""}
                                 </option>
                               ))}
                             </select>
@@ -225,18 +247,31 @@ export default function AdminDelivery() {
                         ) : (
                           <select
                             defaultValue=""
-                            onChange={(e) =>
-                              handleAssign(order.id, e.target.value)
-                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              handleAssign(order.id, val, () => {
+                                e.target.value = "";
+                              });
+                            }}
                             disabled={assigning === order.id}
                             className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:border-emerald-400 bg-white cursor-pointer"
                           >
                             <option value="" disabled>
-                              Assign Personnel...
+                              Assign Order...
                             </option>
                             {deliveryBoys.map((db) => (
-                              <option key={db.id} value={db.id}>
+                              <option
+                                key={db.id}
+                                value={db.id}
+                                disabled={!db.is_available}
+                                style={{
+                                  color: db.is_available
+                                    ? "inherit"
+                                    : "#9ca3af",
+                                }}
+                              >
                                 {db.is_available ? "🟢" : "🔴"} {db.name}
+                                {!db.is_available ? " (Offline)" : ""}
                               </option>
                             ))}
                           </select>

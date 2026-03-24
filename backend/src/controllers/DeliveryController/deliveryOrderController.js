@@ -151,7 +151,11 @@ export const verifyOTP = async (req, res) => {
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
-
+      const [orderRows] = await conn.query(
+        "SELECT id, order_number, payment_mode, total_amount FROM orders WHERE id = ?",
+        [req.params.id],
+      );
+      const order = orderRows[0];
       await conn.query(
         "UPDATE delivery_assignments SET otp_verified = 1, delivered_at = NOW() WHERE id = ?",
         [assignment[0].id],
@@ -171,6 +175,29 @@ export const verifyOTP = async (req, res) => {
         "INSERT INTO order_status_history (order_id, status, updated_by) VALUES (?, ?, ?)",
         [req.params.id, "delivered", req.user.id],
       );
+      await conn.query(
+        "INSERT INTO order_status_history (order_id, status, updated_by) VALUES (?, ?, ?)",
+        [req.params.id, "delivered", req.user.id],
+      );
+
+      // ← YAHAN ADD KARO
+      if (order.payment_mode === "cod") {
+        await conn.query(
+          "UPDATE orders SET payment_status = 'paid' WHERE id = ?",
+          [req.params.id],
+        );
+        await conn.query(
+          `INSERT INTO payments 
+            (order_id, user_id, amount, payment_mode, transaction_id, status, paid_at)
+           VALUES (?, ?, ?, 'cod', ?, 'success', NOW())`,
+          [
+            req.params.id,
+            req.user.id,
+            order.total_amount,
+            `COD-${order.order_number}`,
+          ],
+        );
+      }
 
       await conn.commit();
     } catch (e) {

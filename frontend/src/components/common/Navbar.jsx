@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import cartService from "../../services/cartService";
+import wishlistService from "../../services/wishlistService";
 
 export const updateCartCount = () => {
   window.dispatchEvent(new Event("cartUpdated"));
@@ -15,6 +16,7 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -34,15 +36,35 @@ export default function Navbar() {
     }
   };
 
+  const refreshWishlist = async () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const res = await wishlistService.getAll();
+        setWishlistCount(res.data?.data?.length || 0);
+      } catch {
+        setWishlistCount(0);
+      }
+    } else {
+      setWishlistCount(0);
+    }
+  };
+
   useEffect(() => {
     const stored = localStorage.getItem("user");
     setUser(stored ? JSON.parse(stored) : null);
     refreshCart();
+    refreshWishlist();
   }, [location.pathname]);
 
   useEffect(() => {
     window.addEventListener("cartUpdated", refreshCart);
     return () => window.removeEventListener("cartUpdated", refreshCart);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("wishlistUpdated", refreshWishlist);
+    return () => window.removeEventListener("wishlistUpdated", refreshWishlist);
   }, []);
 
   useEffect(() => {
@@ -62,6 +84,7 @@ export default function Navbar() {
     localStorage.removeItem("wishlistIds");
     setUser(null);
     setCartCount(0);
+    setWishlistCount(0);
     setProfileOpen(false);
     setMenuOpen(false);
     navigate("/");
@@ -98,7 +121,11 @@ export default function Navbar() {
   const customerMenuItems = [
     { to: "/profile", icon: "👤", label: "My Profile" },
     { to: "/orders", icon: "📦", label: "My Orders" },
-    { to: "/wishlist", icon: "❤️", label: "My Wishlist" },
+    {
+      to: "/wishlist",
+      icon: "❤️",
+      label: `My Wishlist${wishlistCount > 0 ? ` (${wishlistCount})` : ""}`,
+    },
     { to: "/wallet", icon: "👛", label: "My Wallet" },
     { to: "/notifications", icon: "🔔", label: "Notifications" },
     { to: "/prescription", icon: "📋", label: "Prescriptions" },
@@ -119,7 +146,11 @@ export default function Navbar() {
       label: `My Cart${cartCount > 0 ? ` (${cartCount})` : ""}`,
     },
     { to: "/orders", icon: "📦", label: "My Orders" },
-    { to: "/wishlist", icon: "❤️", label: "My Wishlist" },
+    {
+      to: "/wishlist",
+      icon: "❤️",
+      label: `My Wishlist${wishlistCount > 0 ? ` (${wishlistCount})` : ""}`,
+    },
     { to: "/wallet", icon: "👛", label: "My Wallet" },
     { to: "/notifications", icon: "🔔", label: "Notifications" },
     { to: "/prescription", icon: "📋", label: "Prescriptions" },
@@ -259,10 +290,20 @@ export default function Navbar() {
                 {/* Wishlist icon */}
                 <Link
                   to="/wishlist"
-                  className="hidden sm:flex p-2 rounded-xl hover:bg-gray-100 transition"
+                  className="hidden sm:flex relative p-2 rounded-xl hover:bg-gray-100 transition"
                   title="My Wishlist"
                 >
                   <span className="text-xl">❤️</span>
+                  {wishlistCount > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 text-white text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 shadow-md"
+                      style={{
+                        background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                      }}
+                    >
+                      {wishlistCount > 99 ? "99+" : wishlistCount}
+                    </span>
+                  )}
                 </Link>
 
                 {/* Notifications icon */}
@@ -326,7 +367,7 @@ export default function Navbar() {
                       </div>
                     </div>
                     <svg
-                      className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
+                      className={`hidden sm:block w-4 h-4 text-gray-400 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -341,7 +382,7 @@ export default function Navbar() {
                   </button>
 
                   {profileOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-2xl py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-2xl py-2 z-50 max-h-96 overflow-y-auto">
                       <div className="px-4 py-3 border-b border-gray-100">
                         <div className="flex items-center gap-3">
                           <div
@@ -415,7 +456,7 @@ export default function Navbar() {
                       </div>
                     </div>
                     <svg
-                      className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? "rotate-180" : ""}`}
+                      className={`hidden sm:block w-4 h-4 text-gray-400 transition-transform ${profileOpen ? "rotate-180" : ""}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -429,7 +470,7 @@ export default function Navbar() {
                     </svg>
                   </button>
                   {profileOpen && (
-                    <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-100 rounded-2xl shadow-2xl py-2 z-50">
+                    <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-100 rounded-2xl shadow-2xl py-2 z-50 max-h-96 overflow-y-auto">
                       <div className="px-4 py-3 border-b border-gray-100">
                         <div className="flex items-center gap-3">
                           <div

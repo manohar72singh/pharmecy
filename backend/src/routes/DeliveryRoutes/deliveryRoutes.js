@@ -4,7 +4,7 @@ import authenticate from "../../middleware/authMiddleware.js";
 import {
   getDeliveryProfile,
   toggleAvailability,
-} from "../../controllers/DeliveryController/DeliveryAuthcontroller.js";
+} from "../../controllers/DeliveryController/deliveryAuthController.js";
 
 import {
   getAssignedOrders,

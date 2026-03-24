@@ -4,7 +4,7 @@ import {
   getNotifications,
   markRead,
   markOneRead,
-} from "../../controllers/UsersControllers/notificationController.js";
+} from "../../controllers/UsersControllers/NotificationController.js";
 
 const router = Router();
 router.use(authenticate);

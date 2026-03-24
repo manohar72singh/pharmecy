@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
 dotenv.config();
-const cpath = path.resolve("./ca.pem");
+const cpath = path.resolve("/backend/src/config/ca.pem");
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,

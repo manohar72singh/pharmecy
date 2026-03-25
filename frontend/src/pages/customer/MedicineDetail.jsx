@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import medicineService from "../../services/medicineService";
 import MedicineImage from "../../components/common/MedicineImage";
 import cartService, { localCart } from "../../services/cartService";
-import ReviewSection from "../../components/common/ReviewSection";
+import ReviewSection from "../../components/common/Reviewsection";
 import { useToast } from "../../context/ToastContext";
 
 // ── Schedule Badge ────────────────────────────────────

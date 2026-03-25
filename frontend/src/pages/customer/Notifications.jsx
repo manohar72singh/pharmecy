@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import notificationService from "../../services/notificationService";
+import notificationService from "../../services/notificationservice";
 
 const TYPE_CONFIG = {
   order: { icon: "📦", color: "text-purple-600", bg: "bg-purple-50" },

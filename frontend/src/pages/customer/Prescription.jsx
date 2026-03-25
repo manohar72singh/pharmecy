@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import prescriptionService from "../../services/prescriptionService";
+import prescriptionService from "../../services/prescriptionservice";
 
 const STATUS_CONFIG = {
   pending: {

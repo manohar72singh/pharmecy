@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import MedicineImage from "../common/MedicineImage";
 import cartService, { localCart } from "../../services/cartService";
 import wishlistService from "../../services/wishlistService";
-import { useToast } from "../../context/ToastContext";
+import { useToast } from "../../context/Toastcontext";
 
 const ScheduleBadge = ({ code }) => {
   const colors = {

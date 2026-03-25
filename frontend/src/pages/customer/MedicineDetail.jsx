@@ -4,7 +4,7 @@ import medicineService from "../../services/medicineService";
 import MedicineImage from "../../components/common/MedicineImage";
 import cartService, { localCart } from "../../services/cartService";
 import ReviewSection from "../../components/common/Reviewsection";
-import { useToast } from "../../context/ToastContext";
+import { useToast } from "../../context/Toastcontext";
 
 // ── Schedule Badge ────────────────────────────────────
 const ScheduleBadge = ({ code }) => {

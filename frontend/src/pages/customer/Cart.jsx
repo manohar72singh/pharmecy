@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MedicineImage from "../../components/common/MedicineImage";
 import cartService, { localCart } from "../../services/cartService";
-import couponService from "../../services/couponService";
+import couponService from "../../services/couponservice";
 
 export default function Cart() {
   const navigate = useNavigate();

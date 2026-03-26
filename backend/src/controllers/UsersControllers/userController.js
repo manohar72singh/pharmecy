@@ -1,5 +1,6 @@
 import pool from "../../config/db.js";
 import bcrypt from "bcryptjs";
+import { v2 as cloudinary } from "cloudinary";
 import path from "path";
 import fs from "fs";
 import { success, error } from "../../utils/response.js";

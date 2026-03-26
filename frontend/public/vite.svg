@@ -1,48 +1,8 @@
-<svg width="680" height="320" viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <style>
-      .logo-bg { fill: #1a7a4a; }
-      .logo-cross-v { fill: #ffffff; }
-      .logo-cross-h { fill: #ffffff; }
-      .logo-leaf { fill: #a8e6c3; opacity: 0.85; }
-      .logo-name { font-family: sans-serif; font-size: 38px; font-weight: 500; fill: #1a7a4a; letter-spacing: -0.5px; }
-      .logo-tag { font-family: sans-serif; font-size: 14px; font-weight: 400; fill: #4caf86; letter-spacing: 2px; }
-      .logo-dot { fill: #f4a024; }
-    </style>
-  </defs>
-
-  <!-- Icon background circle -->
-  <circle cx="160" cy="160" r="90" class="logo-bg"/>
-
-  <!-- Subtle inner ring -->
-  <circle cx="160" cy="160" r="80" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.2"/>
-
-  <!-- Cross vertical -->
-  <rect x="147" y="115" width="26" height="90" rx="4" class="logo-cross-v"/>
-
-  <!-- Cross horizontal -->
-  <rect x="115" y="147" width="90" height="26" rx="4" class="logo-cross-h"/>
-
-  <!-- Leaf accent top-right -->
-  <ellipse cx="213" cy="107" rx="14" ry="8" transform="rotate(-45 213 107)" class="logo-leaf"/>
-
-  <!-- Small dot accent -->
-  <circle cx="218" cy="102" r="4" class="logo-dot"/>
-
-  <!-- Brand name -->
-  <text x="275" y="148" class="logo-name">Pharmecy</text>
-
-  <!-- Tagline -->
-  <text x="277" y="178" class="logo-tag">HEALTH · CARE · TRUST</text>
-
-  <!-- Divider line -->
-  <rect x="277" y="192" width="280" height="1.5" rx="1" fill="#1a7a4a" opacity="0.15"/>
-
-  <!-- Pill icon accent -->
-  <ellipse cx="290" cy="218" rx="18" ry="9" fill="#1a7a4a" opacity="0.12"/>
-  <ellipse cx="290" cy="218" rx="18" ry="9" fill="none" stroke="#1a7a4a" stroke-width="1.2" opacity="0.3"/>
-  <line x1="290" y1="209" x2="290" y2="227" stroke="#1a7a4a" stroke-width="1" opacity="0.3"/>
-
-  <!-- Subtitle text -->
-  <text x="316" y="222" font-family="sans-serif" font-size="12" font-weight="400" fill="#4caf86" opacity="0.9">Your trusted pharmacy partner</text>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="256" cy="256" r="240" fill="#1a7a4a"/>
+  <circle cx="256" cy="256" r="214" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.2"/>
+  <rect x="236" y="136" width="40" height="240" rx="8" fill="#ffffff"/>
+  <rect x="136" y="236" width="240" height="40" rx="8" fill="#ffffff"/>
+  <ellipse cx="340" cy="172" rx="28" ry="14" transform="rotate(-45 340 172)" fill="#a8e6c3" opacity="0.85"/>
+  <circle cx="350" cy="162" r="10" fill="#f4a024"/>
 </svg>

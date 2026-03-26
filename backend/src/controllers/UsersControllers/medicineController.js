@@ -48,42 +48,7 @@ export const getMedicines = async (req, res) => {
     };
     const orderBy = sortMap[sort] || "m.id DESC";
 
-    // const sql = `
-    //   SELECT
-    //     m.id, m.name, m.slug, m.generic_name, m.brand,
-    //     m.pack_size, m.unit, m.requires_prescription, m.is_featured,
-    //     ds.schedule_code,
-    //     c.name  AS category_name,
-    //     c.slug  AS category_slug,
-    //     mf.name AS manufacturer_name,
-    //     mi.image_url,
-    //     mb.id AS batch_id,
-    //     mb.id AS stock_id,
-    //     mb.selling_price,
-    //     mb.mrp,
-    //     mb.discount_percent,
-    //     mb.available_quantity,
-    //     mb.expiry_date,
-    //     mb.batch_status
-    //   FROM medicines m
-    //   LEFT JOIN categories       c  ON m.category_id    = c.id
-    //   LEFT JOIN manufacturers    mf ON m.manufacturer_id = mf.id
-    //   LEFT JOIN drug_schedules   ds ON m.schedule_id     = ds.id
-    //   ${IMAGE_JOIN}
-    //   LEFT JOIN medicine_batches mb ON mb.id = (
-    //     SELECT id FROM medicine_batches
-    //     WHERE medicine_id = m.id
-    //       AND is_active = TRUE
-    //       AND batch_status != 'expired'
-    //       AND available_quantity > 0
-    //     ORDER BY expiry_date ASC
-    //     LIMIT 1
-    //   )
-    //   ${where}
-    //   ORDER BY ${orderBy}
-    //   LIMIT ? OFFSET ?
-    // `;
-const sql = `
+    const sql = `
   SELECT
     m.id, m.name, m.slug, m.generic_name, m.brand,
     m.pack_size, m.unit, m.requires_prescription, m.is_featured,
@@ -156,48 +121,6 @@ const sql = `
 };
 
 // ── Get featured medicines ────────────────────────────
-// export const getFeaturedMedicines = async (req, res) => {
-//   try {
-//     const [rows] = await pool.query(`
-//       SELECT
-//         m.id, m.name, m.slug, m.generic_name, m.brand,
-//         m.pack_size, m.unit, m.requires_prescription,
-//         ds.schedule_code,
-//         c.name AS category_name,
-//         c.slug AS category_slug,
-//         mi.image_url,
-//         mb.id AS batch_id,
-//         mb.id AS stock_id,
-//         mb.selling_price,
-//         mb.mrp,
-//         mb.discount_percent,
-//         mb.available_quantity
-//       FROM medicines m
-//       LEFT JOIN categories       c  ON m.category_id    = c.id
-//       LEFT JOIN drug_schedules   ds ON m.schedule_id     = ds.id
-//       ${IMAGE_JOIN}
-//       LEFT JOIN medicine_batches mb ON mb.id = (
-//         SELECT id FROM medicine_batches
-//         WHERE medicine_id = m.id
-//           AND is_active = TRUE
-//           AND available_quantity > 0
-//         ORDER BY expiry_date ASC
-//         LIMIT 1
-//       )
-//       WHERE m.is_active = TRUE AND m.is_featured = TRUE
-//       ORDER BY m.id DESC
-//       LIMIT 8
-//     `);
-//     return success(res, rows, "Featured medicines retrieved successfully.");
-//   } catch (err) {
-//     console.error(err);
-//     return error(
-//       res,
-//       "Internal server error while fetching featured medicines.",
-//       500,
-//     );
-//   }
-// };
 export const getFeaturedMedicines = async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -250,9 +173,18 @@ export const getMedicineById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Step 1: Best batch ID pehle nikalo
+    const [batchRows] = await pool.query(
+      `SELECT id FROM medicine_batches 
+       WHERE medicine_id = ? AND is_active = TRUE AND available_quantity > 0
+       ORDER BY expiry_date ASC LIMIT 1`,
+      [id]
+    );
+    const batchId = batchRows.length > 0 ? batchRows[0].id : null;
+
+    // Step 2: Main query (koi bhi subquery ON condition mein nahi)
     const [rows] = await pool.query(
-      `
-      SELECT
+      `SELECT
         m.*,
         ds.schedule_code, ds.schedule_name,
         c.name  AS category_name,
@@ -264,48 +196,42 @@ export const getMedicineById = async (req, res) => {
         mb.batch_no, mb.selling_price, mb.mrp,
         mb.discount_percent, mb.available_quantity, mb.expiry_date
       FROM medicines m
-      LEFT JOIN categories       c  ON m.category_id    = c.id
+      LEFT JOIN categories       c  ON m.category_id     = c.id
       LEFT JOIN manufacturers    mf ON m.manufacturer_id = mf.id
       LEFT JOIN drug_schedules   ds ON m.schedule_id     = ds.id
-      ${IMAGE_JOIN}
-      LEFT JOIN medicine_batches mb ON mb.id = (
-        SELECT id FROM medicine_batches
-        WHERE medicine_id = m.id AND is_active = TRUE AND available_quantity > 0
-        ORDER BY expiry_date ASC LIMIT 1
-      )
-      WHERE m.id = ? AND m.is_active = TRUE
-    `,
-      [id],
+      LEFT JOIN (
+        SELECT medicine_id, image_url
+        FROM medicine_images
+        WHERE is_primary = 1
+      ) mi ON mi.medicine_id = m.id
+      LEFT JOIN medicine_batches mb ON mb.id = ?
+      WHERE m.id = ? AND m.is_active = TRUE`,
+      [batchId, id]
     );
 
     if (rows.length === 0)
       return error(res, "Medicine product not found.", 404);
 
+    // Step 3: Images fetch (yeh pehle se theek tha)
     const [images] = await pool.query(
-      `
-      SELECT image_url, is_primary, sort_order
-      FROM medicine_images
-      WHERE medicine_id = ?
-      ORDER BY sort_order ASC
-    `,
-      [id],
+      `SELECT image_url, is_primary, sort_order
+       FROM medicine_images
+       WHERE medicine_id = ?
+       ORDER BY sort_order ASC`,
+      [id]
     );
 
     return success(
       res,
       { ...rows[0], images },
-      "Medicine details retrieved successfully.",
+      "Medicine details retrieved successfully."
     );
+
   } catch (err) {
     console.error(err);
-    return error(
-      res,
-      "Internal server error while fetching medicine details.",
-      500,
-    );
+    return error(res, "Internal server error while fetching medicine details.", 500);
   }
 };
-
 // ── Get categories ────────────────────────────────────
 export const getCategories = async (req, res) => {
   try {

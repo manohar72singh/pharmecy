@@ -180,7 +180,7 @@ export default function Profile() {
 
   const avatarText = profile?.name?.charAt(0)?.toUpperCase() || "U";
   const photoUrl = profile?.profile_image
-    ? `${import.meta.env.VITE_API_URL?.replace("/api", "")}/uploads/profiles/${profile.profile_image}`
+    ? `${import.meta.env.VITE_API_URL}/uploads/profiles/${profile.profile_image}`
     : null;
 
   return (

@@ -25,38 +25,7 @@ export const getProfile = async (req, res) => {
 };
 
 // ── Update Profile ────────────────────────────────────
-// export const updateProfile = async (req, res) => {
-//   try {
-//     const { name, email, date_of_birth, gender } = req.body;
 
-//     if (!name) return error(res, "Name is required.", 400);
-
-//     // Email unique check
-//     if (email) {
-//       const [existing] = await pool.query(
-//         "SELECT id FROM users WHERE email = ? AND id != ?",
-//         [email, req.user.id],
-//       );
-//       if (existing.length > 0)
-//         return error(res, "This email address is already in use.", 409);
-//     }
-
-//     await pool.query(
-//       `UPDATE users SET name=?, email=?, date_of_birth=?, gender=? WHERE id=?`,
-//       [name, email || null, date_of_birth || null, gender || null, req.user.id],
-//     );
-
-//     const [updated] = await pool.query(
-//       "SELECT id, name, phone, email, profile_image, date_of_birth, gender FROM users WHERE id=?",
-//       [req.user.id],
-//     );
-
-//     return success(res, updated[0], "Profile updated successfully.");
-//   } catch (err) {
-//     console.error(err);
-//     return error(res, "Failed to update profile.", 500);
-//   }
-// };
 export const updateProfile = async (req, res) => {
   try {
     let { name, email, date_of_birth, gender } = req.body;
@@ -77,7 +46,7 @@ export const updateProfile = async (req, res) => {
     if (email) {
       const [existing] = await pool.query(
         "SELECT id FROM users WHERE email = ? AND id != ?",
-        [email, req.user.id]
+        [email, req.user.id],
       );
 
       if (existing.length > 0) {
@@ -90,20 +59,14 @@ export const updateProfile = async (req, res) => {
       `UPDATE users 
        SET name=?, email=?, date_of_birth=?, gender=? 
        WHERE id=?`,
-      [
-        name,
-        email || null,
-        date_of_birth || null,
-        gender || null,
-        req.user.id,
-      ]
+      [name, email || null, date_of_birth || null, gender || null, req.user.id],
     );
 
     // ✅ Fetch updated user
     const [updated] = await pool.query(
       `SELECT id, name, phone, email, profile_image, date_of_birth, gender 
        FROM users WHERE id=?`,
-      [req.user.id]
+      [req.user.id],
     );
 
     return success(res, updated[0], "Profile updated successfully.");
@@ -113,21 +76,56 @@ export const updateProfile = async (req, res) => {
   }
 };
 // ── Upload Profile Photo ──────────────────────────────
+// export const uploadProfilePhoto = async (req, res) => {
+//   try {
+//     if (!req.file) return error(res, "Please upload a photo.", 400);
+
+//     // Delete old photo
+//     const [user] = await pool.query(
+//       "SELECT profile_image FROM users WHERE id=?",
+//       [req.user.id],
+//     );
+//     if (user[0]?.profile_image) {
+//       const oldPath = path.join("uploads", user[0].profile_image);
+//       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+//     }
+
+//     const imageUrl = req.file.filename;
+//     await pool.query("UPDATE users SET profile_image=? WHERE id=?", [
+//       imageUrl,
+//       req.user.id,
+//     ]);
+
+//     return success(
+//       res,
+//       { profile_image: imageUrl },
+//       "Profile photo updated successfully.",
+//     );
+//   } catch (err) {
+//     console.error(err);
+//     return error(res, "Failed to upload photo.", 500);
+//   }
+// };
 export const uploadProfilePhoto = async (req, res) => {
   try {
     if (!req.file) return error(res, "Please upload a photo.", 400);
 
-    // Delete old photo
+    // Delete old photo from Cloudinary
     const [user] = await pool.query(
       "SELECT profile_image FROM users WHERE id=?",
       [req.user.id],
     );
+
     if (user[0]?.profile_image) {
-      const oldPath = path.join("uploads", user[0].profile_image);
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      // Cloudinary public_id nikalo URL se
+      const oldUrl = user[0].profile_image;
+      const publicId = oldUrl.split("/").slice(-2).join("/").split(".")[0];
+      await cloudinary.uploader.destroy(publicId);
     }
 
-    const imageUrl = req.file.filename;
+    // Cloudinary URL directly req.file.path mein aata hai
+    const imageUrl = req.file.path;
+
     await pool.query("UPDATE users SET profile_image=? WHERE id=?", [
       imageUrl,
       req.user.id,
@@ -143,7 +141,6 @@ export const uploadProfilePhoto = async (req, res) => {
     return error(res, "Failed to upload photo.", 500);
   }
 };
-
 // ── Change Password ───────────────────────────────────
 export const changePassword = async (req, res) => {
   try {

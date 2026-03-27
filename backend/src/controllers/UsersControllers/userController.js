@@ -77,36 +77,7 @@ export const updateProfile = async (req, res) => {
   }
 };
 // ── Upload Profile Photo ──────────────────────────────
-// export const uploadProfilePhoto = async (req, res) => {
-//   try {
-//     if (!req.file) return error(res, "Please upload a photo.", 400);
 
-//     // Delete old photo
-//     const [user] = await pool.query(
-//       "SELECT profile_image FROM users WHERE id=?",
-//       [req.user.id],
-//     );
-//     if (user[0]?.profile_image) {
-//       const oldPath = path.join("uploads", user[0].profile_image);
-//       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-//     }
-
-//     const imageUrl = req.file.filename;
-//     await pool.query("UPDATE users SET profile_image=? WHERE id=?", [
-//       imageUrl,
-//       req.user.id,
-//     ]);
-
-//     return success(
-//       res,
-//       { profile_image: imageUrl },
-//       "Profile photo updated successfully.",
-//     );
-//   } catch (err) {
-//     console.error(err);
-//     return error(res, "Failed to upload photo.", 500);
-//   }
-// };
 export const uploadProfilePhoto = async (req, res) => {
   try {
     if (!req.file) return error(res, "Please upload a photo.", 400);

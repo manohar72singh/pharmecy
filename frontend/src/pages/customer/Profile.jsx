@@ -179,10 +179,11 @@ export default function Profile() {
     );
 
   const avatarText = profile?.name?.charAt(0)?.toUpperCase() || "U";
-  const photoUrl = profile?.profile_image
-    ? `${import.meta.env.VITE_API_URL}/uploads/profiles/${profile.profile_image}`
-    : null;
-
+  // const photoUrl = profile?.profile_image
+  //   ? `${import.meta.env.VITE_API_URL}/uploads/profiles/${profile.profile_image}`
+  //   : null;
+  // NAYA CODE (Cloudinary direct URL hai)
+  const photoUrl = profile?.profile_image || null;
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}

@@ -1,74 +1,79 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import MedicineImage from "../../components/common/MedicineImage";
-import wishlistService from "../../services/wishlistService";
-import cartService from "../../services/cartService";
+import MedicineCard from "../../components/medicine/MedicineCard";
+
+// ── Guest wishlist helpers (localStorage) ─────────────
+const localWishlist = {
+  get: () => JSON.parse(localStorage.getItem("wishlistIds") || "[]"),
+  add: (id) => {
+    const ids = localWishlist.get();
+    const idStr = id?.toString();
+    if (!ids.includes(idStr)) {
+      localStorage.setItem("wishlistIds", JSON.stringify([...ids, idStr]));
+    }
+  },
+  remove: (id) => {
+    const ids = localWishlist.get().filter((i) => i !== id?.toString());
+    localStorage.setItem("wishlistIds", JSON.stringify(ids));
+  },
+  clear: () => localStorage.removeItem("wishlistIds"),
+};
 
 export default function Wishlist() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [adding, setAdding] = useState(null); // medicine_id being added to cart
   const [msg, setMsg] = useState({ type: "", text: "" });
 
   const isLoggedIn = !!localStorage.getItem("token");
 
+  // ── Load wishlist ──────────────────────────────────
   useEffect(() => {
-    if (!isLoggedIn) {
-      setLoading(false);
-      return;
-    }
-    wishlistService
-      .getAll()
-      .then((res) => setItems(res.data.data || []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [isLoggedIn]);
-
-  const showMsg = (type, text) => {
-    setMsg({ type, text });
-    setTimeout(() => setMsg({ type: "", text: "" }), 3000);
-  };
-
-  const handleRemove = async (medicine_id) => {
-    try {
-      await wishlistService.remove(medicine_id);
-      setItems((prev) => prev.filter((i) => i.medicine_id !== medicine_id));
-
-      let cached = JSON.parse(localStorage.getItem("wishlistIds") || "[]");
-      cached = cached.map((id) => id?.toString()).filter(Boolean);
-      const updated = cached.filter((id) => id !== medicine_id?.toString());
-      localStorage.setItem("wishlistIds", JSON.stringify(updated));
-      window.dispatchEvent(new Event("wishlistUpdated"));
-
-      showMsg("success", "Item removed from wishlist.");
-    } catch {
-      showMsg("error", "Failed to remove item.");
-    }
-  };
-
-  const handleAddToCart = async (item) => {
-    setAdding(item.medicine_id);
-    try {
-      if (!item.batch_id) {
-        showMsg("error", "This item is currently out of stock.");
-        setAdding(null);
-        return;
+    const load = async () => {
+      setLoading(true);
+      try {
+        if (isLoggedIn) {
+          const res = await fetch(`${import.meta.env.VITE_API_URL}/wishlist`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          const data = await res.json();
+          setItems(data.data || []);
+        } else {
+          // Guest: localStorage se medicine IDs lo, medicines fetch karo
+          const ids = localWishlist.get();
+          if (ids.length === 0) {
+            setItems([]);
+          } else {
+            // Each medicine ki detail fetch karo
+            const results = await Promise.allSettled(
+              ids.map((id) =>
+                fetch(`${import.meta.env.VITE_API_URL}/medicines/${id}`).then(
+                  (r) => r.json(),
+                ),
+              ),
+            );
+            const medicines = results
+              .filter((r) => r.status === "fulfilled" && r.value?.success)
+              .map((r) => r.value.data);
+            setItems(medicines);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        setItems([]);
+      } finally {
+        setLoading(false);
       }
-      await cartService.addToCart({
-        medicine_id: item.medicine_id,
-        batch_id: item.batch_id,
-        quantity: 1,
-        image_url: item.image_url,
-        category_slug: item.category_slug,
-      });
-      window.dispatchEvent(new Event("cartUpdated"));
-      showMsg("success", `${item.name} added to cart! 🛒`);
-    } catch {
-      showMsg("error", "Could not add to cart.");
-    } finally {
-      setAdding(null);
-    }
-  };
+    };
+    load();
+
+    // Listen for wishlist updates
+    const handleWishlistUpdate = () => load();
+    window.addEventListener("wishlistUpdated", handleWishlistUpdate);
+    return () =>
+      window.removeEventListener("wishlistUpdated", handleWishlistUpdate);
+  }, [isLoggedIn]);
 
   if (loading)
     return (
@@ -81,7 +86,7 @@ export default function Wishlist() {
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center gap-2 text-xs text-gray-400">
             <Link to="/" className="hover:text-emerald-600">
               Home
@@ -92,7 +97,30 @@ export default function Wishlist() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Guest login banner */}
+      {!isLoggedIn && (
+        <div className="bg-amber-50 border-b border-amber-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-amber-800">
+              <span className="text-base sm:text-lg flex-shrink-0">👤</span>
+              <span>
+                <strong>Login now</strong> to save your wishlist permanently and
+                sync across devices!
+              </span>
+            </div>
+            <Link
+              to="/login"
+              state={{ from: "/wishlist" }}
+              className="flex-shrink-0 text-xs font-bold text-white px-4 py-2 rounded-xl whitespace-nowrap"
+              style={{ background: "#059669" }}
+            >
+              Login / Register
+            </Link>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Toast */}
         {msg.text && (
           <div
@@ -125,30 +153,8 @@ export default function Wishlist() {
           )}
         </div>
 
-        {/* Not logged in */}
-        {!isLoggedIn && (
-          <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center">
-            <div className="text-6xl mb-4">❤️</div>
-            <h3 className="text-lg font-black text-gray-800 mb-2">
-              Please Login
-            </h3>
-            <p className="text-gray-400 text-sm mb-6">
-              You need to be logged in to manage your wishlist.
-            </p>
-            <Link
-              to="/login"
-              className="inline-block text-white font-bold px-6 py-3 rounded-2xl transition"
-              style={{
-                background: "linear-gradient(135deg, #065f46, #059669)",
-              }}
-            >
-              Login Now →
-            </Link>
-          </div>
-        )}
-
         {/* Empty State */}
-        {isLoggedIn && items.length === 0 && (
+        {items.length === 0 && (
           <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center">
             <div className="text-6xl mb-4">💔</div>
             <h3 className="text-lg font-black text-gray-800 mb-2">
@@ -169,99 +175,12 @@ export default function Wishlist() {
           </div>
         )}
 
-        {/* Grid */}
+        {/* Grid - Using MedicineCard */}
         {items.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {items.map((item) => {
-              const price = parseFloat(item.price || 0);
-              const mrp = parseFloat(item.mrp || 0);
-              const disc =
-                mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
-              return (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-emerald-200 transition group"
-                >
-                  <div className="relative">
-                    <Link to={`/medicines/${item.medicine_id}`}>
-                      <div className="h-44 bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center overflow-hidden">
-                        <MedicineImage
-                          src={item.image_url}
-                          alt={item.name}
-                          categorySlug={item.category_slug}
-                          size="lg"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </Link>
-                    <button
-                      onClick={() => handleRemove(item.medicine_id)}
-                      className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition"
-                      title="Remove from wishlist"
-                    >
-                      ❤️
-                    </button>
-                    {disc > 0 && (
-                      <span className="absolute top-3 left-3 text-xs font-bold text-white bg-green-500 px-2 py-0.5 rounded-full">
-                        {disc}% off
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="p-4">
-                    <Link to={`/medicines/${item.medicine_id}`}>
-                      <h3 className="font-bold text-gray-900 text-sm leading-tight hover:text-emerald-600 transition line-clamp-2">
-                        {item.name}
-                      </h3>
-                    </Link>
-                    {item.brand && (
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {item.brand}
-                      </p>
-                    )}
-                    {item.pack_size && (
-                      <p className="text-xs text-gray-400">{item.pack_size}</p>
-                    )}
-
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="font-black text-gray-900">
-                        ₹{price.toFixed(2)}
-                      </span>
-                      {mrp > price && (
-                        <span className="text-xs text-gray-400 line-through">
-                          ₹{mrp.toFixed(2)}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2 mt-3">
-                      <button
-                        onClick={() => handleAddToCart(item)}
-                        disabled={adding === item.medicine_id}
-                        className="flex-1 py-2.5 rounded-xl text-white text-xs font-bold transition shadow-sm"
-                        style={{
-                          background:
-                            adding === item.medicine_id
-                              ? "#6ee7b7"
-                              : "linear-gradient(135deg, #065f46, #059669)",
-                        }}
-                      >
-                        {adding === item.medicine_id
-                          ? "Adding..."
-                          : "🛒 Add to Cart"}
-                      </button>
-                      <button
-                        onClick={() => handleRemove(item.medicine_id)}
-                        className="px-3 py-2.5 rounded-xl text-xs font-bold border-2 border-red-200 text-red-400 hover:bg-red-50 transition"
-                        title="Delete"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {items.map((item) => (
+              <MedicineCard key={item.id} med={item} />
+            ))}
           </div>
         )}
       </div>

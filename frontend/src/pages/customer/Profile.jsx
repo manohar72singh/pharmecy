@@ -84,7 +84,11 @@ export default function Profile() {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       localStorage.setItem(
         "user",
-        JSON.stringify({ ...user, name: infoForm.name }),
+        JSON.stringify({
+          ...user,
+          name: infoForm.name,
+          profile_image: data.data.profile_image || user.profile_image,
+        }),
       );
       showMsg("success", "Profile updated successfully! ✅");
     } catch (err) {
@@ -105,6 +109,11 @@ export default function Profile() {
     try {
       const { data } = await userService.uploadPhoto(formData);
       setProfile({ ...profile, profile_image: data.data.profile_image });
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ ...user, profile_image: data.data.profile_image }),
+      );
       showMsg("success", "Photo uploaded successfully! ✅");
     } catch (err) {
       showMsg("error", "Photo upload failed.", err);
@@ -179,10 +188,7 @@ export default function Profile() {
     );
 
   const avatarText = profile?.name?.charAt(0)?.toUpperCase() || "U";
-  // const photoUrl = profile?.profile_image
-  //   ? `${import.meta.env.VITE_API_URL}/uploads/profiles/${profile.profile_image}`
-  //   : null;
-  // NAYA CODE (Cloudinary direct URL hai)
+
   const photoUrl = profile?.profile_image || null;
   return (
     <div className="min-h-screen bg-gray-50">

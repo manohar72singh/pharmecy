@@ -36,7 +36,6 @@ export default function Navbar() {
     }
   };
 
-  // ✅ FIX 1: Guest ke liye localStorage se wishlist count lo
   const refreshWishlist = async () => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -240,7 +239,6 @@ export default function Navbar() {
             {/* ── GUEST ── */}
             {!user && (
               <>
-                {/* ✅ FIX 2: Wishlist icon - cart jaisa, mobile pe bhi dikhega */}
                 <Link
                   to="/wishlist"
                   className="relative p-2 rounded-xl hover:bg-gray-100 transition group"
@@ -301,7 +299,6 @@ export default function Navbar() {
                   )}
                 </Link>
 
-                {/* ✅ FIX 3: Login/Register - sirf desktop pe, mobile pe hidden */}
                 <Link
                   to="/login"
                   className="hidden md:block text-sm font-semibold text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-lg hover:bg-emerald-50 transition"
@@ -315,13 +312,78 @@ export default function Navbar() {
                 >
                   Register
                 </Link>
+
+                {/* ✅ Triple icon — SIRF GUEST KE LIYE */}
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
+                >
+                  {menuOpen ? (
+                    <svg
+                      className="w-5 h-5 text-gray-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="w-5 h-5 text-gray-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6h16M4 12h16M4 18h16"
+                      />
+                    </svg>
+                  )}
+                </button>
               </>
             )}
 
             {/* ── CUSTOMER ── */}
             {user && role === "customer" && (
               <>
-                {/* Notifications icon */}
+                <Link
+                  to="/wishlist"
+                  className="relative p-2 rounded-xl hover:bg-gray-100 transition group"
+                  title="My Wishlist"
+                >
+                  <svg
+                    className="w-6 h-6 text-gray-600 group-hover:text-emerald-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    />
+                  </svg>
+                  {wishlistCount > 0 && (
+                    <span
+                      className="absolute -top-1 -right-1 text-white text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 shadow-md"
+                      style={{
+                        background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                      }}
+                    >
+                      {wishlistCount > 99 ? "99+" : wishlistCount}
+                    </span>
+                  )}
+                </Link>
+
                 <Link
                   to="/notifications"
                   className="hidden sm:flex relative p-2 rounded-xl hover:bg-gray-100 transition"
@@ -330,7 +392,6 @@ export default function Navbar() {
                   <span className="text-xl">🔔</span>
                 </Link>
 
-                {/* Cart icon */}
                 <Link
                   to="/cart"
                   className="relative p-2 rounded-xl hover:bg-gray-100 transition group"
@@ -360,7 +421,7 @@ export default function Navbar() {
                   )}
                 </Link>
 
-                {/* Avatar + Dropdown */}
+                {/* ✅ Avatar — SIRF LOGGED IN KE LIYE, triple icon NAHI */}
                 <div className="relative" ref={profileRef}>
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
@@ -369,9 +430,17 @@ export default function Navbar() {
                     <div
                       className={`w-9 h-9 rounded-full ${avatarBg} flex items-center justify-center shadow-sm flex-shrink-0`}
                     >
-                      <span className="text-white font-black text-sm">
-                        {getInitials(user.name)}
-                      </span>
+                      {user.profile_image ? (
+                        <img
+                          src={user.profile_image}
+                          alt="Profile"
+                          className="w-9 h-9 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-white font-black text-sm">
+                          {getInitials(user.name)}
+                        </span>
+                      )}
                     </div>
                     <div className="hidden sm:block text-left">
                       <div className="text-sm font-semibold text-gray-800 leading-none">
@@ -528,41 +597,7 @@ export default function Navbar() {
                 </div>
               )}
 
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
-            >
-              {menuOpen ? (
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              )}
-            </button>
+            {/* ✅ Mobile menu button HATA DIYA yahan se — ab sirf guest ke andar hai */}
           </div>
         </div>
 
@@ -580,65 +615,61 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu❤️ */}
-      {menuOpen && (
+      {/* Mobile menu — SIRF GUEST KE LIYE */}
+      {!user && menuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white px-4 py-4 space-y-1">
-          {/* ✅ FIX 4: Guest mobile menu - wishlist + cart + login/register */}
-          {!user && (
-            <>
-              <div className="flex gap-2 pt-2">
-                <Link
-                  to="/login"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex-1 text-center py-2.5 rounded-xl border-2 border-emerald-600 text-emerald-600 font-bold text-sm"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex-1 text-center py-2.5 rounded-xl text-white font-bold text-sm"
-                  style={{ background: "#059669" }}
-                >
-                  Register
-                </Link>
-              </div>
-            </>
-          )}
+          <div className="flex gap-2 pt-2">
+            <Link
+              to="/login"
+              onClick={() => setMenuOpen(false)}
+              className="flex-1 text-center py-2.5 rounded-xl border-2 border-emerald-600 text-emerald-600 font-bold text-sm"
+            >
+              Login
+            </Link>
+            <Link
+              to="/register"
+              onClick={() => setMenuOpen(false)}
+              className="flex-1 text-center py-2.5 rounded-xl text-white font-bold text-sm"
+              style={{ background: "#059669" }}
+            >
+              Register
+            </Link>
+          </div>
+        </div>
+      )}
 
-          {user && role === "customer" && (
-            <>
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mb-2">
-                <div
-                  className={`w-10 h-10 rounded-full ${avatarBg} flex items-center justify-center flex-shrink-0`}
-                >
-                  <span className="text-white font-black text-sm">
-                    {getInitials(user.name)}
-                  </span>
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900 text-sm">{user.name}</p>
-                  <p className="text-xs text-gray-400">{user.phone}</p>
-                </div>
-              </div>
-              {mobileMenuItems.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition"
-                >
-                  <span>{item.icon}</span> {item.label}
-                </Link>
-              ))}
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-50 transition mt-1"
-              >
-                <span>🚪</span> Logout
-              </button>
-            </>
-          )}
+      {/* Mobile menu — SIRF CUSTOMER KE LIYE (avatar se open hoga, triple icon se nahi) */}
+      {user && role === "customer" && menuOpen && (
+        <div className="md:hidden border-t border-gray-100 bg-white px-4 py-4 space-y-1">
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mb-2">
+            <div
+              className={`w-10 h-10 rounded-full ${avatarBg} flex items-center justify-center flex-shrink-0`}
+            >
+              <span className="text-white font-black text-sm">
+                {getInitials(user.name)}
+              </span>
+            </div>
+            <div>
+              <p className="font-bold text-gray-900 text-sm">{user.name}</p>
+              <p className="text-xs text-gray-400">{user.phone}</p>
+            </div>
+          </div>
+          {mobileMenuItems.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition"
+            >
+              <span>{item.icon}</span> {item.label}
+            </Link>
+          ))}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-50 transition mt-1"
+          >
+            <span>🚪</span> Logout
+          </button>
         </div>
       )}
     </nav>

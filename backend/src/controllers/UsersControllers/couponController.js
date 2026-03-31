@@ -28,12 +28,12 @@ export const getActiveCoupons = async (req, res) => {
         );
       } else {
         [rows] = await pool.query(
-          `SELECT id, code, discount_type, discount_value FROM coupons ORDER BY id DESC`,
+          `SELECT id, code, discount_type, discount_value, min_order_amount FROM coupons ORDER BY id DESC`,
         );
       }
     } else {
       [rows] = await pool.query(
-        `SELECT id, code, discount_type, discount_value FROM coupons ORDER BY id DESC`,
+        `SELECT id, code, discount_type, discount_value, min_order_amount FROM coupons ORDER BY id DESC`,
       );
     }
 

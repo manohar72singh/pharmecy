@@ -5,6 +5,7 @@ import medicineService from "../../services/medicineService";
 import MedicineCard from "../../components/medicine/MedicineCard";
 import CustomerReviews from "../../components/common/CustomerReviews";
 import WhyChooseUs from "../../components/common/WhyChooseUs";
+import couponService from "../../services/couponservice";
 
 // ── Category icons map ────────────────────────────────
 const CAT_ICONS = {
@@ -75,19 +76,37 @@ export default function Home() {
   const [loadingMed, setLoadingMed] = useState(true);
   const [loadingCat, setLoadingCat] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [coupons, setCoupons] = useState([]);
+  const [loadingCoup, setLoadingCoup] = useState(true);
 
   useEffect(() => {
+    // Fetch featured medicines and categories in parallel
     medicineService
       .getFeatured()
       .then(({ data }) => setMedicines(data.data || []))
       .catch(console.error)
       .finally(() => setLoadingMed(false));
 
+    // Fetch categories with medicine counts
     medicineService
       .getCategories()
       .then(({ data }) => setCategories(data.data || []))
       .catch(console.error)
       .finally(() => setLoadingCat(false));
+
+    // coupons (sirf active aur valid ones)
+    couponService
+      .getAll()
+      .then(({ data }) => {
+        const allCoupons = data.data || [];
+        const priorityCodes = ["FIRST15", "FREEDEL", "SAVE100"];
+        const filtered = allCoupons.filter((c) =>
+          priorityCodes.includes(c.code),
+        );
+        setCoupons(filtered);
+      })
+      .catch(console.error)
+      .finally(() => setLoadingCoup(false));
   }, []);
 
   const handleSearch = (e) => {
@@ -249,46 +268,41 @@ export default function Home() {
       {/* ── OFFERS ────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 sm:-mt-6 relative z-10">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          {[
-            {
-              emoji: "🎉",
-              title: "FIRST15",
-              sub: "15% off on first order",
-              color: "from-orange-500 via-orange-600 to-orange-700",
-              shadow: "shadow-orange-500/30",
-            },
-            {
-              emoji: "🚚",
-              title: "FREEDEL",
-              sub: "Free delivery on ₹299+",
-              color: "from-emerald-600 via-teal-600 to-emerald-700",
-              shadow: "shadow-emerald-500/30",
-            },
-            {
-              emoji: "💊",
-              title: "VITA20",
-              sub: "20% off on vitamins",
-              color: "from-blue-500 via-blue-600 to-blue-700",
-              shadow: "shadow-blue-500/30",
-            },
-          ].map((o) => (
-            <div
-              key={o.title}
-              className={`bg-gradient-to-r ${o.color} text-white rounded-xl sm:rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-xl hover:shadow-2xl ${o.shadow} transition-all cursor-pointer hover:scale-105 active:scale-95 border border-white/20`}
-            >
-              <span className="text-3xl sm:text-4xl drop-shadow-lg">
-                {o.emoji}
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="font-black text-sm sm:text-lg tracking-tight">
-                  {o.sub}
+          {!loadingCoup &&
+            coupons.map((coupon, index) => {
+              // Har card ke liye alag color scheme (design ke liye)
+              const colors = [
+                "from-orange-500 via-orange-600 to-orange-700 shadow-orange-500/30",
+                "from-emerald-600 via-teal-600 to-emerald-700 shadow-emerald-500/30",
+                "from-blue-500 via-blue-600 to-blue-700 shadow-blue-500/30",
+              ];
+              const emojis = ["🎉", "🚚", "💊", "🏷️"];
+
+              return (
+                <div
+                  key={coupon.id}
+                  className={`bg-gradient-to-r ${colors[index % colors.length]} text-white rounded-xl sm:rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-xl hover:shadow-2xl transition-all cursor-pointer hover:scale-105 active:scale-95 border border-white/20`}
+                >
+                  <span className="text-3xl sm:text-4xl drop-shadow-lg">
+                    {emojis[index % emojis.length]}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-black text-sm sm:text-lg tracking-tight">
+                      {coupon.discount_type === "percent"
+                        ? `${Math.round(coupon.discount_value)}% OFF`
+                        : `Flat ₹${Math.round(coupon.discount_value)} OFF`}
+                      <span className="block text-[10px] sm:text-xs font-medium opacity-90">
+                        {coupon.description ||
+                          `Min order ₹${coupon.min_order_amount}`}
+                      </span>
+                    </div>
+                    <div className="text-[10px] sm:text-xs mt-1.5 bg-white/30 inline-block px-3 py-1 rounded-full font-mono font-black backdrop-blur-sm border border-white/40 shadow-sm">
+                      {coupon.code}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-[10px] sm:text-xs mt-1.5 bg-white/30 inline-block px-3 py-1 rounded-full font-mono font-black backdrop-blur-sm border border-white/40 shadow-sm">
-                  {o.title}
-                </div>
-              </div>
-            </div>
-          ))}
+              );
+            })}
         </div>
       </section>
 

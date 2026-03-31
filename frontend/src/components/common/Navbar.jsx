@@ -76,7 +76,14 @@ export default function Navbar() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-
+  useEffect(() => {
+    const handler = () => {
+      const stored = localStorage.getItem("user");
+      setUser(stored ? JSON.parse(stored) : null);
+    };
+    window.addEventListener("profileUpdated", handler);
+    return () => window.removeEventListener("profileUpdated", handler);
+  }, []);
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -93,7 +100,8 @@ export default function Navbar() {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      window.location.href = `/medicines?search=${searchQuery}`;
+      const formattedQuery = searchQuery.trim().toLowerCase();
+      window.location.href = `/medicines?search=${formattedQuery}`;
     }
   };
 
@@ -472,9 +480,17 @@ export default function Navbar() {
                           <div
                             className={`w-10 h-10 rounded-full ${avatarBg} flex items-center justify-center flex-shrink-0`}
                           >
-                            <span className="text-white font-black text-sm">
-                              {getInitials(user.name)}
-                            </span>
+                            {user.profile_image ? (
+                              <img
+                                src={user.profile_image}
+                                alt="Profile"
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-white font-black text-sm">
+                                {getInitials(user.name)}
+                              </span>
+                            )}
                           </div>
                           <div>
                             <p className="text-sm font-bold text-gray-900 leading-none">

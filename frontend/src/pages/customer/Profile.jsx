@@ -114,6 +114,7 @@ export default function Profile() {
         "user",
         JSON.stringify({ ...user, profile_image: data.data.profile_image }),
       );
+      window.dispatchEvent(new Event("profileUpdated"));
       showMsg("success", "Photo uploaded successfully! ✅");
     } catch (err) {
       showMsg("error", "Photo upload failed.", err);

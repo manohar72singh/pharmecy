@@ -31,8 +31,9 @@ export const getMedicines = async (req, res) => {
     }
     if (search) {
       where +=
-        " AND (m.name LIKE ? OR m.generic_name LIKE ? OR m.brand LIKE ?)";
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+        " AND (LOWER(m.name) LIKE ? OR LOWER(m.generic_name) LIKE ? OR LOWER(m.brand) LIKE ?)";
+      const searchLower = `%${search.toLowerCase()}%`;
+      params.push(searchLower, searchLower, searchLower);
     }
     if (featured === "true") {
       where += " AND m.is_featured = TRUE";
@@ -165,7 +166,11 @@ export const getFeaturedMedicines = async (req, res) => {
     return success(res, rows, "Featured medicines retrieved successfully.");
   } catch (err) {
     console.error(err);
-    return error(res, "Internal server error while fetching featured medicines.", 500);
+    return error(
+      res,
+      "Internal server error while fetching featured medicines.",
+      500,
+    );
   }
 };
 // ── Get single medicine ───────────────────────────────
@@ -178,7 +183,7 @@ export const getMedicineById = async (req, res) => {
       `SELECT id FROM medicine_batches 
        WHERE medicine_id = ? AND is_active = TRUE AND available_quantity > 0
        ORDER BY expiry_date ASC LIMIT 1`,
-      [id]
+      [id],
     );
     const batchId = batchRows.length > 0 ? batchRows[0].id : null;
 
@@ -206,7 +211,7 @@ export const getMedicineById = async (req, res) => {
       ) mi ON mi.medicine_id = m.id
       LEFT JOIN medicine_batches mb ON mb.id = ?
       WHERE m.id = ? AND m.is_active = TRUE`,
-      [batchId, id]
+      [batchId, id],
     );
 
     if (rows.length === 0)
@@ -218,18 +223,21 @@ export const getMedicineById = async (req, res) => {
        FROM medicine_images
        WHERE medicine_id = ?
        ORDER BY sort_order ASC`,
-      [id]
+      [id],
     );
 
     return success(
       res,
       { ...rows[0], images },
-      "Medicine details retrieved successfully."
+      "Medicine details retrieved successfully.",
     );
-
   } catch (err) {
     console.error(err);
-    return error(res, "Internal server error while fetching medicine details.", 500);
+    return error(
+      res,
+      "Internal server error while fetching medicine details.",
+      500,
+    );
   }
 };
 // ── Get categories ────────────────────────────────────

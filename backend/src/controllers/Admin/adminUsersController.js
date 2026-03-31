@@ -7,19 +7,28 @@ export const getUsers = async (req, res) => {
     const offset = (page - 1) * limit;
     let where = "WHERE 1=1";
     const params = [];
+
     if (search) {
       where += " AND (u.name LIKE ? OR u.phone LIKE ? OR u.email LIKE ?)";
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
+
     if (role) {
+      // It's safer to use the role_name from the joined table
       where += " AND r.role_name = ?";
       params.push(role);
     }
 
+    // 1. Get Total Count
     const [[{ total }]] = await pool.query(
-      `SELECT COUNT(*) as total FROM users u JOIN user_roles r ON u.role_id = r.id ${where}`,
+      `SELECT COUNT(DISTINCT u.id) as total 
+       FROM users u 
+       JOIN user_roles r ON u.role_id = r.id 
+       ${where}`,
       params,
     );
+
+    // 2. Get Users with expanded GROUP BY
     const [users] = await pool.query(
       `SELECT u.id, u.name, u.email, u.phone, u.profile_image, u.is_verified, u.created_at,
               r.role_name AS role,
@@ -28,11 +37,20 @@ export const getUsers = async (req, res) => {
        JOIN user_roles r ON u.role_id = r.id
        LEFT JOIN orders o ON u.id = o.user_id
        ${where}
-       GROUP BY u.id
+       GROUP BY 
+         u.id, 
+         u.name, 
+         u.email, 
+         u.phone, 
+         u.profile_image, 
+         u.is_verified, 
+         u.created_at, 
+         r.role_name
        ORDER BY u.created_at DESC
        LIMIT ? OFFSET ?`,
       [...params, parseInt(limit), parseInt(offset)],
     );
+
     return success(
       res,
       {
@@ -44,7 +62,7 @@ export const getUsers = async (req, res) => {
       "Users fetched.",
     );
   } catch (err) {
-    console.error(err);
+    console.error("GetUsers Error:", err);
     return error(res, "Fetch failed.", 500);
   }
 };

@@ -1,7 +1,7 @@
-// import pool from "../../config/db.js";
-// import { success, error } from "../../utils/response.js";
+import pool from "../../config/db.js";
+import { success, error } from "../../utils/response.js";
 
-// // ── Get User Wishlist ────────────────────────────────
+// ── Get User Wishlist ────────────────────────────────
 // export const getWishlist = async (req, res) => {
 //   try {
 //     const [rows] = await pool.query(
@@ -10,7 +10,11 @@
 //              m.name, m.brand, m.pack_size,
 //              mi.image_url, c.slug AS category_slug,
 //              mb.id AS batch_id,
-//              mb.selling_price AS price, mb.mrp
+//              mb.selling_price AS price, mb.mrp,
+//              CASE
+//                WHEN mb.id IS NULL THEN 'out_of_stock'
+//                ELSE 'in_stock'
+//              END AS stock_status
 //       FROM wishlists w
 //       JOIN medicines m ON w.medicine_id = m.id
 //       LEFT JOIN medicine_images mi ON mi.medicine_id = m.id AND mi.is_primary = 1
@@ -38,59 +42,19 @@
 //     return error(res, "Failed to retrieve wishlist items.", 500);
 //   }
 // };
-
-// // ── Toggle Wishlist (Add/Remove) ─────────────────────
-// export const toggleWishlist = async (req, res) => {
-//   try {
-//     const { medicine_id } = req.body;
-//     if (!medicine_id) return error(res, "Medicine ID is required.", 400);
-//     const [existing] = await pool.query(
-//       "SELECT id FROM wishlists WHERE user_id = ? AND medicine_id = ?",
-//       [req.user.id, medicine_id],
-//     );
-//     if (existing.length) {
-//       await pool.query("DELETE FROM wishlists WHERE id = ?", [existing[0].id]);
-//       return success(res, { wishlisted: false }, "Item removed from wishlist.");
-//     } else {
-//       await pool.query(
-//         "INSERT INTO wishlists (user_id, medicine_id) VALUES (?, ?)",
-//         [req.user.id, medicine_id],
-//       );
-//       return success(res, { wishlisted: true }, "Item added to your wishlist.");
-//     }
-//   } catch (err) {
-//     console.error(err);
-//     return error(res, "An error occurred while updating wishlist.", 500);
-//   }
-// };
-
-// // ── Remove from Wishlist ──────────────────────────────
-// export const removeFromWishlist = async (req, res) => {
-//   try {
-//     await pool.query(
-//       "DELETE FROM wishlists WHERE user_id = ? AND medicine_id = ?",
-//       [req.user.id, req.params.medicine_id],
-//     );
-//     return success(res, {}, "Item successfully removed from wishlist.");
-//   } catch (err) {
-//     console.error(err);
-//     return error(res, "Failed to remove item from wishlist.", 500);
-//   }
-// };
-
-import pool from "../../config/db.js";
-import { success, error } from "../../utils/response.js";
-
-// ── Get User Wishlist ────────────────────────────────
 export const getWishlist = async (req, res) => {
   try {
     const [rows] = await pool.query(
       `
       SELECT w.id, w.medicine_id,
              m.name, m.brand, m.pack_size,
+             m.requires_prescription, m.schedule_code,
              mi.image_url, c.slug AS category_slug,
              mb.id AS batch_id,
-             mb.selling_price AS price, mb.mrp,
+             mb.selling_price,
+             mb.mrp,
+             mb.available_quantity,
+             mb.expiry_date,
              CASE 
                WHEN mb.id IS NULL THEN 'out_of_stock'
                ELSE 'in_stock'
@@ -122,7 +86,6 @@ export const getWishlist = async (req, res) => {
     return error(res, "Failed to retrieve wishlist items.", 500);
   }
 };
-
 // ── Toggle Wishlist (Add/Remove) ─────────────────────
 export const toggleWishlist = async (req, res) => {
   try {

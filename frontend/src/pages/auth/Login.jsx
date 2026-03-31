@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import authService from "../../services/authService";
 import { syncLocalCartToDB } from "../../services/cartService";
+import { syncLocalWishlistToDB } from "../../services/wishlistService";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -17,6 +18,36 @@ export default function Login() {
     setError("");
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setError("");
+  //   if (!form.phone || !form.password)
+  //     return setError("Please fill in all fields.");
+  //   setLoading(true);
+  //   try {
+  //     const { data } = await authService.login(form);
+  //     localStorage.setItem("token", data.data.token);
+  //     localStorage.setItem("user", JSON.stringify(data.data.user));
+
+  //     await syncLocalCartToDB();
+  //     window.dispatchEvent(new Event("cartUpdated"));
+
+  //     const role = data.data.user.role;
+  //     if (role === "admin" || role === "super_admin" || role === "pharmacist") {
+  //       navigate("/admin/dashboard");
+  //     } else if (role === "delivery_boy") {
+  //       navigate("/delivery");
+  //     } else {
+  //       navigate(from);
+  //     }
+  //   } catch (err) {
+  //     setError(
+  //       err.response?.data?.message || "Invalid phone number or password.",
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -28,6 +59,7 @@ export default function Login() {
       localStorage.setItem("token", data.data.token);
       localStorage.setItem("user", JSON.stringify(data.data.user));
 
+      await syncLocalWishlistToDB(data.data.token); // ✅ YE ADD KARO
       await syncLocalCartToDB();
       window.dispatchEvent(new Event("cartUpdated"));
 

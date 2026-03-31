@@ -2,53 +2,14 @@ import pool from "../../config/db.js";
 import { success, error } from "../../utils/response.js";
 
 // ── Get User Wishlist ────────────────────────────────
-// export const getWishlist = async (req, res) => {
-//   try {
-//     const [rows] = await pool.query(
-//       `
-//       SELECT w.id, w.medicine_id,
-//              m.name, m.brand, m.pack_size,
-//              mi.image_url, c.slug AS category_slug,
-//              mb.id AS batch_id,
-//              mb.selling_price AS price, mb.mrp,
-//              CASE
-//                WHEN mb.id IS NULL THEN 'out_of_stock'
-//                ELSE 'in_stock'
-//              END AS stock_status
-//       FROM wishlists w
-//       JOIN medicines m ON w.medicine_id = m.id
-//       LEFT JOIN medicine_images mi ON mi.medicine_id = m.id AND mi.is_primary = 1
-//       LEFT JOIN categories c ON m.category_id = c.id
-//       LEFT JOIN (
-//         SELECT mb1.*
-//         FROM medicine_batches mb1
-//         INNER JOIN (
-//           SELECT medicine_id, MIN(expiry_date) AS min_expiry
-//           FROM medicine_batches
-//           WHERE batch_status = 'active' AND available_quantity > 0
-//           GROUP BY medicine_id
-//         ) mb2 ON mb1.medicine_id = mb2.medicine_id
-//               AND mb1.expiry_date = mb2.min_expiry
-//         WHERE mb1.batch_status = 'active' AND mb1.available_quantity > 0
-//       ) mb ON mb.medicine_id = m.id
-//       WHERE w.user_id = ?
-//       ORDER BY w.id DESC
-//       `,
-//       [req.user.id],
-//     );
-//     return success(res, rows, "Wishlist retrieved successfully.");
-//   } catch (err) {
-//     console.error(err);
-//     return error(res, "Failed to retrieve wishlist items.", 500);
-//   }
-// };
 export const getWishlist = async (req, res) => {
   try {
     const [rows] = await pool.query(
       `
       SELECT w.id, w.medicine_id,
              m.name, m.brand, m.pack_size,
-             m.requires_prescription, m.schedule_code,
+             m.requires_prescription,
+             ds.schedule_code,
              mi.image_url, c.slug AS category_slug,
              mb.id AS batch_id,
              mb.selling_price,
@@ -61,6 +22,7 @@ export const getWishlist = async (req, res) => {
              END AS stock_status
       FROM wishlists w
       JOIN medicines m ON w.medicine_id = m.id
+      LEFT JOIN drug_schedules ds ON m.schedule_id = ds.id
       LEFT JOIN medicine_images mi ON mi.medicine_id = m.id AND mi.is_primary = 1
       LEFT JOIN categories c ON m.category_id = c.id
       LEFT JOIN (

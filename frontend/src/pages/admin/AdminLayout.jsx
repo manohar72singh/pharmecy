@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import api from "../../services/api";
+import notificationService from "../../services/notificationservice";
 
 const MENU = [
   { to: "/admin/dashboard", icon: "📊", label: "Dashboard" },
@@ -29,7 +29,7 @@ export default function AdminLayout({ children }) {
   useEffect(() => {
     const fetchUnread = async () => {
       try {
-        const { data } = await api.get("/notifications");
+        const { data } = await notificationService.getAll();
         setUnreadCount(data.data?.unread || 0);
       } catch (err) {
         console.error("Failed to fetch admin notifications", err);

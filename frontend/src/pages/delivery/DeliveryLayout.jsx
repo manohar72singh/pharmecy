@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import api from "../../services/api";
+import notificationService from "../../services/notificationservice";
 
 const NAV = [
   { to: "/delivery", icon: "⚡", label: "Dashboard" },
@@ -17,7 +17,7 @@ export default function DeliveryLayout({ children }) {
   useEffect(() => {
     const fetchUnread = async () => {
       try {
-        const { data } = await api.get("/notifications");
+        const { data } = await notificationService.getAll();
         setUnreadCount(data.data?.unread || 0);
       } catch (err) {
         console.error("Failed to fetch delivery boy notifications", err);

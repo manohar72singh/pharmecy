@@ -12,43 +12,47 @@ const __dirname = path.dirname(__filename);
 // CA certificate path
 const caPath = path.join(__dirname, "ca.pem");
 
-// SSL configuration - dynamic based on environment
+/**
+ * SSL configuration - dynamic based on environment
+ * Cloud databases (TiDB, Render, etc.) REQUIRE secure connections.
+ */
 const getSSLConfig = () => {
   const dbHost = process.env.DB_HOST || '';
-  const isSSL = String(process.env.DB_SSL).trim() === "true";
-  const isExplicitlyDisabled = String(process.env.DB_SSL).trim() === "false";
-  const isLocal = dbHost.includes('localhost') || dbHost.includes('127.0.0.1');
+  const dbSslEnv = String(process.env.DB_SSL).trim().toLowerCase();
   
-  // Base SSL options
+  const isRender = process.env.RENDER === "true" || !!process.env.RENDER_EXTERNAL_URL;
+  const isProduction = process.env.NODE_ENV === "production";
+  const isLocalHost = dbHost.includes('localhost') || dbHost.includes('127.0.0.1');
+
+  // 1. Explicitly DISABLED (Only if explicitly set to "false")
+  if (dbSslEnv === "false") {
+    console.log("🔓 Database SSL explicitly disabled via DB_SSL env var.");
+    return false;
+  }
+
+  // TiDB Cloud / managed DBs usually need these options
   const baseSSLOptions = {
     rejectUnauthorized: true,
     minVersion: 'TLSv1.2'
   };
 
-  // 1. If CA certificate exists, use it (highest priority)
+  // 2. High Priority: Use specific CA certificate file if it exists
   if (fs.existsSync(caPath)) {
-    console.log("✅ Using CA certificate for secure connection");
+    console.log("✅ Using local CA certificate (ca.pem) for secure connection.");
     return {
       ...baseSSLOptions,
       ca: fs.readFileSync(caPath)
     };
-  }
-
-  // 2. If connecting to a remote host (like TiDB Cloud), force SSL
-  // Most cloud providers prohibit insecure connections.
-  if (!isLocal && dbHost.length > 0 && dbHost !== 'localhost') {
-    console.log(`🛡️ Remote host detected (${dbHost}), ensuring secure SSL connection`);
+  } 
+  
+  // 3. AUTO-DETECT for Cloud/Production/Remote hosts
+  // If we are on Render, in Production, or connecting to a non-local host, we FORCE SSL.
+  if (isRender || isProduction || dbSslEnv === "true" || (!isLocalHost && dbHost.length > 0)) {
+    console.log(`🛡️ Enabling secure SSL connection (${isRender ? "Render" : isProduction ? "Production" : !isLocalHost ? "Remote Host" : "Manual"})`);
     return baseSSLOptions;
   }
 
-  // 3. If explicitly requested via environment variable
-  if (isSSL) {
-    console.log("🛡️ Enabling secure SSL connection (Standard)");
-    return baseSSLOptions;
-  }
-
-  // Default for local development
-  console.log("🔓 Database SSL disabled for local connection");
+  // 4. Default to false (for local dev without DB_SSL=true)
   return false;
 };
 

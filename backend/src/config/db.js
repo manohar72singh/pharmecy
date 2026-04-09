@@ -18,41 +18,43 @@ const caPath = path.join(__dirname, "ca.pem");
  */
 const getSSLConfig = () => {
   const dbHost = process.env.DB_HOST || '';
-  const dbSslEnv = String(process.env.DB_SSL).trim().toLowerCase();
+  const dbSslEnv = String(process.env.DB_SSL).toLowerCase().trim();
   
   const isRender = process.env.RENDER === "true" || !!process.env.RENDER_EXTERNAL_URL;
   const isProduction = process.env.NODE_ENV === "production";
   const isLocalHost = dbHost.includes('localhost') || dbHost.includes('127.0.0.1');
 
-  // 1. Explicitly DISABLED (Only if explicitly set to "false")
-  if (dbSslEnv === "false") {
-    console.log("🔓 Database SSL explicitly disabled via DB_SSL env var.");
+  // 1. Only allow disabling SSL if we are on localhost.
+  // This prevents local .env files (DB_SSL=false) from breaking remote cloud DBs on Render.
+  if (isLocalHost && dbSslEnv === "false") {
+    console.log("🔓 Database SSL disabled for local connection.");
     return false;
   }
 
-  // TiDB Cloud / managed DBs usually need these options
+  // Base options for secure cloud databases (TiDB Cloud, etc.)
   const baseSSLOptions = {
     rejectUnauthorized: true,
     minVersion: 'TLSv1.2'
   };
 
-  // 2. High Priority: Use specific CA certificate file if it exists
-  if (fs.existsSync(caPath)) {
-    console.log("✅ Using local CA certificate (ca.pem) for secure connection.");
-    return {
-      ...baseSSLOptions,
-      ca: fs.readFileSync(caPath)
-    };
-  } 
-  
-  // 3. AUTO-DETECT for Cloud/Production/Remote hosts
-  // If we are on Render, in Production, or connecting to a non-local host, we FORCE SSL.
-  if (isRender || isProduction || dbSslEnv === "true" || (!isLocalHost && dbHost.length > 0)) {
-    console.log(`🛡️ Enabling secure SSL connection (${isRender ? "Render" : isProduction ? "Production" : !isLocalHost ? "Remote Host" : "Manual"})`);
+  // 2. FORCED SSL for Remote/Production/Render
+  // If we are NOT on localhost, or we are on Render, or in Production, or DB_SSL=true
+  if (!isLocalHost || isRender || isProduction || dbSslEnv === "true") {
+    
+    // Check for CA certificate file
+    if (fs.existsSync(caPath)) {
+      console.log(`✅ Using CA certificate for ${isRender ? 'Render' : !isLocalHost ? 'Remote' : 'Secure'} connection.`);
+      return {
+        ...baseSSLOptions,
+        ca: fs.readFileSync(caPath)
+      };
+    }
+
+    console.log(`🛡️ Enabling secure SSL connection (${isRender ? "Render" : isProduction ? "Production" : !isLocalHost ? "Remote Host" : "Manual"}).`);
     return baseSSLOptions;
   }
 
-  // 4. Default to false (for local dev without DB_SSL=true)
+  // Default for special local cases
   return false;
 };
 

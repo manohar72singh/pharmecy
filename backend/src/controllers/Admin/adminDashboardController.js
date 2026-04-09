@@ -84,7 +84,7 @@ export const getRecentOrders = async (req, res) => {
 export const getLowStockItems = async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT mb.id, mb.medicine_id, mb.batch_number, mb.available_quantity, mb.expiry_date,
+      SELECT mb.id, mb.medicine_id, mb.batch_no, mb.available_quantity, mb.expiry_date,
              m.name, m.brand
       FROM medicine_batches mb
       JOIN medicines m ON mb.medicine_id = m.id

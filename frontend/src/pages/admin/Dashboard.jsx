@@ -290,7 +290,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
-                    <p className="text-[10px] text-gray-400">Batch: {item.batch_number} · {item.brand}</p>
+                    <p className="text-[10px] text-gray-400">Batch: {item.batch_no} · {item.brand}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-black text-red-600">{item.available_quantity}</p>

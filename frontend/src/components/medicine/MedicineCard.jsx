@@ -72,11 +72,17 @@ export default function MedicineCard({ med }) {
   const isLoggedIn = !!localStorage.getItem("token");
 
   useEffect(() => {
-    const cached = JSON.parse(localStorage.getItem("wishlistIds") || "[]");
-    const medIdStr = med.id?.toString();
-    if (cached.includes(medIdStr)) {
-      setWishlisted(true);
-    }
+    const checkWishlist = () => {
+      const cached = JSON.parse(localStorage.getItem("wishlistIds") || "[]");
+      const medIdStr = med.id?.toString();
+      // Ensure we compare strings properly
+      const isIncluded = cached.some((id) => id?.toString() === medIdStr);
+      setWishlisted(isIncluded);
+    };
+
+    checkWishlist();
+    window.addEventListener("wishlistUpdated", checkWishlist);
+    return () => window.removeEventListener("wishlistUpdated", checkWishlist);
   }, [med.id]);
 
   // ── Add to Cart with Animation ───────────────────────────────────

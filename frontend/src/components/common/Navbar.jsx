@@ -70,6 +70,7 @@ export default function Navbar() {
     refreshCart();
     refreshWishlist();
     refreshNotifications();
+    wishlistService.refreshWishlistCache(); // ✅ Update heart colors cache
   }, [location.pathname]);
 
   useEffect(() => {

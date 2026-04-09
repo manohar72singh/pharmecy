@@ -17,9 +17,26 @@ export const syncLocalWishlistToDB = async () => {
       ids.map((id) => wishlistService.toggle(parseInt(id))),
     );
 
-    localStorage.removeItem("wishlistIds");
-    window.dispatchEvent(new Event("wishlistUpdated"));
+    // Sync complete hone ke baad source of truth (DB) se cache update karein
+    await refreshWishlistCache();
   } catch (err) {
     console.error("Wishlist sync failed:", err);
+  }
+};
+
+// ✅ DB se wishlist IDs lekar localStorage update karne ke liye
+export const refreshWishlistCache = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const { data } = await wishlistService.getAll();
+    if (data.success) {
+      const ids = (data.data || []).map((item) => item.medicine_id?.toString());
+      localStorage.setItem("wishlistIds", JSON.stringify(ids));
+      window.dispatchEvent(new Event("wishlistUpdated"));
+    }
+  } catch (err) {
+    console.error("Failed to refresh wishlist cache:", err);
   }
 };

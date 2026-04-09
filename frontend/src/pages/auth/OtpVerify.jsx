@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import authService from "../../services/authService";
+import { syncLocalWishlistToDB } from "../../services/wishlistService";
+import { syncLocalCartToDB } from "../../services/cartService";
 
 export default function OtpVerify() {
   const navigate = useNavigate();
@@ -73,6 +75,11 @@ export default function OtpVerify() {
       const { data } = await authService.verifyOtp({ phone, otp: otpStr });
       localStorage.setItem("token", data.data.token);
       localStorage.setItem("user", JSON.stringify(data.data.user));
+      
+      // ✅ Sync Guest Data
+      await syncLocalWishlistToDB();
+      await syncLocalCartToDB();
+      
       setVerified(true);
       setTimeout(() => navigate("/"), 2000);
     } catch (err) {

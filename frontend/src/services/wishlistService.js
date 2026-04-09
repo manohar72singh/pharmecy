@@ -7,22 +7,14 @@ const wishlistService = {
 export default wishlistService;
 
 // ✅ Guest wishlist ko login ke baad DB me sync karne ke liye
-export const syncLocalWishlistToDB = async (token) => {
+export const syncLocalWishlistToDB = async () => {
   try {
     const ids = JSON.parse(localStorage.getItem("wishlistIds") || "[]");
     if (ids.length === 0) return;
 
+    // Standard toggle use karein jo api instance use karta hai
     await Promise.allSettled(
-      ids.map((id) =>
-        fetch(`${import.meta.env.VITE_API_URL}/wishlist/toggle`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ medicine_id: parseInt(id) }),
-        }),
-      ),
+      ids.map((id) => wishlistService.toggle(parseInt(id))),
     );
 
     localStorage.removeItem("wishlistIds");

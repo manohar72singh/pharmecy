@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import cartService from "../../services/cartService";
 import wishlistService from "../../services/wishlistService";
+import notificationService from "../../services/notificationservice";
 
 export const updateCartCount = () => {
   window.dispatchEvent(new Event("cartUpdated"));
@@ -55,7 +56,7 @@ export default function Navbar() {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        const { data } = await api.get("/notifications");
+        const { data } = await notificationService.getAll();
         setUnreadCount(data.data?.unread || 0);
       } catch (err) {
         console.error("Failed to fetch notification count", err);

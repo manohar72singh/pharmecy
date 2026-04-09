@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import MedicineCard from "../../components/medicine/MedicineCard";
+import wishlistService from "../../services/wishlistService";
+import api from "../../services/api";
 
 // ── Guest wishlist helpers (localStorage) ─────────────
 const localWishlist = {
@@ -37,12 +39,7 @@ export default function Wishlist() {
       setLoading(true);
       try {
         if (isLoggedIn) {
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/wishlist`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          });
-          const data = await res.json();
+          const { data } = await wishlistService.getAll();
 
           if (data.success) {
             const mapped = (data.data || []).map((item) => ({
@@ -64,17 +61,13 @@ export default function Wishlist() {
           } else {
             // Each medicine ki detail fetch karo
             const results = await Promise.allSettled(
-              ids.map((id) =>
-                fetch(`${import.meta.env.VITE_API_URL}/medicines/${id}`).then(
-                  (r) => r.json(),
-                ),
-              ),
+              ids.map((id) => api.get(`/medicines/${id}`)),
             );
 
             // Only successful and valid medicines
             const medicines = results
-              .filter((r) => r.status === "fulfilled" && r.value?.success)
-              .map((r) => r.value.data);
+              .filter((r) => r.status === "fulfilled" && r.value?.data?.success)
+              .map((r) => r.value.data.data);
 
             // Clean localStorage - remove invalid IDs
             const validIds = medicines.map((m) => m.id);

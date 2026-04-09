@@ -14,25 +14,36 @@ const caPath = path.join(__dirname, "ca.pem");
 
 // SSL configuration - dynamic based on environment
 const getSSLConfig = () => {
-  // Check if DB_SSL is explicitly set to false
+  const isSSL = String(process.env.DB_SSL).trim() === "true";
+  
+  // If explicitly disabled (e.g. localhost)
   if (String(process.env.DB_SSL).trim() === "false") {
     console.log("🔓 Database SSL disabled for local connection");
     return false;
   }
 
-  // Check if CA file exists
+  // TiDB Cloud / managed DBs usually need these options
+  const baseSSLOptions = {
+    rejectUnauthorized: true,
+    minVersion: 'TLSv1.2'
+  };
+
+  // Check if CA file exists (for specific custom certs)
   if (fs.existsSync(caPath)) {
     console.log("✅ Using CA certificate for secure connection");
     return {
-      ca: fs.readFileSync(caPath),
-      rejectUnauthorized: true
+      ...baseSSLOptions,
+      ca: fs.readFileSync(caPath)
     };
-  } else {
-    // If we're on a server and DB_SSL is true but ca.pem isn't there, 
-    // try standard SSL or return false if we're not sure
-    console.log("⚠️ CA certificate not found, checking SSL status...");
-    return process.env.DB_SSL === "true" ? { rejectUnauthorized: true } : false;
+  } 
+  
+  // If DB_SSL is true, provide standard secure connection options
+  if (isSSL) {
+    console.log("🛡️ Enabling secure SSL connection (Standard)");
+    return baseSSLOptions;
   }
+
+  return false;
 };
 
 const pool = mysql.createPool({

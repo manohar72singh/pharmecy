@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import api from "../../services/api";
 
 const MENU = [
   { to: "/admin/dashboard", icon: "📊", label: "Dashboard" },
@@ -12,6 +13,8 @@ const MENU = [
   { to: "/admin/purchase", icon: "🛒", label: "Purchase" },
   { to: "/admin/delivery", icon: "🚴", label: "Delivery" },
   { to: "/admin/coupons", icon: "🏷️", label: "Coupons" },
+  { to: "/admin/broadcast", icon: "📢", label: "Broadcast" },
+  { to: "/admin/pincodes", icon: "📍", label: "Pincodes" },
   { to: "/admin/subscriptions", icon: "🔁", label: "Subscriptions" },
   { to: "/admin/reports", icon: "📈", label: "Reports" },
 ];
@@ -20,7 +23,23 @@ export default function AdminLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const user = JSON.parse(localStorage.getItem("user") || "null");
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const { data } = await api.get("/notifications");
+        setUnreadCount(data.data?.unread || 0);
+      } catch (err) {
+        console.error("Failed to fetch admin notifications", err);
+      }
+    };
+    fetchUnread();
+    // Refresh every 2 minutes
+    const interval = setInterval(fetchUnread, 120000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -210,9 +229,18 @@ export default function AdminLayout({ children }) {
           </div>
 
           {/* Notifications */}
-          <button className="relative p-2 rounded-xl hover:bg-gray-100 transition">
+          <Link
+            to="/notifications"
+            className="relative p-2 rounded-xl hover:bg-gray-100 transition"
+            title="My Notifications"
+          >
             <span className="text-xl">🔔</span>
-          </button>
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 text-[10px] font-black bg-red-500 text-white min-w-[18px] h-[18px] rounded-full flex items-center justify-center border-2 border-white animate-bounce-short">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </Link>
 
           {/* Avatar */}
           <div className="flex items-center gap-2 pl-2 border-l border-gray-200">

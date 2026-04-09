@@ -12,8 +12,14 @@ const __dirname = path.dirname(__filename);
 // CA certificate path
 const caPath = path.join(__dirname, "ca.pem");
 
-// SSL configuration - local aur production dono ke liye
+// SSL configuration - dynamic based on environment
 const getSSLConfig = () => {
+  // Check if DB_SSL is explicitly set to false
+  if (String(process.env.DB_SSL).trim() === "false") {
+    console.log("🔓 Database SSL disabled for local connection");
+    return false;
+  }
+
   // Check if CA file exists
   if (fs.existsSync(caPath)) {
     console.log("✅ Using CA certificate for secure connection");
@@ -22,10 +28,10 @@ const getSSLConfig = () => {
       rejectUnauthorized: true
     };
   } else {
-    console.log("⚠️  CA certificate not found, using basic SSL");
-    return {
-      rejectUnauthorized: true
-    };
+    // If we're on a server and DB_SSL is true but ca.pem isn't there, 
+    // try standard SSL or return false if we're not sure
+    console.log("⚠️ CA certificate not found, checking SSL status...");
+    return process.env.DB_SSL === "true" ? { rejectUnauthorized: true } : false;
   }
 };
 
@@ -34,7 +40,7 @@ const pool = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 4000,
+  port: process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,

@@ -80,3 +80,21 @@ export const getRecentOrders = async (req, res) => {
     return error(res, "Fetch failed.", 500);
   }
 };
+
+export const getLowStockItems = async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT mb.id, mb.medicine_id, mb.batch_number, mb.available_quantity, mb.expiry_date,
+             m.name, m.brand
+      FROM medicine_batches mb
+      JOIN medicines m ON mb.medicine_id = m.id
+      WHERE mb.available_quantity <= 10 AND mb.batch_status = 'active'
+      ORDER BY mb.available_quantity ASC
+      LIMIT 20
+    `);
+    return success(res, rows, "Low stock items fetched.");
+  } catch (err) {
+    console.error(err);
+    return error(res, "Fetch failed.", 500);
+  }
+};

@@ -1,4 +1,6 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import api from "../../services/api";
 
 const NAV = [
   { to: "/delivery", icon: "⚡", label: "Dashboard" },
@@ -9,7 +11,23 @@ const NAV = [
 export default function DeliveryLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(0);
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const { data } = await api.get("/notifications");
+        setUnreadCount(data.data?.unread || 0);
+      } catch (err) {
+        console.error("Failed to fetch delivery boy notifications", err);
+      }
+    };
+    fetchUnread();
+    // Refresh every 2 minutes
+    const interval = setInterval(fetchUnread, 120000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -89,6 +107,18 @@ export default function DeliveryLayout({ children }) {
 
           <div className="ml-auto flex items-center gap-2">
             <div className="flex items-center gap-2">
+              <Link
+                to="/notifications"
+                className="relative p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition"
+              >
+                <span className="text-xl">🔔</span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 text-[10px] font-black bg-red-500 text-white min-w-[18px] h-[18px] rounded-full flex items-center justify-center border-2 border-emerald-800 animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
+              </Link>
+
               <div
                 className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm shadow-lg"
                 style={{

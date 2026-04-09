@@ -257,8 +257,15 @@ export default function Profile() {
                 </p>
               )}
 
-              <div className="mt-2 sm:mt-3 inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-50 text-emerald-600">
-                ✅ Verified
+              <div className="mt-2 sm:mt-3 flex flex-col items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
+                  ✅ Verified
+                </div>
+                {profile?.loyalty_points !== undefined && (
+                  <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-xl text-[10px] sm:text-xs font-black bg-amber-50 text-amber-700 border border-amber-100 shadow-sm animate-pulse">
+                    🪙 {profile.loyalty_points} Reward Points
+                  </div>
+                )}
               </div>
 
               <p className="text-[10px] sm:text-xs text-gray-400 mt-2 sm:mt-3">

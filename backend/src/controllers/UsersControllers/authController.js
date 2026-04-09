@@ -3,6 +3,7 @@ import pool from "../../config/db.js";
 import { generateToken } from "../../utils/jwt.js";
 import { generateOTP, getOTPExpiry } from "../../utils/otp.js";
 import { success, error } from "../../utils/response.js";
+import { createNotification } from "../../utils/notificationHelper.js";
 
 // ── Register ──────────────────────────────────────────
 export const register = async (req, res) => {
@@ -90,6 +91,14 @@ export const verifyOTP = async (req, res) => {
     await pool.query(
       "UPDATE users SET is_verified = TRUE, otp_code = NULL, otp_expires_at = NULL WHERE id = ?",
       [user.id],
+    );
+
+    // ✅ Welcome Notification
+    await createNotification(
+      user.id,
+      "Welcome to MediShop! 🎉",
+      "Thank you for joining us. You can now order medicines and track your health easily.",
+      "general"
     );
 
     const [roleRows] = await pool.query(

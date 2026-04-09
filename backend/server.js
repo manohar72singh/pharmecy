@@ -29,33 +29,28 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-// app.use(
-//   cors({
-//     origin: process.env.FRONTEND_URL || "http://localhost:5173",
-//     credentials: true,
-//   }),
-// );
-
+// CORS configuration dynamically handles local and production origins
 app.use(
   cors({
     origin: (origin, callback) => {
       const allowed = [
         "http://localhost:5173",
         "https://pharmecy-1.onrender.com",
+        "https://pharmecy-2.onrender.com", // Example extra origin
         process.env.FRONTEND_URL,
       ].filter(Boolean);
 
       if (!origin || allowed.includes(origin)) {
         callback(null, true);
       } else {
+        console.warn(`🛑 CORS blocked origin: ${origin}`);
         callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
   })
 );
-// app.use(morgan("dev"));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

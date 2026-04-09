@@ -51,11 +51,24 @@ export default function Navbar() {
     }
   };
 
+  const refreshNotifications = async () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const { data } = await api.get("/notifications");
+        setUnreadCount(data.data?.unread || 0);
+      } catch (err) {
+        console.error("Failed to fetch notification count", err);
+      }
+    }
+  };
+
   useEffect(() => {
     const stored = localStorage.getItem("user");
     setUser(stored ? JSON.parse(stored) : null);
     refreshCart();
     refreshWishlist();
+    refreshNotifications();
   }, [location.pathname]);
 
   useEffect(() => {
@@ -398,6 +411,16 @@ export default function Navbar() {
                   title="Notifications"
                 >
                   <span className="text-xl">🔔</span>
+                  {unreadCount > 0 && (
+                    <span
+                      className="absolute top-1 right-1 text-white text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1 shadow-md animate-bounce"
+                      style={{
+                        background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                      }}
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
                 </Link>
 
                 <Link

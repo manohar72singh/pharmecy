@@ -1,5 +1,6 @@
 import pool from "../../config/db.js";
 import { success, error } from "../../utils/response.js";
+import { createNotification, notifyAdmins } from "../../utils/notificationHelper.js";
 
 // ── Order Number Generate ─────────────────────────────
 const generateOrderNumber = () => {
@@ -21,6 +22,7 @@ export const placeOrder = async (req, res) => {
       payment_mode,
       coupon_id = null,
       discount_amount: clientDiscount = 0,
+      use_loyalty_points = false,
       notes = null,
     } = req.body;
 
@@ -32,11 +34,20 @@ export const placeOrder = async (req, res) => {
       return error(res, "Invalid payment mode selected.", 400);
 
     const [addr] = await conn.query(
-      "SELECT id FROM customer_addresses WHERE id = ? AND user_id = ?",
+      "SELECT id, pincode FROM customer_addresses WHERE id = ? AND user_id = ?",
       [address_id, userId],
     );
     if (addr.length === 0)
       return error(res, "Delivery address not found.", 404);
+
+    // ✅ Pincode Validation
+    const [serviceable] = await conn.query(
+      "SELECT id FROM serviceable_pincodes WHERE pincode = ? AND is_active = 1",
+      [addr[0].pincode]
+    );
+    if (serviceable.length === 0) {
+      return error(res, `Sorry, we do not currently deliver to pincode ${addr[0].pincode}.`, 400);
+    }
 
     const [cartItems] = await conn.query(
       `SELECT ci.id, ci.medicine_id, ci.batch_id, ci.quantity,
@@ -82,7 +93,18 @@ export const placeOrder = async (req, res) => {
 
     const deliveryCharge = subtotal >= 299 ? 0 : 49;
     const taxAmount = 0;
-    const totalAmount = subtotal - discountAmount + deliveryCharge + taxAmount;
+    let totalAmount = subtotal - discountAmount + deliveryCharge + taxAmount;
+
+    // ✅ Loyalty Points Redemption
+    let loyaltyDiscount = 0;
+    if (use_loyalty_points) {
+      const [userRows] = await conn.query("SELECT loyalty_points FROM users WHERE id = ?", [userId]);
+      const availablePoints = userRows[0]?.loyalty_points || 0;
+      if (availablePoints > 0) {
+        loyaltyDiscount = Math.min(availablePoints, totalAmount);
+        totalAmount -= loyaltyDiscount;
+      }
+    }
 
     const orderNumber = generateOrderNumber();
     const [orderResult] = await conn.query(
@@ -140,13 +162,40 @@ export const placeOrder = async (req, res) => {
 
     await conn.query("DELETE FROM cart WHERE user_id = ?", [userId]);
 
+    // ✅ Loyalty Points Reward & Deduction
+    if (loyaltyDiscount > 0) {
+      await conn.query("UPDATE users SET loyalty_points = loyalty_points - ? WHERE id = ?", [loyaltyDiscount, userId]);
+    }
+    const earnedPoints = Math.floor(subtotal / 100);
+    if (earnedPoints > 0) {
+      await conn.query("UPDATE users SET loyalty_points = loyalty_points + ? WHERE id = ?", [earnedPoints, userId]);
+    }
     await conn.commit();
+
+    // ✅ Order Placed Notification
+    await createNotification(
+      userId,
+      "Order Placed successfully! 📦",
+      `Your order #${orderNumber} has been received and is being processed.`,
+      "order_placed",
+      { order_id: orderId, order_number: orderNumber }
+    );
+
+    // ✅ Notify Admins about New Order
+    await notifyAdmins(
+      "New Order Received! 🛍️",
+      `Order #${orderNumber} has been placed by a customer.`,
+      "order_placed",
+      { order_id: orderId, order_number: orderNumber }
+    );
     return success(
       res,
       {
         order_id: orderId,
         order_number: orderNumber,
         total_amount: totalAmount,
+        loyalty_discount: loyaltyDiscount,
+        earned_points: earnedPoints,
         payment_mode,
         order_status: "placed",
       },

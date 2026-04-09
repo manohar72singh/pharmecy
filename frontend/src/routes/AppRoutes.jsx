@@ -40,6 +40,8 @@ import AdminDelivery from "../pages/admin/Delivery";
 import AdminSubscriptions from "../pages/admin/Subscriptions";
 import AdminReports from "../pages/admin/Reports";
 import AdminCoupons from "../pages/admin/Coupons";
+import Pincodes from "../pages/admin/Pincodes";
+import Broadcast from "../pages/admin/Broadcast";
 
 // ── Delivery Pages
 import DeliveryDashboard from "../pages/delivery/DeliveryDashboard";
@@ -213,7 +215,7 @@ export default function AppRoutes() {
         <Route
           path="/notifications"
           element={
-            <ProtectedRoute allowedRoles={["customer"]}>
+            <ProtectedRoute allowedRoles={["customer", "admin", "super_admin", "pharmacist", "delivery_boy"]}>
               <Layout>
                 <Notifications />
               </Layout>
@@ -363,6 +365,30 @@ export default function AppRoutes() {
           }
         />
         {/* ── Delivery Boy Protected Routes ──*/}
+        <Route
+          path="/admin/pincodes"
+          element={
+            <ProtectedRoute
+              allowedRoles={["admin", "super_admin", "pharmacist"]}
+            >
+              <AdminLayout>
+                <Pincodes />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/broadcast"
+          element={
+            <ProtectedRoute
+              allowedRoles={["admin", "super_admin"]}
+            >
+              <AdminLayout>
+                <Broadcast />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/delivery"
           element={

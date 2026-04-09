@@ -3,6 +3,7 @@ import authenticate from "../../middleware/authMiddleware.js";
 import {
   getStats,
   getRecentOrders,
+  getLowStockItems,
 } from "../../controllers/Admin/adminDashboardController.js";
 import {
   getOrders,
@@ -42,6 +43,16 @@ import {
 import { getReports } from "../../controllers/Admin/adminReportsController.js";
 import { getSubscriptions } from "../../controllers/Admin/adminSubscriptionsController.js";
 import { getPurchaseOrders } from "../../controllers/Admin/adminPurchaseController.js";
+import {
+  getPincodes,
+  addPincode,
+  deletePincode,
+  togglePincodeStatus
+} from "../../controllers/Admin/adminPincodeController.js";
+import {
+  sendBroadcast,
+  sendDirectNotification
+} from "../../controllers/Admin/adminNotificationController.js";
 
 const router = Router();
 router.use(authenticate);
@@ -49,6 +60,7 @@ router.use(authenticate);
 // Dashboard
 router.get("/dashboard/stats", getStats);
 router.get("/dashboard/recent-orders", getRecentOrders);
+router.get("/dashboard/low-stock-items", getLowStockItems);
 
 // Orders
 router.get("/orders", getOrders);
@@ -93,5 +105,15 @@ router.get("/subscriptions", getSubscriptions);
 
 // Purchase
 router.get("/purchase", getPurchaseOrders);
+
+// Pincodes
+router.get("/pincodes", getPincodes);
+router.post("/pincodes", addPincode);
+router.delete("/pincodes/:id", deletePincode);
+router.patch("/pincodes/:id/toggle", togglePincodeStatus);
+
+// Notifications
+router.post("/notifications/broadcast", sendBroadcast);
+router.post("/notifications/direct", sendDirectNotification);
 
 export default router;

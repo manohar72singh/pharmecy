@@ -86,6 +86,7 @@
 // };
 import pool from "../../config/db.js";
 import { success, error } from "../../utils/response.js";
+import { createNotification } from "../../utils/notificationHelper.js";
 
 export const getOrders = async (req, res) => {
   try {
@@ -168,6 +169,31 @@ export const updateOrderStatus = async (req, res) => {
       "INSERT INTO order_status_history (order_id, status, updated_by) VALUES (?, ?, ?)",
       [req.params.id, status, req.user.id],
     );
+
+    // ✅ Notify User about Status Change
+    const [[order]] = await pool.query(
+      "SELECT user_id, order_number FROM orders WHERE id = ?",
+      [req.params.id]
+    );
+    if (order) {
+      const statusMap = {
+        confirmed: "Your order has been confirmed! ✅",
+        processing: "Your order is being processed. ⚙️",
+        packed: "Your order has been packed and is ready! 📦",
+        out_for_delivery: "Your order is out for delivery! 🚴",
+        delivered: "Your order has been delivered successfully! 🎉",
+        cancelled: "Your order has been cancelled. ❌",
+      };
+      
+      const title = statusMap[status] || `Order Status Updated: ${status}`;
+      await createNotification(
+        order.user_id,
+        title,
+        `Update for Order #${order.order_number}: The status is now '${status.replace(/_/g, " ")}'.`,
+        status === "delivered" ? "delivered" : status === "out_for_delivery" ? "delivery" : "order_placed",
+        { order_id: req.params.id, order_number: order.order_number }
+      );
+    }
 
     return success(res, {}, "Status updated.");
   } catch (err) {

@@ -34,6 +34,7 @@ const ORDER_STATUS_COLORS = {
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [lowStockItems, setLowStockItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ordersPage, setOrdersPage] = useState(1);
   const ORDERS_PER_PAGE = 5;
@@ -41,12 +42,14 @@ export default function Dashboard() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [statsRes, ordersRes] = await Promise.all([
+        const [statsRes, ordersRes, lowStockRes] = await Promise.all([
           api.get("/admin/dashboard/stats"),
           api.get("/admin/dashboard/recent-orders"),
+          api.get("/admin/dashboard/low-stock-items"),
         ]);
         setStats(statsRes.data.data);
         setRecentOrders(ordersRes.data.data || []);
+        setLowStockItems(lowStockRes.data.data || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -261,6 +264,42 @@ export default function Dashboard() {
               </Link>
             ))}
           </div>
+        </div>
+
+        {/* Low Stock Alerts */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50 bg-red-50/50">
+            <h3 className="font-bold text-red-900 flex items-center gap-2">⚠️ Low Stock Alerts</h3>
+            <Link
+              to="/admin/stock"
+              className="text-xs text-red-600 font-bold hover:underline"
+            >
+              Manage Stock →
+            </Link>
+          </div>
+          {lowStockItems.length === 0 ? (
+            <div className="text-center py-10 text-gray-400 text-sm italic">
+              All stock levels are healthy! ✅
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-50 overflow-y-auto max-h-[300px]">
+              {lowStockItems.map((item) => (
+                <div key={item.id} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition">
+                  <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-lg flex-shrink-0 text-red-600">
+                    💊
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
+                    <p className="text-[10px] text-gray-400">Batch: {item.batch_number} · {item.brand}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-black text-red-600">{item.available_quantity}</p>
+                    <p className="text-[9px] text-gray-400 uppercase font-bold">In Stock</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

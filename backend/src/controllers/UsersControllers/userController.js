@@ -10,7 +10,7 @@ export const getProfile = async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT u.id, u.name, u.phone, u.email, u.profile_image,
-              u.date_of_birth, u.gender, u.is_verified, u.created_at,
+              u.date_of_birth, u.gender, u.is_verified, u.loyalty_points, u.created_at,
               r.role_name
        FROM users u
        JOIN user_roles r ON u.role_id = r.id

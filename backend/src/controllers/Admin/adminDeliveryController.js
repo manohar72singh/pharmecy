@@ -1,5 +1,6 @@
 import pool from "../../config/db.js";
 import { success, error } from "../../utils/response.js";
+import { createNotification } from "../../utils/notificationHelper.js";
 
 // ── Get Delivery Orders (Admin) ───────────────────────
 export const getDeliveryOrders = async (req, res) => {
@@ -117,18 +118,30 @@ export const assignDelivery = async (req, res) => {
       [order_id, "out_for_delivery", req.user.id],
     );
 
-    const [dbUser] = await pool.query(
-      `SELECT u.name FROM delivery_boys db 
+    // ✅ Notify Delivery Boy
+    const [[dbUser]] = await pool.query(
+      `SELECT u.id, u.name, o.order_number FROM delivery_boys db 
         JOIN users u ON db.user_id = u.id 
+        JOIN orders o ON o.id = ?
         WHERE db.id = ?`,
-      [delivery_boy_id],
+      [order_id, delivery_boy_id],
     );
+    
+    if (dbUser) {
+      await createNotification(
+        dbUser.id,
+        "New Delivery Assigned! 🚴",
+        `You have been assigned order #${dbUser.order_number}. Please collect it for delivery.`,
+        "delivery",
+        { order_id, order_number: dbUser.order_number }
+      );
+    }
 
     return success(
       res,
       {
         delivery_otp: otp,
-        delivery_boy_name: dbUser[0]?.name,
+        delivery_boy_name: dbUser?.name,
       },
       "Delivery partner assigned and OTP generated successfully. ",
     );

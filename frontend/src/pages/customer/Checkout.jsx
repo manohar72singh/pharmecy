@@ -47,6 +47,8 @@ export default function Checkout() {
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
   const [orderSuccess, setOrderSuccess] = useState(null);
+  const [userPoints, setUserPoints] = useState(0);
+  const [useLoyaltyPoints, setUseLoyaltyPoints] = useState(false);
 
   // ── Load cart + addresses ─────────────────────────
   useEffect(() => {
@@ -69,9 +71,10 @@ export default function Checkout() {
 
     const load = async () => {
       try {
-        const [cartRes, addrRes] = await Promise.all([
+        const [cartRes, addrRes, profileRes] = await Promise.all([
           cartService.getCart(),
           addressService.getAll(),
+          userService.getProfile(),
         ]);
         const items = cartRes.data.data.items || [];
         if (items.length === 0) {
@@ -84,6 +87,8 @@ export default function Checkout() {
         const def = addrs.find((a) => a.is_default) || addrs[0];
         if (def) setSelectedAddr(def.id);
         if (addrs.length === 0) setShowNewAddr(true);
+        
+        setUserPoints(profileRes.data.data.loyalty_points || 0);
       } catch (err) {
         console.error(err);
       } finally {
@@ -104,7 +109,9 @@ export default function Checkout() {
     ? parseFloat(couponApplied.discount_amount) || 0
     : 0;
   const delivery = subtotal >= 299 ? 0 : 49;
-  const total = subtotal + delivery - couponDiscount;
+  const tempTotal = subtotal + delivery - couponDiscount;
+  const loyaltyValue = useLoyaltyPoints ? Math.min(userPoints, tempTotal) : 0;
+  const total = tempTotal - loyaltyValue;
   const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
 
   // ── Apply Coupon ─────────────────────────────────────
@@ -150,6 +157,7 @@ export default function Checkout() {
         discount_amount: couponApplied
           ? parseFloat(couponApplied.discount_amount)
           : 0,
+        use_loyalty_points: useLoyaltyPoints,
       });
       setOrderSuccess(data.data);
       localStorage.removeItem("cartCoupon");
@@ -502,6 +510,26 @@ export default function Checkout() {
               </div>
             )}
 
+            {step === 3 && userPoints > 0 && (
+              <div className="bg-amber-50 rounded-xl sm:rounded-2xl border-2 border-amber-200 p-4 mb-4 shadow-sm animate-pulse">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🪙</span>
+                    <div>
+                      <p className="font-black text-amber-900 text-sm">Use Reward Points</p>
+                      <p className="text-[10px] sm:text-xs text-amber-700 font-medium">You have <strong>{userPoints}</strong> points available (₹1 = 1 point)</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setUseLoyaltyPoints(!useLoyaltyPoints)}
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${useLoyaltyPoints ? 'bg-amber-600 text-white shadow-md' : 'bg-white text-amber-700 border border-amber-300'}`}
+                  >
+                    {useLoyaltyPoints ? 'Applied ✓' : 'Apply Points'}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {step === 3 && (
               <div>
                 <h2 className="text-lg sm:text-xl font-black text-gray-900 mb-3 sm:mb-4">
@@ -711,6 +739,12 @@ export default function Checkout() {
                   <div className="flex justify-between text-emerald-600 font-semibold">
                     <span>Coupon ({couponApplied.code})</span>
                     <span>− ₹{couponApplied.discount_amount.toFixed(2)}</span>
+                  </div>
+                )}
+                {useLoyaltyPoints && (
+                  <div className="flex justify-between text-amber-600 font-semibold">
+                    <span>Loyalty Points</span>
+                    <span>− ₹{loyaltyValue.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-gray-600">

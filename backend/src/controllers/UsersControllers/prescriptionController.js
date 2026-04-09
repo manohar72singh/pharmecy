@@ -1,5 +1,6 @@
 import pool from "../../config/db.js";
 import { success, error } from "../../utils/response.js";
+import { notifyAdmins } from "../../utils/notificationHelper.js";
 
 // ── Get My Prescriptions ──────────────────────────────
 export const getMyPrescriptions = async (req, res) => {
@@ -33,6 +34,14 @@ export const uploadPrescription = async (req, res) => {
       `INSERT INTO prescriptions (user_id, image_url, status, notes)
        VALUES (?, ?, 'pending', ?)`,
       [req.user.id, imageUrl, notes || null],
+    );
+
+    // ✅ Notify Admins about New Prescription
+    await notifyAdmins(
+      "New Prescription Uploaded! 📋",
+      `A new prescription has been uploaded by ${req.user.name} and needs verification.`,
+      "prescription",
+      { prescription_id: result.insertId }
     );
 
     return success(

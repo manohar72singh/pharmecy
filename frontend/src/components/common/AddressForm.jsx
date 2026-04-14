@@ -224,9 +224,12 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
             name="address_line1"
             value={form.address_line1}
             onChange={set}
-            placeholder="House/Flat no., Street, Locality"
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm
-                       focus:outline-none focus:border-emerald-400 focus:bg-white transition"
+            disabled={!form.city}
+            placeholder={!form.city ? "Please verify pincode first" : "House/Flat no., Street, Locality"}
+            className={`w-full px-3 py-2.5 rounded-xl border text-sm transition focus:outline-none 
+              ${!form.city 
+                ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed" 
+                : "bg-gray-50 border-gray-200 focus:border-emerald-400 focus:bg-white"}`}
           />
         </div>
 
@@ -241,9 +244,12 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
             name="address_line2"
             value={form.address_line2}
             onChange={set}
-            placeholder="Area, Landmark"
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm
-                       focus:outline-none focus:border-emerald-400 focus:bg-white transition"
+            disabled={!form.city}
+            placeholder={!form.city ? "Please verify pincode first" : "Area, Landmark"}
+            className={`w-full px-3 py-2.5 rounded-xl border text-sm transition focus:outline-none 
+              ${!form.city 
+                ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed" 
+                : "bg-gray-50 border-gray-200 focus:border-emerald-400 focus:bg-white"}`}
           />
         </div>
 

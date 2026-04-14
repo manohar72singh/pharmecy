@@ -179,20 +179,23 @@ export const setDefaultAddress = async (req, res) => {
 export const validatePincode = async (req, res) => {
   try {
     const { pincode } = req.params;
-    const [rows] = await pool.query(
-      "SELECT id, city_name FROM serviceable_pincodes WHERE pincode = ? AND is_active = 1",
-      [pincode]
-    );
-
-    if (rows.length === 0) {
-      return error(res, "Sorry, we do not currently deliver to this pincode.", 400);
-    }
     
-    // For now we assume state is Uttar Pradesh or allow frontend to manage
-    // If you have state column in serviceable_pincodes, query it.
-    return success(res, { valid: true, city: rows[0].city_name }, "Pincode is valid.");
+    // Public API Validation (Bypassing local Delivery Zones as requested)
+    const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+    const data = await response.json();
+
+    if (data && data[0] && data[0].Status === "Success") {
+      const info = data[0].PostOffice[0];
+      // info.District often acts as City, info.State as State
+      const city = info.District || info.Block || "Unknown City";
+      const state = info.State || "Unknown State";
+      
+      return success(res, { valid: true, city: city, state: state }, "Pincode is valid.");
+    } else {
+      return error(res, "Please enter a valid active Pincode.", 400);
+    }
   } catch (err) {
-    console.error(err);
+    console.error("Pincode Validation Error:", err);
     return error(res, "Failed to validate pincode.", 500);
   }
 };

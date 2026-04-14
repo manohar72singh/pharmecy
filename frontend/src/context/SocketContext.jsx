@@ -28,7 +28,8 @@ export const SocketProvider = ({ children }) => {
             // Don't reconnect if already connected with a socket
             if (newSocket && newSocket.connected) return;
 
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+            const fallbackBackend = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || fallbackBackend;
 
             newSocket = io(backendUrl, {
                 auth: { token },

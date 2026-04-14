@@ -95,7 +95,22 @@ pool.getConnection()
                }
             })
             .finally(() => {
-                connection.release();
+                // ✅ Auto-generate temporary_orders table
+                connection.query(`
+                  CREATE TABLE IF NOT EXISTS temporary_orders (
+                      id VARCHAR(255) PRIMARY KEY,
+                      user_id INT NOT NULL,
+                      order_data JSON NOT NULL,
+                      amount DECIMAL(10, 2) NOT NULL,
+                      razorpay_order_id VARCHAR(255),
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                  )
+                `)
+                .then(() => console.log("✅ Auto-migrated: temporary_orders table ready."))
+                .catch(err => console.error("Migration error (temp_orders):", err.message))
+                .finally(() => {
+                    connection.release();
+                });
             });
       });
   })

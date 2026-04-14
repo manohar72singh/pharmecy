@@ -147,3 +147,54 @@ export const verifyAndPlaceOrder = async (req, res) => {
     if (conn) conn.release();
   }
 };
+
+/**
+ * Syncs temporary orders for a user by checking Razorpay status.
+ * Used as a fallback when Webhooks are not available.
+ */
+export const syncUserPayments = async (userId) => {
+  try {
+    const [tempOrders] = await pool.query(
+      "SELECT id, order_data FROM temporary_orders WHERE user_id = ?",
+      [userId]
+    );
+
+    if (tempOrders.length === 0) return;
+
+    for (const temp of tempOrders) {
+      const rzpOrderId = temp.id;
+      const { orderDetails, notes } = JSON.parse(temp.order_data);
+
+      // 1. Fetch payments for this RZP Order
+      const payments = await razorpay.orders.fetchPayments(rzpOrderId);
+      
+      // 2. Check if any payment is 'captured'
+      const successfulPayment = payments.items.find(p => p.status === 'captured');
+
+      if (successfulPayment) {
+        console.log(`🔄 Auto-healing order: ${rzpOrderId}`);
+        const conn = await pool.getConnection();
+        try {
+          await conn.beginTransaction();
+          
+          await finalizeOrder(userId, orderDetails, {
+            payment_mode: 'online',
+            payment_status: 'paid',
+            razorpay_order_id: rzpOrderId,
+            razorpay_payment_id: successfulPayment.id
+          }, notes, conn);
+
+          await conn.query("DELETE FROM temporary_orders WHERE id = ?", [rzpOrderId]);
+          await conn.commit();
+        } catch (err) {
+          await conn.rollback();
+          console.error(`❌ Auto-healing failed for ${rzpOrderId}:`, err);
+        } finally {
+          conn.release();
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Sync Payments Error:", err);
+  }
+};

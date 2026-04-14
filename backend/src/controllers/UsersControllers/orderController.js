@@ -2,6 +2,7 @@ import pool from "../../config/db.js";
 import { success, error } from "../../utils/response.js";
 import { calculateOrderTotals } from "../../utils/orderHelper.js";
 import { finalizeOrder } from "../../utils/orderFinalizer.js";
+import { syncUserPayments } from "./razorpayController.js";
 
 // ── Place Order ───────────────────────────────────────
 export const placeOrder = async (req, res) => {
@@ -65,6 +66,9 @@ export const placeOrder = async (req, res) => {
 // ── Get My Orders ─────────────────────────────────────
 export const getMyOrders = async (req, res) => {
   try {
+    // 🛡️ Webhook Alternative: Sync any pending payments first
+    await syncUserPayments(req.user.id);
+
     const [orders] = await pool.query(
       `SELECT o.id, o.order_number, o.order_status, o.order_type,
               o.payment_mode, o.payment_status,

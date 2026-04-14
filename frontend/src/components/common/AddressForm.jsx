@@ -2,37 +2,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "../../context/Toastcontext";
 import addressService from "../../services/addressService";
 
-const STATES = [
-  "Andhra Pradesh",
-  "Arunachal Pradesh",
-  "Assam",
-  "Bihar",
-  "Chhattisgarh",
-  "Delhi",
-  "Goa",
-  "Gujarat",
-  "Haryana",
-  "Himachal Pradesh",
-  "Jharkhand",
-  "Karnataka",
-  "Kerala",
-  "Madhya Pradesh",
-  "Maharashtra",
-  "Manipur",
-  "Meghalaya",
-  "Mizoram",
-  "Nagaland",
-  "Odisha",
-  "Punjab",
-  "Rajasthan",
-  "Sikkim",
-  "Tamil Nadu",
-  "Telangana",
-  "Tripura",
-  "Uttar Pradesh",
-  "Uttarakhand",
-  "West Bengal",
-];
+// STATES array removed as it is now auto-filled from Pincode API
 
 export default function AddressForm({ onSave, onCancel, showCancel = true }) {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -43,7 +13,7 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
     address_line1: "",
     address_line2: "",
     city: "",
-    state: "Uttar Pradesh",
+    state: "",
     pincode: "",
     is_default: false,
   });
@@ -58,12 +28,17 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
         try {
           const res = await addressService.validatePincode(form.pincode);
           if (res.data?.data?.valid) {
-            setForm((prev) => ({ ...prev, city: res.data.data.city || "", state: res.data.data.state || "Uttar Pradesh" }));
+            setForm((prev) => ({ 
+              ...prev, 
+              city: res.data.data.city || "", 
+              state: res.data.data.state || "",
+              address_line1: res.data.data.locality || prev.address_line1
+            }));
             setError("");
           }
         } catch (err) {
            setError(err.response?.data?.message || "Invalid or unsupported pincode.");
-           setForm((prev) => ({ ...prev, city: "", state: "Uttar Pradesh" }));
+           setForm((prev) => ({ ...prev, city: "", state: "" }));
         } finally {
           setIsValidating(false);
         }
@@ -98,12 +73,17 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
            try {
               const res = await addressService.validatePincode(val);
               if (res.data?.data?.valid) {
-                setForm((prev) => ({ ...prev, city: res.data.data.city || "", state: res.data.data.state || "Uttar Pradesh" }));
+                setForm((prev) => ({ 
+                  ...prev, 
+                  city: res.data.data.city || "", 
+                  state: res.data.data.state || "",
+                  address_line1: res.data.data.locality || prev.address_line1
+                }));
                 setError("");
               }
            } catch (err) {
               setError(err.response?.data?.message || "Invalid or unsupported pincode.");
-              setForm((prev) => ({ ...prev, city: "" }));
+              setForm((prev) => ({ ...prev, city: "", state: "" }));
            } finally {
               setIsValidating(false);
            }

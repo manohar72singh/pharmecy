@@ -190,7 +190,10 @@ export const validatePincode = async (req, res) => {
       const city = info.District || info.Block || "Unknown City";
       const state = info.State || "Unknown State";
       
-      return success(res, { valid: true, city: city, state: state }, "Pincode is valid.");
+      // Combine locality names to create a "full address" base
+      const locality = [info.Name, info.Block].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", ");
+      
+      return success(res, { valid: true, city: city, state: state, locality: locality }, "Pincode is valid.");
     } else {
       return error(res, "Please enter a valid active Pincode.", 400);
     }

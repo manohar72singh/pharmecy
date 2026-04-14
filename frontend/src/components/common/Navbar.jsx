@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import cartService from "../../services/cartService";
-import wishlistService from "../../services/wishlistService";
+import wishlistService, { refreshWishlistCache } from "../../services/wishlistService";
 import notificationService from "../../services/notificationservice";
 
 export const updateCartCount = () => {
@@ -70,7 +70,7 @@ export default function Navbar() {
     refreshCart();
     refreshWishlist();
     refreshNotifications();
-    wishlistService.refreshWishlistCache(); // ✅ Update heart colors cache
+    refreshWishlistCache(); // ✅ Update heart colors cache
   }, [location.pathname]);
 
   useEffect(() => {
@@ -81,6 +81,14 @@ export default function Navbar() {
   useEffect(() => {
     window.addEventListener("wishlistUpdated", refreshWishlist);
     return () => window.removeEventListener("wishlistUpdated", refreshWishlist);
+  }, []);
+
+  useEffect(() => {
+    const handleNewNotification = () => {
+      setUnreadCount((prev) => prev + 1);
+    };
+    window.addEventListener("new_notification", handleNewNotification);
+    return () => window.removeEventListener("new_notification", handleNewNotification);
   }, []);
 
   useEffect(() => {

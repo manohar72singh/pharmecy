@@ -6,6 +6,7 @@ import cartService from "../../services/cartService";
 import addressService from "../../services/addressService";
 import orderService from "../../services/orderService";
 import couponService from "../../services/couponservice";
+import userService from "../../services/userServices"
 
 const PAYMENT_METHODS = [
   {

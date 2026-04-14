@@ -353,7 +353,7 @@ export default function MedicineCard({ med }) {
       </div>
 
       {/* CSS Animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes ripple {
           0% {
             transform: translate(-50%, -50%) scale(0);

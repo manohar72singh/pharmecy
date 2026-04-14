@@ -5,7 +5,9 @@ import helmet from "helmet";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import http from "http";
 import pool from "./src/config/db.js";
+import { initSocket } from "./src/utils/socketManager.js";
 import authRoute from "./src/routes/UsersRoutes/authRoutes.js";
 import medicineRoute from "./src/routes/UsersRoutes/medicineRoutes.js";
 import cartRoutes from "./src/routes/UsersRoutes/cartRoutes.js";
@@ -27,6 +29,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const server = http.createServer(app);
+initSocket(server);
+
 const PORT = process.env.PORT || 5000;
 
 // CORS configuration dynamically handles local and production origins
@@ -84,7 +89,7 @@ const startServer = async () => {
     await pool.query("SELECT 1");
     console.log("✅ Database connected successfully");
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
       console.log(`🌿 Environment: ${process.env.NODE_ENV}`);
     });

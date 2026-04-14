@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "../../context/Toastcontext";
 import addressService from "../../services/addressService";
 
@@ -49,14 +49,68 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
 
-  const set = (e) => {
+  useEffect(() => {
+    const validate = async () => {
+      if (form.pincode.length === 6) {
+        setIsValidating(true);
+        try {
+          const res = await addressService.validatePincode(form.pincode);
+          if (res.data?.data?.valid) {
+            setForm((prev) => ({ ...prev, city: res.data.data.city || "", state: res.data.data.state || "Uttar Pradesh" }));
+            setError("");
+          }
+        } catch (err) {
+           setError(err.response?.data?.message || "Invalid or unsupported pincode.");
+           setForm((prev) => ({ ...prev, city: "", state: "Uttar Pradesh" }));
+        } finally {
+          setIsValidating(false);
+        }
+      } else if (form.pincode.length > 0 && form.pincode.length < 6) {
+         setForm((prev) => ({ ...prev, city: "" }));
+      }
+    };
+    
+    // Add small debounce or just run directly as it's triggered on exact length 6
+    if (form.pincode.length === 6 && !form.city) {
+        validate();
+    } else if (form.pincode.length === 6 && form.city) {
+        // already has city, maybe user is editing existing address, we can re-validate just to be sure if they change it
+        // but if they just opened the form, we shouldn't spam the API.
+        // We will validate on change instead. Look at `set` function below.
+    }
+  }, []); // We will handle it in the `set` function specifically for pincode instead!
+
+  const set = async (e) => {
     const { name, value, type, checked } = e.target;
+    const val = type === "checkbox" ? checked : value;
+
     setForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: val,
     }));
     setError("");
+
+    if (name === "pincode") {
+       if (val.length === 6) {
+           setIsValidating(true);
+           try {
+              const res = await addressService.validatePincode(val);
+              if (res.data?.data?.valid) {
+                setForm((prev) => ({ ...prev, city: res.data.data.city || "", state: res.data.data.state || "Uttar Pradesh" }));
+                setError("");
+              }
+           } catch (err) {
+              setError(err.response?.data?.message || "Invalid or unsupported pincode.");
+              setForm((prev) => ({ ...prev, city: "" }));
+           } finally {
+              setIsValidating(false);
+           }
+       } else {
+           setForm((prev) => ({ ...prev, city: "" }));
+       }
+    }
   };
 
   const handleSubmit = async () => {
@@ -146,7 +200,7 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
         {/* Pincode */}
         <div>
           <label className="block text-xs font-bold text-gray-600 mb-1">
-            Pincode *
+            Pincode * {isValidating && <span className="text-emerald-500 text-[10px]">Verifying...</span>}
           </label>
           <input
             type="text"
@@ -196,37 +250,30 @@ export default function AddressForm({ onSave, onCancel, showCancel = true }) {
         {/* City */}
         <div>
           <label className="block text-xs font-bold text-gray-600 mb-1">
-            City *
+            City
           </label>
           <input
             type="text"
             name="city"
             value={form.city}
-            onChange={set}
-            placeholder="e.g. Noida"
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm
-                       focus:outline-none focus:border-emerald-400 focus:bg-white transition"
+            disabled
+            placeholder="Auto-filled from Pincode"
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-100 text-sm text-gray-500 cursor-not-allowed transition"
           />
         </div>
 
         {/* State */}
         <div>
           <label className="block text-xs font-bold text-gray-600 mb-1">
-            State *
+            State
           </label>
-          <select
+          <input
+            type="text"
             name="state"
             value={form.state}
-            onChange={set}
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm
-                       focus:outline-none focus:border-emerald-400 transition"
-          >
-            {STATES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+            disabled
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-100 text-sm text-gray-500 cursor-not-allowed transition"
+          />
         </div>
 
         {/* Default checkbox */}

@@ -118,9 +118,10 @@ export const assignDelivery = async (req, res) => {
       [order_id, "out_for_delivery", req.user.id],
     );
 
-    // ✅ Notify Delivery Boy
+    // ✅ Notify Delivery Boy and Customer
     const [[dbUser]] = await pool.query(
-      `SELECT u.id, u.name, o.order_number FROM delivery_boys db 
+      `SELECT u.id AS db_user_id, u.name AS db_name, u.phone AS db_phone, o.order_number, o.user_id AS customer_id
+       FROM delivery_boys db 
         JOIN users u ON db.user_id = u.id 
         JOIN orders o ON o.id = ?
         WHERE db.id = ?`,
@@ -128,10 +129,20 @@ export const assignDelivery = async (req, res) => {
     );
     
     if (dbUser) {
+      // Notify Delivery Partner
       await createNotification(
-        dbUser.id,
+        dbUser.db_user_id,
         "New Delivery Assigned! 🚴",
         `You have been assigned order #${dbUser.order_number}. Please collect it for delivery.`,
+        "delivery",
+        { order_id, order_number: dbUser.order_number }
+      );
+
+      // Notify Customer
+      await createNotification(
+        dbUser.customer_id,
+        "Order Out For Delivery! 🚴‍♂️",
+        `Your order #${dbUser.order_number} has been assigned to delivery partner ${dbUser.db_name} (Phone: ${dbUser.db_phone || 'N/A'}).`,
         "delivery",
         { order_id, order_number: dbUser.order_number }
       );

@@ -12,6 +12,7 @@ export default function DeliveryLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [popupNotif, setPopupNotif] = useState(null);
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
@@ -26,7 +27,21 @@ export default function DeliveryLayout({ children }) {
     fetchUnread();
     // Refresh every 2 minutes
     const interval = setInterval(fetchUnread, 120000);
-    return () => clearInterval(interval);
+    
+    // Listen for live socket events
+    const handleNewNotif = (e) => {
+      setUnreadCount((p) => p + 1);
+      const notif = e.detail;
+      if (notif && (notif.type === "order_placed" || notif.type === "delivery")) {
+         setPopupNotif(notif);
+      }
+    };
+    window.addEventListener("new_notification", handleNewNotif);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("new_notification", handleNewNotif);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -176,6 +191,25 @@ export default function DeliveryLayout({ children }) {
           })}
         </div>
       </nav>
+
+      {/* ── Popup Notifications ── */}
+      {popupNotif && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-fade-in-up">
+            <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mb-4 mx-auto">
+              {popupNotif.type === "delivery" ? "🚴" : "🛍️"}
+            </div>
+            <h3 className="text-xl font-black text-center text-gray-900">{popupNotif.title}</h3>
+            <p className="mt-2 text-sm text-center text-gray-600 font-medium">{popupNotif.message}</p>
+            <button 
+              onClick={() => setPopupNotif(null)} 
+              className="mt-6 w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/30 transition-all font-bold rounded-xl"
+            >
+              Okay
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

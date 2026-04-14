@@ -1,6 +1,6 @@
 import pool from "../../config/db.js";
 import { success, error } from "../../utils/response.js";
-import { createNotification, notifyAdmins } from "../../utils/notificationHelper.js";
+import { createNotification, notifyAdmins, notifyDeliveryPartners } from "../../utils/notificationHelper.js";
 
 // ── Order Number Generate ─────────────────────────────
 const generateOrderNumber = () => {
@@ -40,14 +40,14 @@ export const placeOrder = async (req, res) => {
     if (addr.length === 0)
       return error(res, "Delivery address not found.", 404);
 
-    // ✅ Pincode Validation
-    const [serviceable] = await conn.query(
-      "SELECT id FROM serviceable_pincodes WHERE pincode = ? AND is_active = 1",
-      [addr[0].pincode]
-    );
-    if (serviceable.length === 0) {
-      return error(res, `Sorry, we do not currently deliver to pincode ${addr[0].pincode}.`, 400);
-    }
+    // ✅ Pincode Validation (Disabled as per your request)
+    // const [serviceable] = await conn.query(
+    //   "SELECT id FROM serviceable_pincodes WHERE pincode = ? AND is_active = 1",
+    //   [addr[0].pincode]
+    // );
+    // if (serviceable.length === 0) {
+    //   return error(res, `Sorry, we do not currently deliver to pincode ${addr[0].pincode}.`, 400);
+    // }
 
     const [cartItems] = await conn.query(
       `SELECT ci.id, ci.medicine_id, ci.batch_id, ci.quantity,
@@ -188,6 +188,14 @@ export const placeOrder = async (req, res) => {
       "order_placed",
       { order_id: orderId, order_number: orderNumber }
     );
+
+    // ✅ Notify Delivery Partners about New Order
+    await notifyDeliveryPartners(
+      "New Order Received! 🛍️",
+      `Order #${orderNumber} has been placed and is waiting for assignment.`,
+      "order_placed",
+      { order_id: orderId, order_number: orderNumber }
+    );
     return success(
       res,
       {
@@ -244,10 +252,13 @@ export const getOrderDetail = async (req, res) => {
               ca.full_name, ca.phone AS addr_phone,
               ca.address_line1, ca.address_line2,
               ca.city, ca.state, ca.pincode,
-              da.delivery_otp, da.otp_verified
+              da.delivery_otp, da.otp_verified,
+              dbu.name AS delivery_boy_name, dbu.phone AS delivery_boy_phone
        FROM orders o
        JOIN customer_addresses ca ON o.address_id = ca.id
        LEFT JOIN delivery_assignments da ON da.order_id = o.id
+       LEFT JOIN delivery_boys db ON da.delivery_boy_id = db.id
+       LEFT JOIN users dbu ON db.user_id = dbu.id
        WHERE o.id = ? AND o.user_id = ?`,
       [id, req.user.id],
     );

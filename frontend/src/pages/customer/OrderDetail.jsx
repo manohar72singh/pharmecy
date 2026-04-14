@@ -468,6 +468,18 @@ export default function OrderDetail() {
               </div>
             </div>
 
+            {order.delivery_boy_name && (
+              <div className="bg-white rounded-xl sm:rounded-2xl border border-emerald-100 p-4 sm:p-5">
+                <h3 className="font-bold text-gray-900 mb-3 text-sm sm:text-base">
+                  🚴 Delivery Partner
+                </h3>
+                <div className="bg-emerald-50 rounded-xl p-3 sm:p-4 text-xs sm:text-sm text-emerald-800">
+                  <p className="font-bold text-emerald-900">{order.delivery_boy_name}</p>
+                  <p className="mt-0.5">📞 {order.delivery_boy_phone || "N/A"}</p>
+                </div>
+              </div>
+            )}
+
             {history.length > 0 && (
               <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-5">
                 <h3 className="font-bold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">

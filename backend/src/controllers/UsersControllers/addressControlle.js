@@ -5,7 +5,7 @@ import { success, error } from "../../utils/response.js";
 export const getAddresses = async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT * FROM customer_addresses WHERE user_id = ? ORDER BY is_default DESC, id DESC",
+      "SELECT * FROM customer_addresses WHERE user_id = ? AND (is_deleted = 0 OR is_deleted IS NULL) ORDER BY is_default DESC, id DESC",
       [req.user.id],
     );
     return success(res, rows, "Addresses retrieved successfully.");
@@ -46,7 +46,7 @@ export const addAddress = async (req, res) => {
 
     // Pehla address auto default
     const [existing] = await pool.query(
-      "SELECT COUNT(*) as cnt FROM customer_addresses WHERE user_id = ?",
+      "SELECT COUNT(*) as cnt FROM customer_addresses WHERE user_id = ? AND (is_deleted = 0 OR is_deleted IS NULL)",
       [req.user.id],
     );
     const autoDefault = existing[0].cnt === 0 ? 1 : is_default ? 1 : 0;
@@ -95,7 +95,7 @@ export const updateAddress = async (req, res) => {
     } = req.body;
 
     const [addr] = await pool.query(
-      "SELECT id FROM customer_addresses WHERE id = ? AND user_id = ?",
+      "SELECT id FROM customer_addresses WHERE id = ? AND user_id = ? AND (is_deleted = 0 OR is_deleted IS NULL)",
       [id, req.user.id],
     );
     if (addr.length === 0) return error(res, "Address not found.", 404);
@@ -134,17 +134,17 @@ export const deleteAddress = async (req, res) => {
   try {
     const { id } = req.params;
     const [addr] = await pool.query(
-      "SELECT id, is_default FROM customer_addresses WHERE id = ? AND user_id = ?",
+      "SELECT id, is_default FROM customer_addresses WHERE id = ? AND user_id = ? AND (is_deleted = 0 OR is_deleted IS NULL)",
       [id, req.user.id],
     );
     if (addr.length === 0) return error(res, "Address not found.", 404);
 
-    await pool.query("DELETE FROM customer_addresses WHERE id = ?", [id]);
+    await pool.query("UPDATE customer_addresses SET is_deleted = 1, is_default = 0 WHERE id = ?", [id]);
 
     // Agar default tha to pehle wale ko default karo
     if (addr[0].is_default) {
       await pool.query(
-        "UPDATE customer_addresses SET is_default = 1 WHERE user_id = ? LIMIT 1",
+        "UPDATE customer_addresses SET is_default = 1 WHERE user_id = ? AND (is_deleted = 0 OR is_deleted IS NULL) LIMIT 1",
         [req.user.id],
       );
     }
@@ -165,12 +165,34 @@ export const setDefaultAddress = async (req, res) => {
       [req.user.id],
     );
     await pool.query(
-      "UPDATE customer_addresses SET is_default = 1 WHERE id = ? AND user_id = ?",
+      "UPDATE customer_addresses SET is_default = 1 WHERE id = ? AND user_id = ? AND (is_deleted = 0 OR is_deleted IS NULL)",
       [id, req.user.id],
     );
     return success(res, {}, "Default address set successfully.");
   } catch (err) {
     console.error(err);
     return error(res, "Operation failed.", 500);
+  }
+};
+
+// ── Validate Pincode ──────────────────────────────────
+export const validatePincode = async (req, res) => {
+  try {
+    const { pincode } = req.params;
+    const [rows] = await pool.query(
+      "SELECT id, city_name FROM serviceable_pincodes WHERE pincode = ? AND is_active = 1",
+      [pincode]
+    );
+
+    if (rows.length === 0) {
+      return error(res, "Sorry, we do not currently deliver to this pincode.", 400);
+    }
+    
+    // For now we assume state is Uttar Pradesh or allow frontend to manage
+    // If you have state column in serviceable_pincodes, query it.
+    return success(res, { valid: true, city: rows[0].city_name }, "Pincode is valid.");
+  } catch (err) {
+    console.error(err);
+    return error(res, "Failed to validate pincode.", 500);
   }
 };

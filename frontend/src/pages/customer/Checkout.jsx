@@ -151,45 +151,42 @@ export default function Checkout() {
     if (!selectedAddr) return setError("Please select a delivery address.");
     setPlacing(true);
     setError("");
+
+    const orderPayload = {
+      address_id: selectedAddr,
+      payment_mode: paymentMethod,
+      coupon_id: couponApplied?.coupon_id || null,
+      discount_amount: couponApplied ? parseFloat(couponApplied.discount_amount) : 0,
+      use_loyalty_points: useLoyaltyPoints,
+      notes: null,
+    };
+
     try {
-      const { data } = await orderService.placeOrder({
-        address_id: selectedAddr,
-        payment_mode: paymentMethod,
-        coupon_id: couponApplied?.coupon_id || null,
-        discount_amount: couponApplied
-          ? parseFloat(couponApplied.discount_amount)
-          : 0,
-        use_loyalty_points: useLoyaltyPoints,
-      });
-
-      const orderData = data.data;
-
-      // Check if it's Online or UPI payment
-      if (paymentMethod === "online" || paymentMethod === "upi") {
-        await initiateRazorpayPayment(orderData);
-      } else {
-        // COD or Wallet (Assuming wallet handles its own deduction in backend)
-        setOrderSuccess(orderData);
+      if (paymentMethod === "cod" || paymentMethod === "wallet") {
+        // Direct placement for COD/Wallet
+        const { data } = await orderService.placeOrder(orderPayload);
+        setOrderSuccess(data.data);
         localStorage.removeItem("cartCoupon");
         window.dispatchEvent(new Event("cartUpdated"));
+      } else {
+        // Online/UPI Flow: First prepare Razorpay Order
+        await initiatePaymentFlow(orderPayload);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to place order.");
+      setError(err.response?.data?.message || "Failed to process order.");
     } finally {
-      setPlacing(false);
+      if (paymentMethod === "cod" || paymentMethod === "wallet") {
+        setPlacing(false);
+      }
     }
   };
 
-  // ── Razorpay Payment ──────────────────────────────
-  const initiateRazorpayPayment = async (orderData) => {
+  // ── Razorpay Payment Flow ─────────────────────────
+  const initiatePaymentFlow = async (orderPayload) => {
     try {
-      // 1. Create Razorpay Order in Backend
-      const { data: rzpOrderRes } = await razorpayService.createOrder({
-        amount: orderData.total_amount,
-        order_id: orderData.order_id,
-      });
-
-      const { razorpay_order_id, amount, currency, key_id } = rzpOrderRes.data;
+      // 1. Prepare Order (Calculates totals and gets RZP ID without saving order yet)
+      const { data: rzpRes } = await razorpayService.prepareOrder(orderPayload);
+      const { razorpay_order_id, amount, currency, key_id } = rzpRes.data;
 
       // 2. Open Razorpay Checkout
       const options = {
@@ -197,31 +194,27 @@ export default function Checkout() {
         amount: amount,
         currency: currency,
         name: "MediShop Pharmacy",
-        description: `Payment for Order #${orderData.order_number}`,
-        image: "/vite.svg", // Replace with your logo
+        description: "Secure Healthcare Payment",
+        image: "/vite.svg",
         order_id: razorpay_order_id,
         handler: async function (response) {
           try {
             setPlacing(true);
-            // 3. Verify Payment
+            // 3. Finalize and Place Order in Backend
             const verifyData = {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              order_id: orderData.order_id,
             };
 
-            await razorpayService.verifyPayment(verifyData);
+            const { data: finalRes } = await razorpayService.verifyAndPlace(verifyData);
 
             // 4. Success
-            setOrderSuccess({
-              ...orderData,
-              payment_status: "paid",
-            });
+            setOrderSuccess(finalRes.data);
             localStorage.removeItem("cartCoupon");
             window.dispatchEvent(new Event("cartUpdated"));
           } catch (err) {
-            setError("Payment verification failed. Please contact support.");
+            setError(err.response?.data?.message || "Payment verification failed. Please contact support.");
           } finally {
             setPlacing(false);
           }
@@ -237,7 +230,6 @@ export default function Checkout() {
         modal: {
           ondismiss: function () {
             setPlacing(false);
-            setError("Payment cancelled. You can retry from your orders page.");
           },
         },
       };
@@ -245,7 +237,7 @@ export default function Checkout() {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
-      setError("Failed to initiate payment. Please try again.");
+      setError(err.response?.data?.message || "Failed to initiate payment.");
       setPlacing(false);
     }
   };
@@ -794,8 +786,8 @@ export default function Checkout() {
                     }}
                   >
                     {placing
-                      ? "Placing..."
-                      : `🎉 Place Order — ₹${total.toFixed(2)}`}
+                      ? "Processing..."
+                      : (paymentMethod === 'cod' ? `🎉 Place Order — ₹${total.toFixed(2)}` : `💳 Pay Amount — ₹${total.toFixed(2)}`)}
                   </button>
                 </div>
               </div>

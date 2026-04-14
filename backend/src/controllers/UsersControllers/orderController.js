@@ -1,14 +1,7 @@
 import pool from "../../config/db.js";
 import { success, error } from "../../utils/response.js";
-import { createNotification, notifyAdmins, notifyDeliveryPartners } from "../../utils/notificationHelper.js";
-
-// ── Order Number Generate ─────────────────────────────
-const generateOrderNumber = () => {
-  const date = new Date();
-  const ymd = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}`;
-  const rand = Math.floor(1000 + Math.random() * 9000);
-  return `ORD-${ymd}-${rand}`;
-};
+import { calculateOrderTotals } from "../../utils/orderHelper.js";
+import { finalizeOrder } from "../../utils/orderFinalizer.js";
 
 // ── Place Order ───────────────────────────────────────
 export const placeOrder = async (req, res) => {
@@ -17,194 +10,44 @@ export const placeOrder = async (req, res) => {
     await conn.beginTransaction();
 
     const userId = req.user.id;
-    const {
-      address_id,
-      payment_mode,
-      coupon_id = null,
-      discount_amount: clientDiscount = 0,
-      use_loyalty_points = false,
-      notes = null,
+    const { 
+        address_id, 
+        payment_mode, 
+        coupon_id, 
+        discount_amount, 
+        use_loyalty_points, 
+        notes 
     } = req.body;
 
-    if (!address_id || !payment_mode)
-      return error(res, "Delivery address and payment mode are required.", 400);
-
-    const validModes = ["cod", "online", "upi", "wallet"];
-    if (!validModes.includes(payment_mode))
-      return error(res, "Invalid payment mode selected.", 400);
-
-    const [addr] = await conn.query(
-      "SELECT id, pincode FROM customer_addresses WHERE id = ? AND user_id = ?",
-      [address_id, userId],
-    );
-    if (addr.length === 0)
-      return error(res, "Delivery address not found.", 404);
-
-    // ✅ Pincode Validation (Disabled as per your request)
-    // const [serviceable] = await conn.query(
-    //   "SELECT id FROM serviceable_pincodes WHERE pincode = ? AND is_active = 1",
-    //   [addr[0].pincode]
-    // );
-    // if (serviceable.length === 0) {
-    //   return error(res, `Sorry, we do not currently deliver to pincode ${addr[0].pincode}.`, 400);
-    // }
-
-    const [cartItems] = await conn.query(
-      `SELECT ci.id, ci.medicine_id, ci.batch_id, ci.quantity,
-              mb.selling_price, mb.mrp, mb.available_quantity, m.name
-       FROM cart ci
-       JOIN medicine_batches mb ON ci.batch_id    = mb.id
-       JOIN medicines        m  ON ci.medicine_id = m.id
-       WHERE ci.user_id = ?`,
-      [userId],
-    );
-
-    if (cartItems.length === 0) return error(res, "Your cart is empty.", 400);
-
-    let subtotal = 0;
-    for (const item of cartItems) {
-      if (item.available_quantity < item.quantity)
-        return error(
-          res,
-          `Stock for "${item.name}" is currently unavailable.`,
-          400,
-        );
-      subtotal += parseFloat(item.selling_price) * item.quantity;
+    if (payment_mode !== 'cod') {
+        // Online and UPI are now handled by the Razorpay flow
+        return error(res, "Only COD can be placed directly. For online payments, use the payment flow.", 400);
     }
 
-    let discountAmount = parseFloat(clientDiscount) || 0;
-
-    if (coupon_id && discountAmount === 0) {
-      const [coupon] = await conn.query(
-        "SELECT id, discount_type, discount_value FROM coupons WHERE id = ?",
-        [coupon_id],
-      );
-      if (coupon.length > 0) {
-        const dtype = (coupon[0].discount_type || "").toLowerCase();
-        const dvalue = parseFloat(coupon[0].discount_value) || 0;
-        if (dtype === "flat") {
-          discountAmount = dvalue;
-        } else {
-          discountAmount = parseFloat(((subtotal * dvalue) / 100).toFixed(2));
-        }
-        discountAmount = Math.min(discountAmount, subtotal);
-      }
+    // 1. Calculate Totals
+    let orderDetails;
+    try {
+        orderDetails = await calculateOrderTotals(userId, { 
+            address_id, 
+            coupon_id, 
+            use_loyalty_points, 
+            clientDiscount: discount_amount 
+        }, conn);
+    } catch (e) {
+        return error(res, e.message, 400);
     }
 
-    const deliveryCharge = subtotal >= 299 ? 0 : 49;
-    const taxAmount = 0;
-    let totalAmount = subtotal - discountAmount + deliveryCharge + taxAmount;
+    // 2. Finalize Order
+    const result = await finalizeOrder(userId, orderDetails, { payment_mode, payment_status: 'pending' }, notes, conn);
 
-    // ✅ Loyalty Points Redemption
-    let loyaltyDiscount = 0;
-    if (use_loyalty_points) {
-      const [userRows] = await conn.query("SELECT loyalty_points FROM users WHERE id = ?", [userId]);
-      const availablePoints = userRows[0]?.loyalty_points || 0;
-      if (availablePoints > 0) {
-        loyaltyDiscount = Math.min(availablePoints, totalAmount);
-        totalAmount -= loyaltyDiscount;
-      }
-    }
-
-    const orderNumber = generateOrderNumber();
-    const [orderResult] = await conn.query(
-      `INSERT INTO orders
-       (user_id, address_id, coupon_id, order_number, order_type, subtotal, delivery_charge,
-        discount_amount, tax_amount, total_amount, payment_mode, payment_status, order_status, notes)
-       VALUES (?, ?, ?, ?, 'normal', ?, ?, ?, ?, ?, ?, 'pending', 'placed', ?)`,
-      [
-        userId,
-        address_id,
-        coupon_id,
-        orderNumber,
-        subtotal,
-        deliveryCharge,
-        discountAmount,
-        taxAmount,
-        totalAmount,
-        payment_mode,
-        notes,
-      ],
-    );
-    const orderId = orderResult.insertId;
-
-    if (coupon_id) {
-      await conn.query(
-        "INSERT INTO coupon_usage (coupon_id, user_id, order_id) VALUES (?, ?, ?)",
-        [coupon_id, userId, orderId],
-      );
-    }
-
-    for (const item of cartItems) {
-      const itemTotal = parseFloat(item.selling_price) * item.quantity;
-      await conn.query(
-        `INSERT INTO order_items (order_id, medicine_id, batch_id, quantity, unit_price, total_price)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [
-          orderId,
-          item.medicine_id,
-          item.batch_id,
-          item.quantity,
-          item.selling_price,
-          itemTotal,
-        ],
-      );
-      await conn.query(
-        "UPDATE medicine_batches SET available_quantity = available_quantity - ? WHERE id = ?",
-        [item.quantity, item.batch_id],
-      );
-    }
-
-    await conn.query(
-      "INSERT INTO order_status_history (order_id, status, updated_by) VALUES (?, ?, ?)",
-      [orderId, "placed", userId],
-    );
-
-    await conn.query("DELETE FROM cart WHERE user_id = ?", [userId]);
-
-    // ✅ Loyalty Points Reward & Deduction
-    if (loyaltyDiscount > 0) {
-      await conn.query("UPDATE users SET loyalty_points = loyalty_points - ? WHERE id = ?", [loyaltyDiscount, userId]);
-    }
-    const earnedPoints = Math.floor(subtotal / 100);
-    if (earnedPoints > 0) {
-      await conn.query("UPDATE users SET loyalty_points = loyalty_points + ? WHERE id = ?", [earnedPoints, userId]);
-    }
     await conn.commit();
 
-    // ✅ Order Placed Notification
-    await createNotification(
-      userId,
-      "Order Placed successfully! 📦",
-      `Your order #${orderNumber} has been received and is being processed.`,
-      "order_placed",
-      { order_id: orderId, order_number: orderNumber }
-    );
-
-    // ✅ Notify Admins about New Order
-    await notifyAdmins(
-      "New Order Received! 🛍️",
-      `Order #${orderNumber} has been placed by a customer.`,
-      "order_placed",
-      { order_id: orderId, order_number: orderNumber }
-    );
-
-    // ✅ Notify Delivery Partners about New Order
-    await notifyDeliveryPartners(
-      "New Order Received! 🛍️",
-      `Order #${orderNumber} has been placed and is waiting for assignment.`,
-      "order_placed",
-      { order_id: orderId, order_number: orderNumber }
-    );
     return success(
       res,
       {
-        order_id: orderId,
-        order_number: orderNumber,
-        total_amount: totalAmount,
-        loyalty_discount: loyaltyDiscount,
-        earned_points: earnedPoints,
-        payment_mode,
+        ...result,
+        loyalty_discount: orderDetails.loyaltyDiscount,
+        earned_points: orderDetails.earnedPoints,
         order_status: "placed",
       },
       "Order placed successfully! 🎉",

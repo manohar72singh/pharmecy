@@ -84,6 +84,8 @@ export const verifyAndPlaceOrder = async (req, res) => {
       razorpay_signature,
     } = req.body;
 
+    console.log(`📡 Verifying payment for RZP Order: ${razorpay_order_id}`);
+
     const userId = req.user.id;
 
     // 1. Signature Verification
@@ -94,6 +96,7 @@ export const verifyAndPlaceOrder = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature !== razorpay_signature) {
+        console.error("❌ Invalid Signature");
         return error(res, "Invalid payment signature.", 400);
     }
 
@@ -104,27 +107,21 @@ export const verifyAndPlaceOrder = async (req, res) => {
     );
 
     if (tempRows.length === 0) {
-        return error(res, "Order session expired or not found.", 404);
+        // Checking if order was already finalized by webhook or auto-sync
+        const [existingOrder] = await conn.query("SELECT id FROM orders WHERE razorpay_order_id = ?", [razorpay_order_id]);
+        if (existingOrder.length > 0) {
+            console.log("✅ Order already finalized exists.");
+            return success(res, { order_id: existingOrder[0].id }, "Order already finalized.");
+        }
+        console.error("❌ Temp order not found");
+        return error(res, "Order session not found.", 404);
     }
 
     const { orderDetails, notes } = JSON.parse(tempRows[0].order_data);
 
     // 3. Finalize Order (Within Transaction)
     await conn.beginTransaction();
-
-    // Re-check stock one last time inside the transaction
-    try {
-        await calculateOrderTotals(userId, { 
-            address_id: orderDetails.address.id, 
-            coupon_id: orderDetails.coupon_id,
-            use_loyalty_points: !!orderDetails.loyaltyDiscount // Simple check
-        }, conn);
-    } catch (e) {
-        // If stock ran out, we have a problem. The user has paid.
-        // In a real app, you'd trigger a refund here.
-        await conn.rollback();
-        return error(res, `Stock issue after payment: ${e.message}. Please contact support with Payment ID: ${razorpay_payment_id}`, 400);
-    }
+    console.log("📝 Finalizing order in database...");
 
     const result = await finalizeOrder(userId, orderDetails, {
         payment_mode: 'online',
@@ -137,11 +134,12 @@ export const verifyAndPlaceOrder = async (req, res) => {
     await conn.query("DELETE FROM temporary_orders WHERE id = ?", [razorpay_order_id]);
 
     await conn.commit();
+    console.log("✅ Order finalized successfully!");
 
     return success(res, result, "Order placed successfully! 🎉");
   } catch (err) {
     if (conn) await conn.rollback();
-    console.error("Payment Finalization Error:", err);
+    console.error("❌ Payment Finalization Error:", err);
     return error(res, "An error occurred while finalizing your order.", 500);
   } finally {
     if (conn) conn.release();
@@ -161,6 +159,8 @@ export const syncUserPayments = async (userId) => {
 
     if (tempOrders.length === 0) return;
 
+    console.log(`🔍 Checking ${tempOrders.length} pending session for user: ${userId}`);
+
     for (const temp of tempOrders) {
       const rzpOrderId = temp.id;
       const { orderDetails, notes } = JSON.parse(temp.order_data);
@@ -168,11 +168,13 @@ export const syncUserPayments = async (userId) => {
       // 1. Fetch payments for this RZP Order
       const payments = await razorpay.orders.fetchPayments(rzpOrderId);
       
-      // 2. Check if any payment is 'captured'
-      const successfulPayment = payments.items.find(p => p.status === 'captured');
+      // 2. Check for successful payments (Captured or Authorized)
+      const successfulPayment = payments.items.find(p => 
+        p.status === 'captured' || p.status === 'authorized'
+      );
 
       if (successfulPayment) {
-        console.log(`🔄 Auto-healing order: ${rzpOrderId}`);
+        console.log(`✨ Auto-healing found a paid order: ${rzpOrderId}`);
         const conn = await pool.getConnection();
         try {
           await conn.beginTransaction();

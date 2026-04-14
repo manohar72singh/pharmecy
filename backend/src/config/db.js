@@ -71,11 +71,23 @@ const pool = mysql.createPool({
   ssl: getSSLConfig()
 });
 
-// Connection test
+// Connection test and Auto-Migrations
 pool.getConnection()
   .then(connection => {
     console.log("✅ Database connection pool created successfully");
-    connection.release();
+    
+    // Auto-migrate: Add is_deleted column if it doesn't exist
+    connection.query("ALTER TABLE customer_addresses ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE")
+      .then(() => console.log("✅ Auto-migrated: is_deleted column added to customer_addresses"))
+      .catch((err) => {
+         // Ignore duplicate column errors
+         if (err.code !== 'ER_DUP_FIELDNAME') {
+             console.error("Migration warning:", err.message);
+         }
+      })
+      .finally(() => {
+          connection.release();
+      });
   })
   .catch(err => {
     console.error("❌ Database connection failed:", err.message);

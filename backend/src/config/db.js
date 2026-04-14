@@ -86,7 +86,17 @@ pool.getConnection()
          }
       })
       .finally(() => {
-          connection.release();
+          // Auto-migrate: Add razorpay_order_id to orders table
+          connection.query("ALTER TABLE orders ADD COLUMN razorpay_order_id VARCHAR(255) AFTER coupon_id")
+            .then(() => console.log("✅ Auto-migrated: razorpay_order_id added to orders"))
+            .catch((err) => {
+               if (err.code !== 'ER_DUP_FIELDNAME') {
+                   console.error("Migration warning (razorpay):", err.message);
+               }
+            })
+            .finally(() => {
+                connection.release();
+            });
       });
   })
   .catch(err => {

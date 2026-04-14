@@ -23,6 +23,7 @@ import notificationRoutes from "./src/routes/UsersRoutes/notificationRoutes.js";
 import walletRoutes from "./src/routes/UsersRoutes/walletRoutes.js";
 import adminRoutes from "./src/routes/AdminRoutes/adminRoutes.js";
 import deliveryRoutes from "./src/routes/DeliveryRoutes/deliveryRoutes.js";
+import razorpayRoutes from "./src/routes/UsersRoutes/razorpayRoutes.js";
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -80,6 +81,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/delivery", deliveryRoutes);
+app.use("/api/razorpay", razorpayRoutes);
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found" });
 });

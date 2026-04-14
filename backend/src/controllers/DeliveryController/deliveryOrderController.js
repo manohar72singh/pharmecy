@@ -1,5 +1,6 @@
 import pool from "../../config/db.js";
 import { success, error } from "../../utils/response.js";
+import { createNotification, notifyAdmins } from "../../utils/notificationHelper.js";
 
 // ── Get Assigned Orders ───────────────────────────────
 export const getAssignedOrders = async (req, res) => {
@@ -152,7 +153,7 @@ export const verifyOTP = async (req, res) => {
     try {
       await conn.beginTransaction();
       const [orderRows] = await conn.query(
-        "SELECT id, order_number, payment_mode, total_amount FROM orders WHERE id = ?",
+        "SELECT id, user_id, order_number, payment_mode, total_amount FROM orders WHERE id = ?",
         [req.params.id],
       );
       const order = orderRows[0];
@@ -180,7 +181,6 @@ export const verifyOTP = async (req, res) => {
         [req.params.id, "delivered", req.user.id],
       );
 
-      // ← YAHAN ADD KARO
       if (order.payment_mode === "cod") {
         await conn.query(
           "UPDATE orders SET payment_status = 'paid' WHERE id = ?",
@@ -192,7 +192,7 @@ export const verifyOTP = async (req, res) => {
            VALUES (?, ?, ?, 'cod', ?, 'success', NOW())`,
           [
             req.params.id,
-            req.user.id,
+            order.user_id,
             order.total_amount,
             `COD-${order.order_number}`,
           ],
@@ -200,6 +200,24 @@ export const verifyOTP = async (req, res) => {
       }
 
       await conn.commit();
+
+      // ✅ Send Notifications after successful transaction
+      // 1. Notify Customer
+      await createNotification(
+        order.user_id,
+        "Order Delivered Successfully! 🎉",
+        `Your order #${order.order_number} has been delivered. Thank you for shopping with MediShop!`,
+        "delivered",
+        { order_id: req.params.id, order_number: order.order_number }
+      );
+
+      // 2. Notify All Admins
+      await notifyAdmins(
+        "Order Delivered ✅",
+        `Order #${order.order_number} has been marked as delivered by the partner.`,
+        "delivered",
+        { order_id: req.params.id, order_number: order.order_number }
+      );
     } catch (e) {
       await conn.rollback();
       throw e;

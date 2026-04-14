@@ -7,6 +7,7 @@ import addressService from "../../services/addressService";
 import orderService from "../../services/orderService";
 import couponService from "../../services/couponservice";
 import userService from "../../services/userServices"
+import razorpayService from "../../services/razorpayService";
 
 const PAYMENT_METHODS = [
   {
@@ -160,12 +161,91 @@ export default function Checkout() {
           : 0,
         use_loyalty_points: useLoyaltyPoints,
       });
-      setOrderSuccess(data.data);
-      localStorage.removeItem("cartCoupon");
-      window.dispatchEvent(new Event("cartUpdated"));
+
+      const orderData = data.data;
+
+      // Check if it's Online or UPI payment
+      if (paymentMethod === "online" || paymentMethod === "upi") {
+        await initiateRazorpayPayment(orderData);
+      } else {
+        // COD or Wallet (Assuming wallet handles its own deduction in backend)
+        setOrderSuccess(orderData);
+        localStorage.removeItem("cartCoupon");
+        window.dispatchEvent(new Event("cartUpdated"));
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to place order.");
     } finally {
+      setPlacing(false);
+    }
+  };
+
+  // ── Razorpay Payment ──────────────────────────────
+  const initiateRazorpayPayment = async (orderData) => {
+    try {
+      // 1. Create Razorpay Order in Backend
+      const { data: rzpOrderRes } = await razorpayService.createOrder({
+        amount: orderData.total_amount,
+        order_id: orderData.order_id,
+      });
+
+      const { razorpay_order_id, amount, currency, key_id } = rzpOrderRes.data;
+
+      // 2. Open Razorpay Checkout
+      const options = {
+        key: key_id,
+        amount: amount,
+        currency: currency,
+        name: "MediShop Pharmacy",
+        description: `Payment for Order #${orderData.order_number}`,
+        image: "/vite.svg", // Replace with your logo
+        order_id: razorpay_order_id,
+        handler: async function (response) {
+          try {
+            setPlacing(true);
+            // 3. Verify Payment
+            const verifyData = {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              order_id: orderData.order_id,
+            };
+
+            await razorpayService.verifyPayment(verifyData);
+
+            // 4. Success
+            setOrderSuccess({
+              ...orderData,
+              payment_status: "paid",
+            });
+            localStorage.removeItem("cartCoupon");
+            window.dispatchEvent(new Event("cartUpdated"));
+          } catch (err) {
+            setError("Payment verification failed. Please contact support.");
+          } finally {
+            setPlacing(false);
+          }
+        },
+        prefill: {
+          name: user.name,
+          email: user.email || "",
+          contact: user.phone || "",
+        },
+        theme: {
+          color: "#059669",
+        },
+        modal: {
+          ondismiss: function () {
+            setPlacing(false);
+            setError("Payment cancelled. You can retry from your orders page.");
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      setError("Failed to initiate payment. Please try again.");
       setPlacing(false);
     }
   };

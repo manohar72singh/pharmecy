@@ -7,6 +7,13 @@
     <title>MediShop Pharmacy</title>
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#059669" />
+    
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://*.razorpay.com; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; connect-src 'self' https://api.razorpay.com wss: https:; frame-src 'self' https://api.razorpay.com https://*.razorpay.com;" />
+    
+    <!-- Permissions Policy to allow sensor access for Razorpay -->
+    <meta http-equiv="Permissions-Policy" content="accelerometer=(), gyroscope=(), magnetometer=(), microphone=(), camera=(), speaker=(), fullscreen=(), payment=()" />
+    
     <!-- Razorpay SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   </head>

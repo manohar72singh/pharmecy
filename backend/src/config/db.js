@@ -71,48 +71,11 @@ const pool = mysql.createPool({
   ssl: getSSLConfig()
 });
 
-// Connection test and Auto-Migrations
+// Connection test
 pool.getConnection()
   .then(connection => {
     console.log("✅ Database connection pool created successfully");
-    
-    // Auto-migrate: Add is_deleted column if it doesn't exist
-    connection.query("ALTER TABLE customer_addresses ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE")
-      .then(() => console.log("✅ Auto-migrated: is_deleted column added to customer_addresses"))
-      .catch((err) => {
-         // Ignore duplicate column errors
-         if (err.code !== 'ER_DUP_FIELDNAME') {
-             console.error("Migration warning:", err.message);
-         }
-      })
-      .finally(() => {
-          // Auto-migrate: Add razorpay_order_id to orders table
-          connection.query("ALTER TABLE orders ADD COLUMN razorpay_order_id VARCHAR(255) AFTER coupon_id")
-            .then(() => console.log("✅ Auto-migrated: razorpay_order_id added to orders"))
-            .catch((err) => {
-               if (err.code !== 'ER_DUP_FIELDNAME') {
-                   console.error("Migration warning (razorpay):", err.message);
-               }
-            })
-            .finally(() => {
-                // ✅ Auto-generate temporary_orders table
-                connection.query(`
-                  CREATE TABLE IF NOT EXISTS temporary_orders (
-                      id VARCHAR(255) PRIMARY KEY,
-                      user_id INT NOT NULL,
-                      order_data JSON NOT NULL,
-                      amount DECIMAL(10, 2) NOT NULL,
-                      razorpay_order_id VARCHAR(255),
-                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                  )
-                `)
-                .then(() => console.log("✅ Auto-migrated: temporary_orders table ready."))
-                .catch(err => console.error("Migration error (temp_orders):", err.message))
-                .finally(() => {
-                    connection.release();
-                });
-            });
-      });
+    connection.release();
   })
   .catch(err => {
     console.error("❌ Database connection failed:", err.message);

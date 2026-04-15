@@ -5,7 +5,7 @@ import { createNotification } from "../../utils/notificationHelper.js";
 // ── Get Delivery Orders (Admin) ───────────────────────
 export const getDeliveryOrders = async (req, res) => {
   try {
-    const { page = 1, limit = 15, status } = req.query;
+    const { page = 1, limit = 10, status } = req.query;
     const offset = (page - 1) * limit;
 
     let where =

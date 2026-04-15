@@ -4,7 +4,7 @@ import { success, error } from "../../utils/response.js";
 // ── Get All Coupons (Admin) ───────────────────────────
 export const getCoupons = async (req, res) => {
   try {
-    const { page = 1, limit = 15 } = req.query;
+    const { page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
 
     const [[{ total }]] = await pool.query(

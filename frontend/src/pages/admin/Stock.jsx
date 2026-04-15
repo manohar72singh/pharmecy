@@ -8,16 +8,17 @@ export default function AdminStock() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [lowOnly, setLowOnly] = useState(false);
+  const [expiryFilter, setExpiryFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
   const [newQty, setNewQty] = useState("");
   const LIMIT = 15;
 
-  const load = async () => {
+  const load = async (pageToLoad = page) => {
     setLoading(true);
     try {
       const { data } = await api.get(
-        `/admin/stock?page=${page}&limit=${LIMIT}&search=${search}&low_stock=${lowOnly}`,
+        `/admin/stock?page=${pageToLoad}&limit=${LIMIT}&search=${search}&low_stock=${lowOnly}&expiry_status=${expiryFilter}`,
       );
       setStock(data.data.stock);
       setTotal(data.data.total);
@@ -30,12 +31,15 @@ export default function AdminStock() {
 
   useEffect(() => {
     load();
-  }, [page, lowOnly]);
+  }, [page, lowOnly, expiryFilter]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setPage(1);
-    load();
+    if (page === 1) {
+      load(1);
+    } else {
+      setPage(1);
+    }
   };
 
   const handleUpdate = async (id) => {
@@ -79,6 +83,7 @@ export default function AdminStock() {
         <button
           onClick={() => {
             setLowOnly(!lowOnly);
+            setExpiryFilter("all");
             setPage(1);
           }}
           className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 border-2 ${
@@ -89,6 +94,49 @@ export default function AdminStock() {
         >
           <span>⚠️</span> Low Stock Alerts
         </button>
+        <div className="flex flex-wrap gap-2">
+          {[
+            {
+              key: "all",
+              label: "All Batch Stock",
+              style:
+                "bg-gray-50 text-gray-700 border-gray-100 hover:bg-gray-100",
+            },
+            {
+              key: "near_expiry",
+              label: "Near Expiry (4 mo)",
+              style:
+                "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100",
+            },
+            {
+              key: "expired",
+              label: "Expired",
+              style: "bg-red-50 text-red-500 border-red-100 hover:bg-red-100",
+            },
+          ].map((item) => (
+            <button
+              key={item.key}
+              onClick={() => {
+                setExpiryFilter(item.key);
+                setLowOnly(false);
+                setPage(1);
+              }}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 ${
+                expiryFilter === item.key ? "shadow-md" : item.style
+              } ${
+                expiryFilter === item.key
+                  ? item.key === "expired"
+                    ? "bg-red-500 text-white border-red-500"
+                    : item.key === "near_expiry"
+                      ? "bg-amber-500 text-white border-amber-500"
+                      : "bg-emerald-500 text-white border-emerald-500"
+                  : ""
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Stock Inventory Table */}
@@ -126,10 +174,17 @@ export default function AdminStock() {
                   ))
                 : stock.map((item) => {
                     const isLow = item.available_quantity <= 10;
-                    const isExpiring =
-                      item.expiry_date &&
-                      new Date(item.expiry_date) <
-                        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                    const expiryDate = item.expiry_date
+                      ? new Date(item.expiry_date)
+                      : null;
+                    const isExpired = expiryDate
+                      ? expiryDate < new Date()
+                      : false;
+                    const isNearExpiry = expiryDate
+                      ? expiryDate >= new Date() &&
+                        expiryDate <=
+                          new Date(Date.now() + 120 * 24 * 60 * 60 * 1000)
+                      : false;
                     return (
                       <tr
                         key={item.id}
@@ -186,15 +241,18 @@ export default function AdminStock() {
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`text-[10px] uppercase font-black px-2 py-1 rounded-lg ${isExpiring ? "bg-red-100 text-red-600 shadow-sm" : "bg-gray-100 text-gray-500"}`}
+                            className={`text-[10px] uppercase font-black px-2 py-1 rounded-lg ${isExpired ? "bg-red-100 text-red-600 shadow-sm" : isNearExpiry ? "bg-amber-100 text-amber-700 shadow-sm" : "bg-gray-100 text-gray-500"}`}
                           >
-                            {isExpiring && "⚠️ "}
-                            {item.expiry_date
-                              ? new Date(item.expiry_date).toLocaleDateString(
-                                  "en-IN",
-                                  { month: "short", year: "numeric" },
-                                )
-                              : "No Expiry"}
+                            {isExpired && "❌ Expired"}
+                            {!isExpired && isNearExpiry && "⚠️ Near Expiry"}
+                            {!item.expiry_date && "No Expiry"}
+                            {item.expiry_date &&
+                              !isExpired &&
+                              !isNearExpiry &&
+                              new Date(item.expiry_date).toLocaleDateString(
+                                "en-IN",
+                                { month: "short", year: "numeric" },
+                              )}
                           </span>
                         </td>
                         <td className="px-4 py-3">

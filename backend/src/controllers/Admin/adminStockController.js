@@ -3,7 +3,13 @@ import { success, error } from "../../utils/response.js";
 
 export const getStock = async (req, res) => {
   try {
-    const { page = 1, limit = 15, search, low_stock } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      low_stock,
+      expiry_status,
+    } = req.query;
     const offset = (page - 1) * limit;
     let where = "WHERE mb.batch_status = 'active'";
     const params = [];
@@ -13,6 +19,12 @@ export const getStock = async (req, res) => {
     }
     if (low_stock === "true") {
       where += " AND mb.available_quantity <= 10";
+    }
+    if (expiry_status === "expired") {
+      where += " AND mb.expiry_date < CURDATE()";
+    } else if (expiry_status === "near_expiry") {
+      where +=
+        " AND mb.expiry_date >= CURDATE() AND mb.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 4 MONTH)";
     }
 
     const [[{ total }]] = await pool.query(

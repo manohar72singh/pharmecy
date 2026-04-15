@@ -60,7 +60,7 @@ export const getEarnings = async (req, res) => {
 // ── Get Delivery History ──────────────────────────────
 export const getDeliveryHistory = async (req, res) => {
   try {
-    const { page = 1, limit = 15 } = req.query;
+    const { page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
 
     const [dbRows] = await pool.query(

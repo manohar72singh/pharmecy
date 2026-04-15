@@ -1,11 +1,14 @@
 import pool from "../../config/db.js";
 import { success, error } from "../../utils/response.js";
-import { createNotification, notifyAdmins } from "../../utils/notificationHelper.js";
+import {
+  createNotification,
+  notifyAdmins,
+} from "../../utils/notificationHelper.js";
 
 // ── Get Assigned Orders ───────────────────────────────
 export const getAssignedOrders = async (req, res) => {
   try {
-    const { page = 1, limit = 15 } = req.query;
+    const { page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
 
     const [dbRows] = await pool.query(
@@ -208,7 +211,7 @@ export const verifyOTP = async (req, res) => {
         "Order Delivered Successfully! 🎉",
         `Your order #${order.order_number} has been delivered. Thank you for shopping with MediShop!`,
         "delivered",
-        { order_id: req.params.id, order_number: order.order_number }
+        { order_id: req.params.id, order_number: order.order_number },
       );
 
       // 2. Notify All Admins
@@ -216,7 +219,7 @@ export const verifyOTP = async (req, res) => {
         "Order Delivered ✅",
         `Order #${order.order_number} has been marked as delivered by the partner.`,
         "delivered",
-        { order_id: req.params.id, order_number: order.order_number }
+        { order_id: req.params.id, order_number: order.order_number },
       );
     } catch (e) {
       await conn.rollback();

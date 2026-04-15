@@ -8,14 +8,15 @@ export default function AdminMedicines() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [expiryFilter, setExpiryFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const LIMIT = 10;
 
-  const load = async () => {
+  const load = async (pageToLoad = page) => {
     setLoading(true);
     try {
       const { data } = await api.get(
-        `/admin/medicines?page=${page}&limit=${LIMIT}&search=${search}`,
+        `/admin/medicines?page=${pageToLoad}&limit=${LIMIT}&search=${search}&expiry_status=${expiryFilter}`,
       );
       setMedicines(data.data.medicines);
       setTotal(data.data.total);
@@ -28,12 +29,15 @@ export default function AdminMedicines() {
 
   useEffect(() => {
     load();
-  }, [page]);
+  }, [page, expiryFilter]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setPage(1);
-    load();
+    if (page === 1) {
+      load(1);
+    } else {
+      setPage(1);
+    }
   };
 
   const handleToggle = async (id) => {
@@ -52,8 +56,11 @@ export default function AdminMedicines() {
   return (
     <div className="space-y-4">
       {/* Search Header */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex gap-3 shadow-sm">
-        <form onSubmit={handleSearch} className="flex gap-2 flex-1">
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-wrap gap-3 shadow-sm">
+        <form
+          onSubmit={handleSearch}
+          className="flex gap-2 flex-1 min-w-[300px]"
+        >
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -68,6 +75,32 @@ export default function AdminMedicines() {
             Search
           </button>
         </form>
+        <div className="flex flex-wrap gap-2 items-center">
+          {[
+            { key: "all", label: "All Medicines" },
+            { key: "near_expiry", label: "Near Expiry (4 mo)" },
+            { key: "expired", label: "Expired" },
+          ].map((item) => (
+            <button
+              key={item.key}
+              onClick={() => {
+                setExpiryFilter(item.key);
+                if (page !== 1) setPage(1);
+              }}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 ${
+                expiryFilter === item.key
+                  ? item.key === "expired"
+                    ? "bg-red-500 text-white border-red-500"
+                    : item.key === "near_expiry"
+                      ? "bg-amber-500 text-white border-amber-500"
+                      : "bg-emerald-500 text-white border-emerald-500"
+                  : "bg-gray-50 text-gray-700 border-gray-100 hover:bg-gray-100"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
@@ -80,6 +113,7 @@ export default function AdminMedicines() {
                   "Category",
                   "Stock Level",
                   "Base Price",
+                  "Expiry",
                   "Classification",
                   "Visibility",
                   "Actions",
@@ -97,7 +131,7 @@ export default function AdminMedicines() {
               {loading
                 ? [...Array(8)].map((_, i) => (
                     <tr key={i}>
-                      <td colSpan={7} className="px-4 py-4">
+                      <td colSpan={8} className="px-4 py-4">
                         <div className="h-4 bg-gray-100 rounded animate-pulse" />
                       </td>
                     </tr>
@@ -139,6 +173,29 @@ export default function AdminMedicines() {
                       </td>
                       <td className="px-4 py-3 font-bold text-emerald-600">
                         ₹{parseFloat(med.min_price || 0).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`text-[10px] font-black px-2 py-1 rounded-lg uppercase ${med.has_expired_batches ? "bg-red-100 text-red-600" : med.has_near_expiry_batches ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-500"}`}
+                        >
+                          {med.has_expired_batches && "Expired"}
+                          {!med.has_expired_batches &&
+                            med.has_near_expiry_batches &&
+                            "Near Expiry"}
+                          {!med.has_expired_batches &&
+                            !med.has_near_expiry_batches &&
+                            !med.earliest_expiry_date &&
+                            "No Expiry"}
+                          {!med.has_expired_batches &&
+                            !med.has_near_expiry_batches &&
+                            med.earliest_expiry_date &&
+                            new Date(
+                              med.earliest_expiry_date,
+                            ).toLocaleDateString("en-IN", {
+                              month: "short",
+                              year: "numeric",
+                            })}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <span

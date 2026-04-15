@@ -3,7 +3,7 @@ import { success, error } from "../../utils/response.js";
 
 export const getMedicines = async (req, res) => {
   try {
-    const { page = 1, limit = 15, search, category } = req.query;
+    const { page = 1, limit = 15, search, category, expiry_status } = req.query;
     const offset = (page - 1) * limit;
     let where = "WHERE 1=1";
     const params = [];
@@ -14,6 +14,13 @@ export const getMedicines = async (req, res) => {
     if (category) {
       where += " AND c.slug = ?";
       params.push(category);
+    }
+    if (expiry_status === "expired") {
+      where +=
+        " AND EXISTS (SELECT 1 FROM medicine_batches mb WHERE mb.medicine_id = m.id AND mb.batch_status = 'active' AND mb.expiry_date < CURDATE())";
+    } else if (expiry_status === "near_expiry") {
+      where +=
+        " AND EXISTS (SELECT 1 FROM medicine_batches mb WHERE mb.medicine_id = m.id AND mb.batch_status = 'active' AND mb.expiry_date >= CURDATE() AND mb.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 4 MONTH))";
     }
 
     const [[{ total }]] = await pool.query(
@@ -26,7 +33,10 @@ export const getMedicines = async (req, res) => {
               c.name AS category_name,
               (SELECT image_url FROM medicine_images WHERE medicine_id = m.id AND is_primary = 1 LIMIT 1) AS image_url,
               COALESCE((SELECT SUM(available_quantity) FROM medicine_batches WHERE medicine_id = m.id AND batch_status = 'active'), 0) AS total_stock,
-              (SELECT MIN(selling_price) FROM medicine_batches WHERE medicine_id = m.id AND batch_status = 'active') AS min_price
+              (SELECT MIN(selling_price) FROM medicine_batches WHERE medicine_id = m.id AND batch_status = 'active') AS min_price,
+              (SELECT MIN(expiry_date) FROM medicine_batches WHERE medicine_id = m.id AND batch_status = 'active' AND expiry_date IS NOT NULL) AS earliest_expiry_date,
+              EXISTS (SELECT 1 FROM medicine_batches WHERE medicine_id = m.id AND batch_status = 'active' AND expiry_date < CURDATE()) AS has_expired_batches,
+              EXISTS (SELECT 1 FROM medicine_batches WHERE medicine_id = m.id AND batch_status = 'active' AND expiry_date >= CURDATE() AND expiry_date <= DATE_ADD(CURDATE(), INTERVAL 4 MONTH)) AS has_near_expiry_batches
        FROM medicines m
        LEFT JOIN categories c ON m.category_id = c.id
        ${where}

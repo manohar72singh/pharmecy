@@ -3,7 +3,7 @@ import { success, error } from "../../utils/response.js";
 
 export const getSuppliers = async (req, res) => {
   try {
-    const { page = 1, limit = 15, search } = req.query;
+    const { page = 1, limit = 10, search } = req.query;
     const offset = (page - 1) * limit;
     let where = "WHERE 1=1";
     const params = [];

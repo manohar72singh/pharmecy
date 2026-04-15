@@ -15,7 +15,7 @@ export const getMedicines = async (req, res) => {
   try {
     const {
       page = 1,
-      limit = 12,
+      limit = 10,
       category,
       search,
       featured,

@@ -3,7 +3,7 @@ import { success, error } from "../../utils/response.js";
 
 export const getUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 15, search, role } = req.query;
+    const { page = 1, limit = 10, search, role } = req.query;
     const offset = (page - 1) * limit;
     let where = "WHERE 1=1";
     const params = [];

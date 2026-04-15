@@ -127,7 +127,7 @@ export const assignDelivery = async (req, res) => {
         WHERE db.id = ?`,
       [order_id, delivery_boy_id],
     );
-    
+
     if (dbUser) {
       // Notify Delivery Partner
       await createNotification(
@@ -135,16 +135,16 @@ export const assignDelivery = async (req, res) => {
         "New Delivery Assigned! 🚴",
         `You have been assigned order #${dbUser.order_number}. Please collect it for delivery.`,
         "delivery",
-        { order_id, order_number: dbUser.order_number }
+        { order_id, order_number: dbUser.order_number },
       );
 
       // Notify Customer
       await createNotification(
         dbUser.customer_id,
         "Order Out For Delivery! 🚴‍♂️",
-        `Your order #${dbUser.order_number} has been assigned to delivery partner ${dbUser.db_name} (Phone: ${dbUser.db_phone || 'N/A'}).`,
+        `Your order #${dbUser.order_number} has been assigned to delivery partner ${dbUser.db_name} (Phone: ${dbUser.db_phone || "N/A"}).`,
         "delivery",
-        { order_id, order_number: dbUser.order_number }
+        { order_id, order_number: dbUser.order_number },
       );
     }
 
@@ -152,7 +152,7 @@ export const assignDelivery = async (req, res) => {
       res,
       {
         delivery_otp: otp,
-        delivery_boy_name: dbUser?.name,
+        delivery_boy_name: dbUser?.db_name,
       },
       "Delivery partner assigned and OTP generated successfully. ",
     );

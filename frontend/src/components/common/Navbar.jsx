@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import cartService from "../../services/cartService";
-import wishlistService, { refreshWishlistCache } from "../../services/wishlistService";
+import wishlistService, {
+  refreshWishlistCache,
+} from "../../services/wishlistService";
 import notificationService from "../../services/notificationservice";
 
 export const updateCartCount = () => {
@@ -84,11 +86,13 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const handleNewNotification = () => {
+    const handleNewNotification = (e) => {
+      // Event dispatched from SocketContext: CustomEvent with detail
       setUnreadCount((prev) => prev + 1);
     };
     window.addEventListener("new_notification", handleNewNotification);
-    return () => window.removeEventListener("new_notification", handleNewNotification);
+    return () =>
+      window.removeEventListener("new_notification", handleNewNotification);
   }, []);
 
   useEffect(() => {
